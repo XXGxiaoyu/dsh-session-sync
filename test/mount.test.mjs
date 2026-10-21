@@ -815,6 +815,8 @@ test('a session dragged over a real sidebar row drops into that workspace', asyn
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 160)) })
 
   const modal = document.getElementById('root').querySelector('.ss-modal')
+  assert.ok(modal.querySelector('.ss-modal-card'), 'the confirmation is a centred dialog card')
+  assert.match(modal.className, /ss-modal/, 'the dialog sits in a mask overlay')
   assert.ok(modal, 'dropping opens the confirmation dialog')
   assert.match(modal.textContent, /\/tmp\/alpha/)
   const confirm = [...modal.querySelectorAll('button')].find((button) => button.textContent === t('plan.confirm'))
