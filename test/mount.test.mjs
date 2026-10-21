@@ -761,6 +761,26 @@ test('a session dragged over a real sidebar row drops into that workspace', asyn
   await act(async () => { workspaceRow.dispatchEvent(over) })
   assert.ok(workspaceRow.classList.contains('ss-ws-over'), 'the official row lights up under the pointer')
 
+  // Expanded area: a session row belongs to the header above it, so the whole
+  // group — not just the header — accepts the drop.
+  const member = document.createElement('div')
+  member.setAttribute('data-row-key', 'session:remote-9')
+  workspaceRow.after(member)
+  const overMember = new dom.window.Event('dragover', { bubbles: true, cancelable: true })
+  Object.defineProperty(overMember, 'dataTransfer', { value: data })
+  await act(async () => { member.dispatchEvent(overMember) })
+  assert.ok(workspaceRow.classList.contains('ss-ws-over'), 'the owning header is marked')
+  assert.ok(member.classList.contains('ss-ws-member'), 'the expanded row is tinted too')
+  const pill = document.querySelector('.ss-dnd-tip.ws')
+  assert.ok(pill !== null, 'the pointer pill names the target')
+  assert.match(pill.querySelector('.ss-dnd-name').textContent, /Alpha|ds-harness-workspace/)
+  assert.match(pill.querySelector('.ss-dnd-hint').textContent, /整组可放|Whole group/)
+
+  const outside = new dom.window.Event('dragover', { bubbles: true, cancelable: true })
+  Object.defineProperty(outside, 'dataTransfer', { value: data })
+  await act(async () => { document.body.dispatchEvent(outside) })
+  assert.ok(document.querySelector('.ss-dnd-tip.blocked') !== null, 'stray areas show the blocked pill')
+
   const overUngrouped = new dom.window.Event('dragover', { bubbles: true, cancelable: true })
   Object.defineProperty(overUngrouped, 'dataTransfer', { value: data })
   await act(async () => { ungroupedRow.dispatchEvent(overUngrouped) })
@@ -769,7 +789,9 @@ test('a session dragged over a real sidebar row drops into that workspace', asyn
 
   const drop = new dom.window.Event('drop', { bubbles: true, cancelable: true })
   Object.defineProperty(drop, 'dataTransfer', { value: data })
-  await act(async () => { workspaceRow.dispatchEvent(drop) })
+  await act(async () => { member.dispatchEvent(drop) })
+  // The success state holds for ~90ms before the confirmation dialog opens.
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 160)) })
 
   const modal = document.getElementById('root').querySelector('.ss-modal')
   assert.ok(modal, 'dropping opens the confirmation dialog')

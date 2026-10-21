@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>会话同步 · 拖拽悬停设计稿</title>
+<style>
+  :root{
+    --bg:#151517; --panel:#1b1b1e; --card:#2c2c2e; --layer:#232326;
+    --text:#e6e6e8; --secondary:#a9a9b0; --tertiary:#7c7c85; --caption:#66666f;
+    --border-1:#ffffff14; --border-2:#ffffff1f; --border-3:#ffffff2e;
+    --brand:#4d6bfe; --brand-soft:#4d6bfe1f; --ok:#3ecf8e; --warn:#f5a524;
+    --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px;
+    --shadow:0 10px 30px #00000059, 0 2px 6px #0000003d;
+    --mono:ui-monospace,"SF Mono",Menlo,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/22px var(--sans);padding:32px 40px 56px}
+  h1{font-size:20px;line-height:28px;font-weight:500;margin:0 0 4px}
+  .sub{color:var(--tertiary);font-size:13px;line-height:20px;margin:0 0 24px}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+  .frame{border:.5px solid var(--border-2);border-radius:var(--r-lg);background:var(--panel);overflow:hidden}
+  .frame-hd{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:.5px solid var(--border-1);background:#ffffff05}
+  .tag{font-size:11px;line-height:16px;padding:1px 8px;border-radius:999px;border:.5px solid var(--border-2);color:var(--secondary)}
+  .tag.brand{color:#bcd0ff;border-color:#4d6bfe66;background:#4d6bfe1a}
+  .frame-name{font-size:13px;font-weight:600;letter-spacing:.1px}
+  .frame-note{margin-left:auto;color:var(--caption);font-size:11px}
+  .stage{display:grid;grid-template-columns:288px minmax(0,1fr);min-height:196px}
+  .side{padding:12px 8px;border-right:.5px solid var(--border-1);display:flex;flex-direction:column;gap:2px}
+  .side-title{font-size:11px;line-height:16px;letter-spacing:.4px;text-transform:uppercase;color:var(--caption);padding:4px 8px}
+  .row{display:flex;align-items:center;gap:8px;height:32px;padding:0 8px;border-radius:var(--r-sm);color:var(--secondary);font-size:13px;position:relative}
+  .row .ico{width:16px;height:16px;flex:none;color:var(--tertiary)}
+  .row .label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row.sess{padding-left:30px;color:var(--tertiary);height:28px;font-size:12.5px}
+  .row.sess .dot{width:6px;height:6px;border-radius:2px;background:#ffffff33;flex:none}
+  .row.active{color:var(--text);background:#ffffff0d}
+  .rail{position:absolute;left:2px;top:6px;bottom:6px;width:2px;border-radius:2px;background:transparent}
+  .row.hover-head{background:#ffffff14;box-shadow:inset 0 0 0 1.5px var(--brand);color:var(--text)}
+  .row.member{background:#4d6bfe14}
+  .row.member .rail{background:var(--brand)}
+  .row.member::after{content:"";position:absolute;left:12px;top:0;bottom:0;width:1px;background:#4d6bfe33}
+  .row.un-group{box-shadow:inset 0 0 0 1.5px #ffffff33;color:var(--text);border-radius:var(--r-sm)}
+  .row.un-group:hover{background:#ffffff0f}
+  .row .count{margin-left:auto;font-size:11px;color:var(--caption);font-variant-numeric:tabular-nums}
+  .canvas{position:relative;background:radial-gradient(120% 120% at 10% 0%,#ffffff08,transparent 60%),var(--panel);padding:16px 20px;display:flex;flex-direction:column;gap:10px;justify-content:center}
+  .ghost{position:relative;display:flex;align-items:center;gap:10px;align-self:flex-start;padding:8px 12px;border-radius:var(--r-md);border:.5px solid var(--border-3);background:var(--layer);box-shadow:var(--shadow);max-width:320px}
+  .ghost .g-ico{width:20px;height:20px;border-radius:6px;background:#ffffff12;display:grid;place-items:center;color:#cfd3db;flex:none}
+  .ghost .g-title{font-size:13px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ghost .g-sub{font-size:11px;line-height:15px;color:var(--caption)}
+  .ghost .g-badge{margin-left:auto;font-size:11px;color:var(--secondary);background:#ffffff12;border-radius:999px;padding:1px 7px;flex:none}
+  .pill{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;padding:6px 10px 6px 8px;border-radius:999px;border:.5px solid #4d6bfe59;background:color-mix(in srgb,var(--layer) 92%,transparent);box-shadow:var(--shadow);color:var(--text);font-size:12px;line-height:18px;backdrop-filter:blur(10px)}
+  .pill .p-ico{width:16px;height:16px;display:grid;place-items:center;color:#9fb4ff}
+  .pill .p-name{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pill .p-hint{color:var(--tertiary);border-left:.5px solid var(--border-2);padding-left:8px}
+  .pill.blocked{border-color:var(--border-2);color:var(--tertiary)}
+  .pill.blocked .p-ico{color:var(--caption)}
+  .caption-line{font-size:12px;line-height:20px;color:var(--tertiary)}
+  .caption-line b{color:var(--secondary);font-weight:600}
+  .kbd{font:11px/16px var(--mono);padding:0 5px;border-radius:4px;border:.5px solid var(--border-2);color:var(--secondary);background:#ffffff0a}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:22px;color:var(--tertiary);font-size:12px}
+  .swatch{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  .spec{margin-top:22px;border-top:.5px solid var(--border-1);padding-top:16px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+  .spec h3{margin:0 0 6px;font-size:13px;font-weight:600;color:var(--text)}
+  .spec p,.spec li{font-size:12px;line-height:19px;color:var(--tertiary);margin:0}
+  .spec ul{margin:0;padding-left:16px}
+</style>
+</head>
+<body>
+  <h1>拖拽悬停 · 交互设计稿</h1>
+  <p class="sub">目标：左侧工作区的整块区域（标题行 + 展开后的所有行）都能接住拖放；悬停反馈要一眼看懂“会放进哪个分组、发生什么”。所有颜色/圆角/动效取 DSH 变量。</p>
+
+  <div class="grid">
+    <!-- A -->
+    <section class="frame">
+      <div class="frame-hd"><span class="tag brand">状态 A</span><span class="frame-name">拖动中（未进入目标）</span><span class="frame-note">源行 45% · 拖影 + 计数</span></div>
+      <div class="stage">
+        <div class="side">
+          <div class="side-title">工作区</div>
+          <div class="row"><span class="ico">▣</span><span class="label">未分组</span><span class="count">6</span></div>
+          <div class="row active"><span class="ico">▾</span><span class="label">ds-harness-workspace</span><span class="count">28</span></div>
+          <div class="row sess"><span class="dot"></span><span class="label">开发 dsh 局域网会话同步插件</span></div>
+          <div class="row sess"><span class="dot"></span><span class="label">有一个思路：基于 UEFI 通过…</span></div>
+          <div class="row sess"><span class="dot"></span><span class="label">AMD 平台 VTD 与 DMA 反检…</span></div>
+        </div>
+        <div class="canvas">
+          <div class="ghost">
+            <span class="g-ico">▤</span>
+            <span><span class="g-title">开发 dsh 局域网会话同步插件</span><br/><span class="g-sub">拉取 · 19 条事件</span></span>
+            <span class="g-badge">+2</span>
+          </div>
+          <p class="caption-line">拖影跟随指针（偏移 16 / 18），多选时右上角显示 <b>+N</b>；源行降到 45% 并保持原布局，不做位移动画。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- B -->
+    <section class="frame">
+      <div class="frame-hd"><span class="tag brand">状态 B</span><span class="frame-name">悬停在分组标题行</span><span class="frame-note">标题行描边 1.5px</span></div>
+      <div class="stage">
+        <div class="side">
+          <div class="side-title">工作区</div>
+          <div class="row"><span class="ico">▣</span><span class="label">未分组</span><span class="count">6</span></div>
+          <div class="row hover-head"><span class="ico">▾</span><span class="label">ds-harness-workspace</span><span class="count">28</span></div>
+          <div class="row sess"><span class="dot"></span><span class="label">开发 dsh 局域网会话同步插件</span></div>
+          <div class="row sess"><span class="dot"></span><span class="label">有一个思路：基于 UEFI 通过…</span></div>
+        </div>
+        <div class="canvas">
+          <div class="pill">
+            <span class="p-ico">▣</span>
+            <span class="p-name">ds-harness-workspace</span>
+            <span class="p-hint">拉取到此分组</span>
+          </div>
+          <p class="caption-line">标题行：底色 <b>interactive-bg-hover</b> + 内描边 <b>brand-primary</b>；胶囊只显示目标名与动作，不再重复路径。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- C -->
+    <section class="frame">
+      <div class="frame-hd"><span class="tag brand">状态 C</span><span class="frame-name">悬停在展开区域（本次新增）</span><span class="frame-note">整组承接 · 左侧 2px 轨道</span></div>
+      <div class="stage">
+        <div class="side">
+          <div class="side-title">工作区</div>
+          <div class="row"><span class="ico">▣</span><span class="label">未分组</span><span class="count">6</span></div>
+          <div class="row hover-head"><span class="ico">▾</span><span class="label">ds-harness-workspace</span><span class="count">28</span></div>
+          <div class="row sess member"><span class="rail"></span><span class="dot"></span><span class="label">开发 dsh 局域网会话同步插件</span></div>
+          <div class="row sess member"><span class="rail"></span><span class="dot"></span><span class="label">有一个思路：基于 UEFI 通过…</span></div>
+          <div class="row sess member"><span class="rail"></span><span class="dot"></span><span class="label">AMD 平台 VTD 与 DMA 反检…</span></div>
+        </div>
+        <div class="canvas">
+          <div class="pill">
+            <span class="p-ico">▣</span>
+            <span class="p-name">ds-harness-workspace</span>
+            <span class="p-hint">整组可放 · 会话将出现在此分组</span>
+          </div>
+          <p class="caption-line">指针落在任意 <b>会话行 / 溢出行的空白处</b> 也算命中：所属组的标题行保持描边，成员行铺 <b>brand 10%</b> 底色并加一条 2px 左轨，边界一眼可见。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- D -->
+    <section class="frame">
+      <div class="frame-hd"><span class="tag brand">状态 D</span><span class="frame-name">悬停在「未分组」</span><span class="frame-note">虚线语义 · 不归档</span></div>
+      <div class="stage">
+        <div class="side">
+          <div class="side-title">工作区</div>
+          <div class="row un-group"><span class="ico">▣</span><span class="label">未分组</span><span class="count">6</span></div>
+          <div class="row"><span class="ico">▸</span><span class="label">ds-harness-workspace</span><span class="count">28</span></div>
+          <div class="row"><span class="ico">▸</span><span class="label">dsh-session-sync</span><span class="count">3</span></div>
+        </div>
+        <div class="canvas">
+          <div class="pill">
+            <span class="p-ico">▣</span>
+            <span class="p-name">未分组</span>
+            <span class="p-hint">放入插件目录，不归档到工作区</span>
+          </div>
+          <p class="caption-line">「未分组」不是真实工作区：用 1px 中性描边而非品牌色，胶囊写明落点，避免误以为会建一个新分组。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- E -->
+    <section class="frame">
+      <div class="frame-hd"><span class="tag">状态 E</span><span class="frame-name">悬停在非目标区域</span><span class="frame-note">明确拒绝 · 不抖动</span></div>
+      <div class="stage">
+        <div class="side">
+          <div class="side-title">工作区</div>
+          <div class="row"><span class="ico">▣</span><span class="label">未分组</span><span class="count">6</span></div>
+          <div class="row"><span class="ico">▸</span><span class="label">ds-harness-workspace</span><span class="count">28</span></div>
+        </div>
+        <div class="canvas">
+          <div class="pill blocked">
+            <span class="p-ico">⊘</span>
+            <span class="p-name">无法放入此处</span>
+            <span class="p-hint">请拖到左侧工作区</span>
+          </div>
+          <p class="caption-line">只有按住拖动时才出现；离开所有目标 200ms 后淡出，不跟随抖动，不改变光标以外的页面状态。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- F -->
+    <section class="frame">
+      <div class="frame-hd"><span class="tag brand">状态 F</span><span class="frame-name">松手后（确认弹窗之前）</span><span class="frame-note">90ms 反馈 · 再进确认</span></div>
+      <div class="stage">
+        <div class="side">
+          <div class="side-title">工作区</div>
+          <div class="row"><span class="ico">▣</span><span class="label">未分组</span><span class="count">6</span></div>
+          <div class="row"><span class="ico">▾</span><span class="label">ds-harness-workspace</span><span class="count">28</span></div>
+          <div class="row sess"><span class="dot"></span><span class="label">开发 dsh 局域网会话同步插件</span></div>
+        </div>
+        <div class="canvas">
+          <div class="pill" style="border-color:#3ecf8e59">
+            <span class="p-ico" style="color:#3ecf8e">✓</span>
+            <span class="p-name">已选定 ds-harness-workspace</span>
+            <span class="p-hint">正在准备确认…</span>
+          </div>
+          <p class="caption-line">松手先给一次 <b>90ms</b> 成功态（绿色对勾，胶囊不消失），随后弹出原有的逐条确认弹窗；取消则回到普通列表。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="legend">
+    <span><i class="swatch" style="background:var(--brand)"></i>brand-primary · 目标描边 / 左轨</span>
+    <span><i class="swatch" style="background:#4d6bfe14"></i>brand 10% · 整组底色</span>
+    <span><i class="swatch" style="background:#ffffff14"></i>interactive-bg-hover · 标题行</span>
+    <span><i class="swatch" style="background:#ffffff33"></i>border-l3 · 未分组 / 拒绝态</span>
+  </div>
+
+  <div class="spec">
+    <div>
+      <h3>命中规则</h3>
+      <ul>
+        <li>指针落在标题行 → 该分组</li>
+        <li>落在展开区的会话行 / 溢出行的任意位置（含空白）→ 向上回溯最近的标题行</li>
+        <li>嵌套子分组：以最近的标题行为准</li>
+        <li>「未分组」= 插件的 <span class="kbd">unsorted</span> 目录</li>
+      </ul>
+    </div>
+    <div>
+      <h3>动效</h3>
+      <ul>
+        <li>描边 / 底色：<span class="kbd">120ms</span> <span class="kbd">cubic-bezier(.4,0,.2,1)</span></li>
+        <li>胶囊：透明度 + <span class="kbd">scale(.98→1)</span>，120ms</li>
+        <li>离开目标：200ms 淡出，不做位移</li>
+        <li>成功态停留 90ms 后进入确认弹窗</li>
+      </ul>
+    </div>
+    <div>
+      <h3>边界</h3>
+      <ul>
+        <li>不改 DSH 侧栏 DOM/类名，只加临时 class</li>
+        <li>胶囊 <span class="kbd">pointer-events:none</span>，绝不挡命中</li>
+        <li>目标名超长省略，最多 180px</li>
+        <li>拖拽取消（Esc / 拖回原处）立即清空所有高亮</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

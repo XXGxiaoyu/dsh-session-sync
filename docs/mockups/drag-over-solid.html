@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"/><title>拖拽悬停 · 实心品牌色变体（shadcn 味）</title>
+<style>
+  :root{--bg:#151517;--panel:#1b1b1e;--layer:#232326;--text:#e6e6e8;--secondary:#a9a9b0;--tertiary:#7c7c85;--caption:#66666f;
+    --b1:#ffffff14;--b2:#ffffff1f;--b3:#ffffff2e;--brand:#4d6bfe;--brand-strong:#3f5bf0;--ok:#3ecf8e;
+    --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--shadow:0 12px 32px #00000073,0 2px 8px #00000059;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/22px var(--sans);padding:30px 38px 44px}
+  h1{font-size:20px;line-height:28px;font-weight:500;margin:0 0 4px}
+  .sub{color:var(--tertiary);font-size:13px;line-height:20px;margin:0 0 22px}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+  .frame{border:.5px solid var(--b2);border-radius:var(--r-lg);background:var(--panel);overflow:hidden}
+  .frame-hd{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:.5px solid var(--b1);background:#ffffff05}
+  .tag{font-size:11px;line-height:16px;padding:1px 8px;border-radius:999px;border:.5px solid var(--b2);color:var(--secondary)}
+  .tag.solid{background:var(--brand);border-color:transparent;color:#fff}
+  .frame-name{font-size:13px;font-weight:600}
+  .frame-note{margin-left:auto;color:var(--caption);font-size:11px}
+  .stage{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:180px}
+  .side{padding:12px 8px;border-right:.5px solid var(--b1)}
+  .side-title{font-size:11px;line-height:16px;letter-spacing:.4px;text-transform:uppercase;color:var(--caption);padding:4px 8px}
+  .row{display:flex;align-items:center;gap:8px;height:32px;padding:0 8px;border-radius:var(--r-sm);color:var(--secondary);font-size:13px;position:relative}
+  .row .label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.row .count{margin-left:auto;font-size:11px;color:var(--caption)}
+  .row.sess{height:28px;font-size:12.5px;color:var(--tertiary);padding-left:30px}
+  .row.sess .dot{width:6px;height:6px;border-radius:2px;background:#ffffff33}
+  .row.over{background:#4d6bfe26;box-shadow:0 0 0 2px var(--brand),0 0 24px #4d6bfe40;color:#fff;border-radius:10px}
+  .row.member{background:#4d6bfe1f;color:var(--text)}
+  .row.member::before{content:"";position:absolute;left:2px;top:5px;bottom:5px;width:3px;border-radius:999px;background:var(--brand)}
+  .canvas{padding:18px 20px;display:flex;flex-direction:column;gap:12px;justify-content:center;background:radial-gradient(120% 120% at 0% 0%,#4d6bfe14,transparent 55%),var(--panel)}
+  .pill{align-self:flex-start;display:inline-flex;align-items:center;gap:9px;padding:7px 12px 7px 9px;border-radius:14px;background:var(--brand);color:#fff;box-shadow:var(--shadow);font-size:12px;line-height:18px}
+  .pill .pc{width:22px;height:22px;border-radius:7px;background:#ffffff26;display:grid;place-items:center;font-size:12px}
+  .pill .hint{color:#ffffffb8;border-left:.5px solid #ffffff4d;padding-left:9px}
+  .pill.done{background:var(--ok);color:#08231a;box-shadow:0 12px 32px #3ecf8e40,0 2px 8px #00000040}
+  .pill.done .hint{color:#08231ab8;border-left-color:#08231a33}
+  .ghost{align-self:flex-start;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:16px;background:#ffffff1a;border:1px solid #ffffff33;box-shadow:var(--shadow);backdrop-filter:blur(12px)}
+  .ghost .gi{width:26px;height:26px;border-radius:9px;background:#ffffff26;display:grid;place-items:center}
+  .ghost .gt{font-size:13px;color:#fff}.ghost .gs{font-size:11px;color:#ffffff99}
+  .ghost .gb{margin-left:12px;font-size:11px;padding:1px 7px;border-radius:999px;background:#fff;color:#151517;font-weight:600}
+  .note{font-size:12px;line-height:20px;color:var(--tertiary)}.note b{color:var(--secondary)}
+  .spec{margin-top:20px;border-top:.5px solid var(--b1);padding-top:16px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+  .spec h3{margin:0 0 6px;font-size:13px}.spec p{font-size:12px;line-height:19px;color:var(--tertiary);margin:0}
+</style></head><body>
+  <h1>拖拽悬停 · 实心品牌色变体</h1>
+  <p class="sub">shadcn/ui 的“实心 + 强阴影 + 大圆角”语汇，颜色仍只用 DSH 的 brand / success 与层级变量，圆角取 radius-md/lg，避免和两侧面板打架。</p>
+  <div class="grid">
+    <section class="frame">
+      <div class="frame-hd"><span class="tag solid">变体 1</span><span class="frame-name">悬停在分组标题行</span><span class="frame-note">2px ring · 实心胶囊</span></div>
+      <div class="stage">
+        <div class="side">
+          <div class="side-title">工作区</div>
+          <div class="row"><span>▣</span><span class="label">未分组</span><span class="count">6</span></div>
+          <div class="row over"><span>▾</span><span class="label">ds-harness-workspace</span><span class="count">28</span></div>
+          <div class="row sess"><span class="dot"></span><span class="label">开发 dsh 局域网会话同步插件</span></div>
+          <div class="row sess"><span class="dot"></span><span class="label">有一个思路：基于 UEFI 通过…</span></div>
+        </div>
+        <div class="canvas">
+          <div class="pill"><span class="pc">▣</span><span>ds-harness-workspace</span><span class="hint">拉取到此分组</span></div>
+          <p class="note">目标行 <b>2px 环 + 12% 品牌底色 + 外发光</b>，比描边更有“吸住”的物理感；胶囊用实心品牌色，白字对比度 > 7:1。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="frame">
+      <div class="frame-hd"><span class="tag solid">变体 2</span><span class="frame-name">悬停在展开区域</span><span class="frame-note">整组 12% 底 · 3px 左轨</span></div>
+      <div class="stage">
+        <div class="side">
+          <div class="side-title">工作区</div>
+          <div class="row"><span>▣</span><span class="label">未分组</span><span class="count">6</span></div>
+          <div class="row over"><span>▾</span><span class="label">ds-harness-workspace</span><span class="count">28</span></div>
+          <div class="row sess member"><span class="dot"></span><span class="label">开发 dsh 局域网会话同步插件</span></div>
+          <div class="row sess member"><span class="dot"></span><span class="label">有一个思路：基于 UEFI 通过…</span></div>
+          <div class="row sess member"><span class="dot"></span><span class="label">AMD 平台 VTD 与 DMA 反检…</span></div>
+        </div>
+        <div class="canvas">
+          <div class="pill"><span class="pc">▣</span><span>ds-harness-workspace</span><span class="hint">整组可放</span></div>
+          <p class="note">成员行 12% 品牌底 + 左侧 3px 轨道，标题行保持 2px 环；整组像一条被拉起的“抽屉”。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="frame">
+      <div class="frame-hd"><span class="tag solid">变体 3</span><span class="frame-name">拖动中的拖影</span><span class="frame-note">玻璃 + 实心计数</span></div>
+      <div class="stage">
+        <div class="side">
+          <div class="side-title">工作区</div>
+          <div class="row"><span>▣</span><span class="label">未分组</span><span class="count">6</span></div>
+          <div class="row"><span>▸</span><span class="label">ds-harness-workspace</span><span class="count">28</span></div>
+        </div>
+        <div class="canvas">
+          <div class="ghost"><span class="gi">▤</span><span><span class="gt">开发 dsh 局域网会话同步插件</span><br/><span class="gs">拉取 · 19 条事件</span></span><span class="gb">+2</span></div>
+          <p class="note">拖影用 <b>layer + 12% 白 + blur</b> 的玻璃层，计数徽章实心白底黑字，跨深浅主题都可读。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="frame">
+      <div class="frame-hd"><span class="tag solid">变体 4</span><span class="frame-name">松手成功态</span><span class="frame-note">实心 success · 90ms</span></div>
+      <div class="stage">
+        <div class="side">
+          <div class="side-title">工作区</div>
+          <div class="row"><span>▣</span><span class="label">未分组</span><span class="count">6</span></div>
+          <div class="row"><span>▾</span><span class="label">ds-harness-workspace</span><span class="count">28</span></div>
+          <div class="row sess"><span class="dot"></span><span class="label">开发 dsh 局域网会话同步插件</span></div>
+        </div>
+        <div class="canvas">
+          <div class="pill done"><span class="pc">✓</span><span>已选定 ds-harness-workspace</span><span class="hint">正在准备确认…</span></div>
+          <p class="note">成功态直接换成 success 实心底，文字转深色保证对比；停留 90ms 后进入确认弹窗。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="spec">
+    <div><h3>和原稿的差别</h3><p>描边 1.5px → 2px 环 + 外发光；胶囊从“半透明玻璃 + 品牌描边”改为“实心品牌底 + 白字”；拖影加 blur 与实心计数；成员行轨道 2px → 3px。</p></div>
+    <div><h3>仍遵守的约束</h3><p>只用 DSH 变量与 radius-md/lg；不改 DOM 结构；胶囊 pointer-events:none；120ms cubic-bezier(.4,0,.2,1)；成功态 90ms。</p></div>
+    <div><h3>取舍</h3><p>更“抓眼”，适合高频拖拽；代价是深色界面里白色胶囊会比较跳，且品牌实心色和主按钮抢视觉。二选一即可。</p></div>
+  </div>
+</body></html>
