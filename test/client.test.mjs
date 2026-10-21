@@ -248,3 +248,10 @@ test('a stale host is called out instead of looking like a wrong version', () =>
   assert.match(html, new RegExp(`v${JSON.parse(fs.readFileSync(path.join(here, '..', 'package.json'), 'utf8')).version.replace(/\./g, '\\.')}`), 'the footer advertises the build it was shipped with')
   assert.doesNotMatch(html, /宿主 v/, 'no stale-host line when host and bundle agree')
 })
+
+test('a render crash is contained by an error boundary instead of a blank panel', () => {
+  assert.match(source, /class Boundary extends React\.Component/)
+  assert.match(source, /getDerivedStateFromError/)
+  assert.match(source, /function Diagnostics\(/)
+  assert.match(source, /h\(Boundary, \{ t: \(key\) => translateNow\(key\) \}/, 'both the settings section and the main panel are wrapped')
+})
