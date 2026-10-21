@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.1 — 2026-10-21
+
+- **修复设置页崩溃 `shortClock is not defined`。** 面板重写时「上次扫描时间」的格式化函数漏了定义：只要跨网段扫描有了目标并渲染出扫描摘要，React 就会抛 `ReferenceError`，Windows 上最先撞到。补上 `shortClock()`（本地时间 `HH:MM:SS`）。
+- **新增未声明标识符检查。** 手写 bundle 没有构建期检查，任何漏定义的函数都要等用户点开界面才暴露。现在用 `acorn` 解析 `lib/*.js`，把「读了但从未声明」的标识符列成失败项——本次的 `shortClock` 正好会被它拦下。
+- 测试 **44 项**通过。
+
 ## 0.5.0 — 2026-10-21
 
 - **Session panel, rebuilt.** Status chips (online / ports / own address), a slim local-device card, one row per device with meta line, and the sessions toolbar now live in one flat, DSH-native layout.

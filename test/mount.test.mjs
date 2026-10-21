@@ -971,3 +971,27 @@ test('a row nested inside DSH\'s div/span section resolves to its group header',
   await act(async () => { panelRoot.unmount() })
   list.remove()
 })
+
+test('the probe summary renders with a wall-clock time instead of throwing', async () => {
+  const { registered, t } = loadComponents()
+  const calls = []
+  const at = new Date(2026, 9, 21, 21, 3, 12).getTime()
+  stubFetch(() => statePayload({ probe: { at, targets: 6, found: 2 } }), calls)
+  const container = document.getElementById('root')
+  const root = createRoot(container)
+  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  await act(async () => {
+    root.render(React.createElement(page.component, { t }))
+  })
+  await act(async () => { await Promise.resolve() })
+
+  const toggle = [...container.querySelectorAll('button')].find((button) => button.className.includes('ss-advanced-toggle'))
+  assert.ok(toggle, 'the advanced section has a toggle')
+  await act(async () => { toggle.click() })
+  await act(async () => { await Promise.resolve() })
+
+  const text = container.textContent
+  assert.match(text, /21:03:12/, 'the scan time is rendered as HH:MM:SS')
+  assert.match(text, /6/, 'the scan target count is shown')
+  assert.match(text, /2/, 'the scan found count is shown')
+})
