@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0 — 2026-10-22
+
+- **The transfer queue got a real design.** Every transfer is its own card: status icon (spinner / check / warning), session title, direction and peer, target directory, measured duration and the failure reason. Cards slide in with a short stagger, pop their check when they land, and keep a steady shimmer while running.
+- **The batch is legible at a glance.** Four counters open the drawer (done / running / skipped / failed) and the persistent bar shows the running session plus a progress meter, so a long pull no longer looks frozen.
+- **Both entry points behave the same.** Clicking anywhere on the bar (or pressing Enter/Space) opens the drawer; while it is open the bar stays out of the way.
+- **Accents use DSH's business blue.** `--dsw-alias-brand-primary` is white in the dark theme, which made the running card unreadable; the queue now draws its accents from `--dsw-alias-state-business-primary` and keeps success/error tokens for outcomes.
+- **Motion respects `prefers-reduced-motion`.** Spinner, shimmer, stagger and pop are all disabled for users who ask for less movement.
+- Tests **56** pass, including the drawer contract (one card per transfer, four counters, filled track for settled rows).
+
 ## 0.5.5 — 2026-10-21
 
 - **Sessions pulled by early builds open again.** Those copies were imported with `isSeeded: false` but still carried the peer's inherited end-seed marker, which DSH rejects with `released v2 unseeded Session contains an inherited end-seed marker`. Imports now strip the inherited prefix, so a copy only contains the conversation you actually own.

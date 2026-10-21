@@ -456,6 +456,21 @@ test('one-click sync dedupes imported sessions and reports them as skipped', asy
   assert.equal(pulls[0].body.sessionId, 'remote-1')
   assert.equal(calls.filter((call) => call.body.action === 'push').length, 0, 'sync means pull direction')
   assert.match(container.textContent, /跳过|Skipped/, 'the duplicate is reported as skipped in the queue')
+
+  const bar = container.querySelector('.ss-qbar')
+  assert.ok(bar, 'the queue gets a persistent summary bar')
+  assert.equal(bar.querySelectorAll('.ss-qbar-meter span').length, 1, 'the bar carries a progress meter')
+  assert.equal(bar.querySelector('.ss-qbar-meter span').style.width, '100%', 'settled transfers fill the meter')
+
+  const openQueue = [...bar.querySelectorAll('button')].find((button) => button.textContent === t('queue.open'))
+  await act(async () => { openQueue.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  const drawer = container.querySelector('.ss-drawer')
+  assert.ok(drawer, 'the bar opens the transfer drawer')
+  assert.equal(drawer.querySelectorAll('.ss-qi').length, 2, 'each transfer gets its own card')
+  assert.equal(drawer.querySelectorAll('.ss-qi.done').length, 1)
+  assert.equal(drawer.querySelectorAll('.ss-qi.skipped').length, 1)
+  assert.equal(drawer.querySelectorAll('.ss-qstat').length, 4, 'the drawer summarises the batch by status')
+  assert.ok(drawer.querySelector('.ss-qi.done .ss-qi-track'), 'completed cards show a filled track')
   await act(async () => { root.unmount() })
 })
 

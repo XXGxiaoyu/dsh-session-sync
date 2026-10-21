@@ -1,5 +1,6 @@
 # dsh-session-sync
 
+
 **LAN session sync for DSH.** Every DSH that has this plugin discovers the others on the local network, lists their sessions, and can pull or push conversations over plain HTTP. The nickname you give a device lives **only on your machine** — the peer can go offline, reboot, or change IP and come back, and you still see the name you gave it.
 
 <div align="center">
@@ -27,6 +28,7 @@
 | **🔎 Find sessions fast**<br/>Search (press `/`), 全部 / 未拉取 / 已拉取 filters, sort by time or title, and ↑↓ / Space / Enter navigation. Rows stay quiet: one status chip, with 校验 and 拉取 on hover or focus. | **🧰 Tidy device cards & queue**<br/>A per-device ⋯ menu (rename, copy LAN address, refresh, push, forget), transfers summarised in a bottom bar and a detail drawer, and network/advanced options folded away. |
 | **🖱️ Drag, select, drop**<br/>Select one or many sessions and drag them onto any known folder **or straight onto a workspace row in DSH's own sidebar**: the header takes the whole group, a session row takes the pointer's position and shows an insertion line between rows. Every drop asks for confirmation and names the workspace it will land in. | **🚦 Confirmed transfer queue**<br/>Repeated pushes/pulls are detected up front; a dialog lets you keep the local copy, overwrite it, or drop that single item. The rest of the queue keeps running in order. |
 | **⚡ One-click sync**<br/>**Sync all** / **Push all** plan the whole device in one go, skip sessions already present by content fingerprint, and report each row as done, skipped or failed. | **🌐 Cross-subnet scanning**<br/>Broadcast stays on the local segment; add CIDRs, IPs or `ip:port` under *Cross-subnet scan*. CIDRs get silent UDP discovery packets, single IPs are also probed over HTTP on 47802–47817 — a firewall that drops UDP no longer hides the peer. |
+| **🚦 Queue that shows its work**<br/>Each transfer is a card with spinner, measured duration, failure reason and a progress track; a sticky bar carries the active item and a meter, and the drawer opens on click. |
 
 ### Three UI promises
 
