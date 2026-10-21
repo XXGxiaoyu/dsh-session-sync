@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>会话同步 · 主界面自检与优化草案</title>
+<style>
+  :root{
+    --bg:#151517; --board:#1b1b1e; --card:#202024; --card-2:#26262b;
+    --stroke:#ffffff14; --stroke-2:#ffffff26; --text:#f2f2f3; --text-2:#a5a5ac; --text-3:#71717a;
+    --brand:#6d8cff; --brand-soft:#6d8cff26; --ok:#22c55e; --ok-soft:#22c55e1f; --warn:#f59e0b; --bad:#ef4444;
+    --r-sm:8px; --r-md:12px; --r-lg:16px; --ease:cubic-bezier(.4,0,.2,1);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:14px/22px -apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;padding:36px 40px 56px}
+  h1{font-size:24px;line-height:32px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em}
+  .lede{color:var(--text-2);font-size:13px;line-height:20px;max-width:920px;margin:0 0 6px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 26px;color:var(--text-3);font-size:12px}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:middle}
+  .board{background:var(--board);border:.5px solid var(--stroke);border-radius:18px;padding:20px 22px 24px;margin:0 0 26px}
+  .board-hd{display:flex;align-items:baseline;gap:10px;margin:0 0 4px}
+  .board-hd h2{font-size:15px;line-height:22px;font-weight:600;margin:0}
+  .board-hd span{color:var(--text-3);font-size:12px}
+  .board-sub{color:var(--text-2);font-size:12.5px;line-height:19px;margin:0 0 18px;max-width:980px}
+  .mono{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+  .chip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;
+    border:.5px solid var(--stroke);color:var(--text-2);font-size:11.5px;line-height:1;background:#ffffff08}
+  .chip.ok{color:#9ae6b4;border-color:#22c55e40;background:#22c55e14}
+  .chip.brand{color:#bcc9ff;border-color:#6d8cff40;background:#6d8cff14}
+  .chip.warn{color:#fcd34d;border-color:#f59e0b40;background:#f59e0b14}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--text-3);flex:none}
+  .dot.on{background:var(--ok);box-shadow:0 0 0 3px #22c55e26;animation:breathe 2.4s var(--ease) infinite}
+  @keyframes breathe{0%,100%{box-shadow:0 0 0 2px #22c55e1f}50%{box-shadow:0 0 0 5px #22c55e12}}
+  .btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--r-md);
+    border:.5px solid var(--stroke-2);background:#ffffff0a;color:var(--text);font-size:13px;cursor:default}
+  .btn.primary{background:#e9e9ee;color:#141416;border-color:transparent;font-weight:500}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--text-2)}
+  .btn.sm{height:26px;padding:0 9px;font-size:12px;border-radius:8px}
+  .btn[disabled]{opacity:.45}
+  .num{display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 4px;
+    border-radius:6px;background:#6d8cff;color:#0d1020;font-size:11px;font-weight:700;margin-left:8px;vertical-align:1px}
+  .anno{color:#c7cedd;font-size:12px;line-height:18px}
+  .anno b{color:#fff;font-weight:600}
+
+  /* phone-free panel */
+  .panel{background:#141416;border:.5px solid var(--stroke);border-radius:14px;padding:22px 26px}
+  .ph{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+  .ph h3{font-size:20px;line-height:28px;font-weight:500;margin:0}
+  .ph .sub{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .sec{margin-top:26px}
+  .sec-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+  .sec-hd h4{font-size:15px;line-height:22px;font-weight:600;margin:0}
+  .sec-hd .meta{color:var(--text-3);font-size:12px}
+  .card{background:var(--card);border:.5px solid var(--stroke);border-radius:var(--r-lg);overflow:hidden}
+  .row{display:flex;align-items:center;gap:12px;padding:12px 16px}
+  .row + .row{border-top:.5px solid var(--stroke)}
+  .grow{flex:1;min-width:0}
+  .t1{font-size:15px;line-height:22px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .t2{font-size:13px;line-height:20px;color:var(--text-2)}
+  .t3{font-size:12px;line-height:18px;color:var(--text-3)}
+  .trunc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .check{width:16px;height:16px;border-radius:5px;border:1.5px solid #ffffff3d;flex:none;display:flex;
+    align-items:center;justify-content:center;font-size:10px;color:#0d1020}
+  .check.on{background:#e9e9ee;border-color:#e9e9ee}
+  .field{display:flex;align-items:center;gap:10px}
+  .input{height:32px;border-radius:10px;border:.5px solid var(--stroke-2);background:#ffffff08;color:var(--text);
+    padding:0 10px;font-size:13px;display:flex;align-items:center;min-width:0}
+  .input .ph-txt{color:var(--text-3)}
+  .switch{width:36px;height:22px;border-radius:999px;background:#ffffff26;position:relative;flex:none}
+  .switch i{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;
+    transition:transform .2s var(--ease)}
+  .switch.on{background:#e9e9ee}
+  .switch.on i{transform:translateX(14px);background:#141416}
+  .selbar{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;background:#ffffff0a;
+    border:.5px solid var(--stroke);margin:8px 0 4px;backdrop-filter:blur(8px)}
+  .ghostline{border-top:.5px dashed #ffffff26}
+  .kv{display:flex;align-items:baseline;gap:8px}
+  .frame-note{display:flex;gap:10px;align-items:flex-start;margin-top:16px;color:var(--text-2);font-size:12.5px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+  .mini{background:#141416;border:.5px solid var(--stroke);border-radius:12px;padding:14px}
+  .mini h5{margin:0 0 8px;font-size:12px;line-height:18px;font-weight:600;color:var(--text-2);letter-spacing:.02em;text-transform:uppercase}
+  table{border-collapse:collapse;width:100%;font-size:12.5px}
+  th,td{text-align:left;padding:8px 10px;border-top:.5px solid var(--stroke);vertical-align:top}
+  th{color:var(--text-3);font-weight:500;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em}
+  td .mono{color:var(--text-2)}
+  .kbd{display:inline-block;min-width:20px;text-align:center;padding:1px 5px;border-radius:5px;
+    border:.5px solid var(--stroke-2);background:#ffffff0a;font-family:ui-monospace,monospace;font-size:11px;color:var(--text-2)}
+  .menu{position:relative;background:var(--card-2);border:.5px solid var(--stroke-2);border-radius:12px;
+    padding:6px;width:172px;box-shadow:0 16px 40px #0009}
+  .menu .it{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font-size:12.5px;color:var(--text-2)}
+  .menu .it.hot{background:#ffffff12;color:var(--text)}
+  .menu .it.danger{color:#fca5a5}
+  .tip{position:absolute;padding:4px 8px;border-radius:8px;background:#2b2b31;border:.5px solid var(--stroke-2);
+    font-size:11.5px;color:var(--text-2);box-shadow:0 8px 24px #0008}
+  .skel{height:12px;border-radius:6px;background:linear-gradient(90deg,#ffffff0d,#ffffff1a,#ffffff0d);background-size:200% 100%}
+</style>
+</head>
+<body>
+
+<h1>会话同步 · 主界面自检与优化草案</h1>
+<p class="lede">目标：把「本机 / 设备 / 会话 / 设置」四块讲清楚——一屏内看得到状态，找不到会话时知道下一步做什么，批量与传输有连续反馈。所有颜色、字号、圆角、动效仍用 DSH 变量。</p>
+<div class="legend">
+  <span><i style="background:#6d8cff"></i>新增 / 改动</span>
+  <span><i style="background:#22c55e"></i>状态色沿用</span>
+  <span><i style="background:#71717a"></i>保持不动</span>
+</div>
+
+<!-- A -->
+<div class="board">
+  <div class="board-hd"><h2>A · 建议主界面</h2><span>设备在线、选中 2 条会话</span></div>
+  <p class="board-sub">三段式：<b>状态条</b>（一眼看到谁在线、端口、延迟）→ <b>设备</b>（一台设备一张卡，会话列表挂在卡里）→ <b>设置</b>（常用展开、高级折叠）。批量操作从「选择条」统一出手，不再分散在每行。</p>
+
+  <div class="panel">
+    <div class="ph">
+      <div>
+        <h3>会话同步</h3>
+        <div class="sub">
+          <span class="chip ok"><span class="dot on"></span>1 台在线 · 2 台已知</span>
+          <span class="chip">同步 <span class="mono">47802</span></span>
+          <span class="chip">发现 <span class="mono">47801</span></span>
+          <span class="chip">本机 <span class="mono">10.178.48.147</span></span>
+        </div>
+      </div>
+      <div class="field">
+        <button class="btn ghost" title="最近刷新 4 秒前">↻ 刷新</button>
+        <button class="btn ghost">⋯</button>
+      </div>
+    </div>
+
+    <!-- 本机 -->
+    <div class="sec">
+      <div class="sec-hd"><h4>本机</h4><span class="meta">别的设备看到的名字</span></div>
+      <div class="card">
+        <div class="row" style="align-items:flex-start">
+          <span class="dot on" style="margin-top:6px"></span>
+          <div class="grow">
+            <div class="field">
+              <span class="t2" style="width:64px">设备名称</span>
+              <div class="input" style="width:210px"><span>lipeiyangdeMacBook-Pro-4</span></div>
+              <button class="btn sm primary">保存</button>
+            </div>
+            <div class="t3 mono" style="margin-top:6px">10.178.48.147:47802 · macOS arm64 · 运行 v0.4.3</div>
+          </div>
+        </div>
+      </div>
+      <div class="frame-note"><span class="anno"><b>改动：</b>名称输入与本机地址/版本合成一行，保存后原地闪一次「已保存」，不再弹全局提示。</span></div>
+    </div>
+
+    <!-- 设备 -->
+    <div class="sec">
+      <div class="sec-hd">
+        <h4>设备</h4>
+        <span class="meta">1 在线 / 共 2 · <span style="color:#6d8cff">给设备改的名字只存在本机</span></span>
+      </div>
+
+      <div class="card" style="margin-bottom:14px">
+        <div class="row">
+          <span class="dot on"></span>
+          <div class="grow">
+            <div class="t1">实验室 Windows <span class="chip brand">已命名</span></div>
+            <div class="t3">
+              <span class="mono">10.178.32.80:47802</span> · Windows · v0.4.3 · 16 个会话 · 3 分钟前在线
+            </div>
+          </div>
+          <div class="field">
+            <button class="btn sm">同步会话</button>
+            <button class="btn ghost sm">⋯</button>
+          </div>
+        </div>
+
+        <!-- 会话工具栏 -->
+        <div class="row" style="gap:8px;border-top:.5px solid var(--stroke);background:#ffffff05">
+          <div class="input" style="width:240px"><span style="color:var(--text-3)">搜索会话…</span></div>
+          <span class="chip brand">全部 16</span>
+          <span class="chip">未拉取 3</span>
+          <span class="chip">已拉取 13</span>
+          <div class="grow"></div>
+          <span class="chip">按时间 ↓</span>
+        </div>
+
+        <!-- 选择条 -->
+        <div class="row" style="padding:10px 16px 0"><div class="selbar" style="flex:1;margin:0">
+          <div class="check on">✓</div>
+          <span class="t2">已选 <b style="color:#fff">2</b> 个会话</span>
+          <div class="grow"></div>
+          <span class="chip">拉取到：未分组 ▾</span>
+          <button class="btn sm primary">拉取 2 个</button>
+          <button class="btn ghost sm">清除</button>
+        </div></div>
+
+        <!-- 会话行 -->
+        <div class="row" style="padding:9px 16px">
+          <div class="check on">✓</div>
+          <div class="grow">
+            <div class="t1">开发 dsh 局域网会话同步插件</div>
+            <div class="t3"><span class="mono">#66ec750b</span> · 10-21 19:07 · <span style="color:#8b9bd4">ds-harness-workspace</span></div>
+          </div>
+          <span class="chip ok">已拉取</span>
+          <button class="btn ghost sm">校验</button>
+        </div>
+        <div class="row" style="padding:9px 16px;background:#ffffff08">
+          <div class="check on">✓</div>
+          <div class="grow">
+            <div class="t1">未命名会话</div>
+            <div class="t3"><span class="mono">#fc4e8e35</span> · 10-21 19:07 · <span class="mono">C:\Users\Administrator\.dsh\profiles\desktop</span></div>
+          </div>
+          <span class="chip">未拉取</span>
+          <span class="field" style="opacity:1"><button class="btn ghost sm">校验</button><button class="btn ghost sm">拉取</button></span>
+        </div>
+        <div class="row" style="padding:9px 16px">
+          <div class="check"></div>
+          <div class="grow">
+            <div class="t1">基于 UEFI 的启动链分析</div>
+            <div class="t3"><span class="mono">#14f5c5c3</span> · 10-21 18:25 · <span style="color:#8b9bd4">ds-harness-workspace</span></div>
+          </div>
+          <span class="chip ok">已拉取</span>
+          <button class="btn ghost sm">校验</button>
+        </div>
+        <div class="row" style="padding:8px 16px;border-top:.5px solid var(--stroke);justify-content:center">
+          <span class="t3">还有 13 个会话 · <span style="color:#bcc9ff">展开</span></span>
+        </div>
+      </div>
+
+      <div class="row" style="padding:0;gap:10px;align-items:center;color:var(--text-3)">
+        <span class="t3" style="padding:2px 0">拖到设备卡片上 = 推送；拖到左侧工作区分组 = 拉取到该分组</span>
+      </div>
+    </div>
+
+    <!-- 设置 -->
+    <div class="sec">
+      <div class="sec-hd"><h4>同步设置</h4><span class="meta">常用 3 项 · 高级折叠</span></div>
+      <div class="card">
+        <div class="row">
+          <div class="grow"><div class="t1">自动拉取</div><div class="t2">每 20 秒检查在线设备，把没拉过的会话同步过来。</div></div>
+          <div class="field"><span class="switch on"><i></i></span></div>
+        </div>
+        <div class="row">
+          <div class="grow"><div class="t1">自动同步目录</div><div class="t2">自动拉下来的会话放到哪里。默认「未分组」。</div></div>
+          <div class="input" style="width:210px;justify-content:space-between"><span>未分组</span><span style="color:var(--text-3)">▾</span></div>
+        </div>
+        <div class="row">
+          <div class="grow"><div class="t1">界面语言</div><div class="t2">默认跟随 DSH；中文系统中文，其它系统 English。</div></div>
+          <div class="input" style="width:210px;justify-content:space-between"><span>跟随 DSH</span><span style="color:var(--text-3)">▾</span></div>
+        </div>
+        <div class="row" style="justify-content:space-between;padding:10px 16px">
+          <span class="t2">网络与高级（端口 · 手动地址 · 跨网段 · 种子）</span>
+          <span class="chip">▸ 展开</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- B -->
+<div class="board">
+  <div class="board-hd"><h2>B · 设备卡与会话行的状态</h2><span>hover / 选中 / 离线 / 未命名</span></div>
+  <p class="board-sub">每行默认只显示「是什么 + 状态」，操作在 hover 时出现；选中用左侧 2px 品牌轨道，不用整行换色，扫读时不闪。</p>
+  <div class="grid2">
+    <div class="mini">
+      <h5>设备：在线 + hover</h5>
+      <div class="card">
+        <div class="row">
+          <span class="dot on"></span>
+          <div class="grow"><div class="t1">实验室 Windows</div><div class="t3 mono">10.178.32.80:47802 · 16 个会话</div></div>
+          <div class="field"><button class="btn sm primary">同步会话</button><button class="btn ghost sm">⋯</button></div>
+        </div>
+      </div>
+      <div class="frame-note"><span class="anno">主操作只有一个（同步会话）；改名/移除/复制地址收进 <b>⋯</b>，避免每张卡三个按钮抢注意力。</span></div>
+    </div>
+    <div class="mini">
+      <h5>设备：离线</h5>
+      <div class="card">
+        <div class="row">
+          <span class="dot"></span>
+          <div class="grow"><div class="t1" style="color:var(--text-2)">旧笔记本</div><div class="t3 mono">10.178.40.12:47802 · 最近 21 分钟前</div></div>
+          <div class="field"><button class="btn sm" disabled>同步会话</button><button class="btn ghost sm">⋯</button></div>
+        </div>
+      </div>
+      <div class="frame-note"><span class="anno">离线保留入口但禁用，hover 提示「设备离线时只能查看」——比整块消失更容易理解。</span></div>
+    </div>
+    <div class="mini">
+      <h5>会话行：默认 / hover / 选中</h5>
+      <div class="card">
+        <div class="row" style="padding:9px 14px">
+          <div class="check"></div>
+          <div class="grow"><div class="t1">基于 UEFI 的启动链分析</div><div class="t3"><span class="mono">#14f5c5c3</span> · 10-21 18:25</div></div>
+          <span class="chip ok">已拉取</span>
+        </div>
+        <div class="row" style="padding:9px 14px;background:#ffffff08">
+          <div class="check"></div>
+          <div class="grow"><div class="t1">未命名会话</div><div class="t3"><span class="mono">#fc4e8e35</span> · 10-21 19:07</div></div>
+          <span class="field"><button class="btn ghost sm">校验</button><button class="btn ghost sm">拉取</button></span>
+        </div>
+        <div class="row" style="padding:9px 14px;box-shadow:inset 2px 0 0 #6d8cff;background:#6d8cff12">
+          <div class="check on">✓</div>
+          <div class="grow"><div class="t1">开发 dsh 局域网会话同步插件</div><div class="t3"><span class="mono">#66ec750b</span> · 10-21 19:07</div></div>
+          <span class="chip ok">已拉取</span>
+        </div>
+      </div>
+      <div class="frame-note"><span class="anno">默认行右侧只留状态徽章；hover 才出「校验 / 拉取」。选中态左侧 2px 品牌轨道 + 8% 底。</span></div>
+    </div>
+    <div class="mini">
+      <h5>⋯ 菜单</h5>
+      <div class="menu" style="margin:0 auto">
+        <div class="it hot">✎ 重命名…</div>
+        <div class="it">⧉ 复制局域网地址</div>
+        <div class="it">↻ 重新拉取列表</div>
+        <div class="it danger">✕ 移除这台设备</div>
+      </div>
+      <div class="frame-note"><span class="anno">危险项放最后、用红色文字，不加二次确认（移除只删本地命名与记录，可重新发现）。</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- C -->
+<div class="board">
+  <div class="board-hd"><h2>C · 空态、批处理与设置</h2><span>第一次打开 / 传输中 / 高级</span></div>
+  <p class="board-sub">空态给三步指引 + 一键复制本机地址；传输用底部迷你条 + 右侧抽屉，不挤占会话列表。</p>
+  <div class="grid2">
+    <div class="mini">
+      <h5>空态：还没有别的设备</h5>
+      <div class="card">
+        <div class="row" style="flex-direction:column;align-items:flex-start;gap:10px;padding:18px 18px">
+          <div class="t1">让另一台设备也安装这个插件</div>
+          <div class="t2">同一局域网内会自动发现；跨网段或 VPN 用下面的手动地址。</div>
+          <div class="field" style="width:100%"><div class="input mono grow" style="width:auto;flex:1">10.178.48.147:47801</div><button class="btn sm">复制</button></div>
+          <div class="field" style="width:100%"><div class="input grow" style="width:auto;flex:1"><span class="ph-txt">手动地址，如 10.0.0.8:47801</span></div><button class="btn sm primary">添加</button></div>
+          <div class="t3">1. 另一台设备安装并启用「会话同步」 · 2. 确认在同一网段 · 3. 仍未发现就填手动地址</div>
+        </div>
+      </div>
+    </div>
+    <div class="mini">
+      <h5>传输：底部迷你条 + 抽屉</h5>
+      <div class="card" style="padding:0">
+        <div class="row" style="padding:10px 14px;gap:10px;background:#ffffff0a">
+          <span class="chip brand">⇣ 正在拉取 2 / 5</span>
+          <div class="grow"><div class="skel" style="width:100%;height:4px"></div></div>
+          <span class="t3">展开</span>
+        </div>
+        <div class="row" style="padding:12px 14px;flex-direction:column;align-items:stretch;gap:8px">
+          <div class="kv"><span class="chip ok">✓</span><div class="t2">开发 dsh 局域网会话同步插件</div></div>
+          <div class="kv"><span class="chip ok">✓</span><div class="t2">基于 UEFI 的启动链分析</div></div>
+          <div class="kv"><span class="chip warn">↻</span><div class="t2">未命名会话 · 重试 1/3</div></div>
+          <div class="kv"><span class="chip" style="color:#fca5a5;border-color:#ef444440">!</span><div class="t2">Session 1 · 校验失败</div></div>
+        </div>
+      </div>
+      <div class="frame-note"><span class="anno">队列不再插在列表中间；失败行给「重试 / 跳过」，整批结束给一条汇总，3 秒后自动收起。</span></div>
+    </div>
+    <div class="mini">
+      <h5>高级设置（折叠）</h5>
+      <div class="card">
+        <div class="row" style="padding:10px 14px"><div class="t2 grow">同步端口</div><span class="chip mono">47802</span></div>
+        <div class="row" style="padding:10px 14px"><div class="t2 grow">发现端口</div><span class="chip mono">47801</span></div>
+        <div class="row" style="padding:10px 14px;flex-direction:column;align-items:stretch;gap:6px">
+          <div class="t2">跨网段扫描</div>
+          <div class="input mono" style="height:56px;align-items:flex-start;padding:8px 10px;line-height:18px">192.168.5.0/24<br>10.0.0.7<br><span class="ph-txt">每行一个 CIDR 或 IP</span></div>
+        </div>
+        <div class="row" style="padding:10px 14px;border-top:0"><div class="t2 grow">种子地址（手动指定对端）</div><span class="chip">3 个</span></div>
+      </div>
+    </div>
+    <div class="mini">
+      <h5>校验：失败时才展开</h5>
+      <div class="card">
+        <div class="row" style="padding:10px 14px;align-items:flex-start">
+          <div class="grow">
+            <div class="t2" style="color:#fca5a5">校验失败 · 字节不一致</div>
+            <div class="t3 mono" style="word-break:break-all;color:var(--text-2)">a3f1…9be2（本机）↔ 7c02…41d8（对端）</div>
+          </div>
+          <div class="field"><button class="btn ghost sm">复制摘要</button><button class="btn sm">仍要拉取</button></div>
+        </div>
+      </div>
+      <div class="frame-note"><span class="anno">成功时不占一行：12 位前缀 + 悬停看全量。失败才展开两段摘要与「仍要拉取」。</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- D -->
+<div class="board">
+  <div class="board-hd"><h2>D · 动效与键盘</h2><span>全部 120–240ms，遵循 reduced-motion</span></div>
+  <div class="grid2">
+    <div class="mini">
+      <h5>动效</h5>
+      <table>
+        <tr><th>场景</th><th>动作</th><th>时长 / 曲线</th></tr>
+        <tr><td>设备上线</td><td>状态点呼吸一次 + 行淡入</td><td class="mono">240ms · standard</td></tr>
+        <tr><td>行 hover / 选中</td><td>底色 6%→10%，左侧轨道 0→2px</td><td class="mono">120ms · standard</td></tr>
+        <tr><td>选择条出现</td><td>高度 0→40，透明度 0→1</td><td class="mono">160ms · decelerate</td></tr>
+        <tr><td>传输抽屉</td><td>translateX 100%→0 + 背后遮罩 20%</td><td class="mono">220ms · standard</td></tr>
+        <tr><td>按钮按下</td><td>scale .98</td><td class="mono">90ms · linear</td></tr>
+        <tr><td>刷新</td><td>图标旋转 700ms，结束后显示「4 秒前」</td><td class="mono">700ms · linear</td></tr>
+      </table>
+    </div>
+    <div class="mini">
+      <h5>键盘与命中区</h5>
+      <table>
+        <tr><th>键</th><th>行为</th></tr>
+        <tr><td><span class="kbd">/</span></td><td>聚焦会话搜索</td></tr>
+        <tr><td><span class="kbd">J</span> <span class="kbd">K</span></td><td>上下移动焦点行</td></tr>
+        <tr><td><span class="kbd">Space</span></td><td>选中 / 取消焦点行</td></tr>
+        <tr><td><span class="kbd">⌘A</span></td><td>全选当前设备会话</td></tr>
+        <tr><td><span class="kbd">Enter</span></td><td>拉取焦点行</td></tr>
+        <tr><td><span class="kbd">Esc</span></td><td>取消选择 / 关闭抽屉</td></tr>
+        <tr><td>窄屏 &lt;860px</td><td>行变两行：标题行 + 操作行；选择条贴底</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="frame-note" style="margin-top:14px"><span class="anno"><b>取舍：</b>不改 DSH 侧栏 DOM；面板内所有控件沿用既有 <span class="mono">--dsw-alias-*</span> 令牌与 32px 控件高度，深/浅色主题自动跟随。</span></div>
+</div>
+
+</body>
+</html>

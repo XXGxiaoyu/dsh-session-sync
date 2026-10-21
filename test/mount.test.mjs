@@ -32,7 +32,23 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
 const React = require('react')
 const { act } = require('react')
-const { createRoot } = require('react-dom/client')
+const { createRoot: baseCreateRoot } = require('react-dom/client')
+
+// Every test gets a clean document and unmounts its roots afterwards: React
+// roots keep polling the host, so leaking them piles up timers and DOM nodes.
+const liveRoots = new Set()
+function createRoot(container) {
+  const root = baseCreateRoot(container)
+  liveRoots.add(root)
+  return root
+}
+test.afterEach(() => {
+  for (const root of liveRoots) {
+    try { root.unmount() } catch { /* already gone */ }
+  }
+  liveRoots.clear()
+  document.body.innerHTML = '<div id="root"></div>'
+})
 
 function statePayload(overrides = {}) {
   const now = Date.now()
@@ -167,6 +183,10 @@ test('settings page shows discovered devices and renames one inline', async () =
   const onlineRow = container.querySelector('[data-peer="peer-1"]')
   assert.ok(onlineRow.querySelector('.ss-dot').className.includes('on'))
 
+  const menuButton = onlineRow.querySelector('.ss-menu-wrap > button')
+  await act(async () => {
+    menuButton.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
+  })
   const renameButton = [...onlineRow.querySelectorAll('button')].find((button) => button.textContent === t('device.rename'))
   await act(async () => {
     renameButton.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
@@ -228,7 +248,7 @@ test('the main panel lists a peer\'s sessions and verifies one by sha256', async
   // DeviceRow owns the rename controls; the session buttons are siblings inside
   // the per-device wrapper, so both live under `box`.
   const box = peerRow.parentElement
-  const show = [...box.querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  const show = peerRow.querySelector('.ss-device-name')
   await act(async () => {
     show.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
   })
@@ -417,7 +437,7 @@ test('one-click sync dedupes imported sessions and reports them as skipped', asy
   await act(async () => { root.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
 
-  const open = [...container.querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  const open = container.querySelector('[data-peer="peer-1"] .ss-device-name')
   await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
   assert.match(container.textContent, /未拉取的会话/)
@@ -461,7 +481,7 @@ test('dragging a peer session onto a workspace folder pulls it into that folder'
   await act(async () => { root.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
 
-  const open = [...container.querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  const open = container.querySelector('[data-peer="peer-1"] .ss-device-name')
   await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 
@@ -523,7 +543,7 @@ test('a skipped item keeps the rest of the queue moving', async () => {
   await act(async () => { root.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
 
-  const open = [...container.querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  const open = container.querySelector('[data-peer="peer-1"] .ss-device-name')
   await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 
@@ -559,7 +579,7 @@ test('choosing overwrite asks the receiver to bypass its fingerprint check', asy
   await act(async () => { root.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
 
-  const open = [...container.querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  const open = container.querySelector('[data-peer="peer-1"] .ss-device-name')
   await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 
@@ -592,7 +612,7 @@ test('checking a session enables the selection actions and scopes the plan', asy
   await act(async () => { root.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
 
-  const open = [...container.querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  const open = container.querySelector('[data-peer="peer-1"] .ss-device-name')
   await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 
@@ -636,12 +656,14 @@ test('the device list never shows this machine, and unnamed sessions carry their
   })
   await act(async () => { await Promise.resolve() })
 
-  assert.equal(container.querySelector('.ss-self'), null, 'this machine is not a device row')
-  assert.doesNotMatch(container.textContent, /10\.1\.2\.3:47802/, 'its own address is not advertised to the user as a device')
-  assert.equal(container.querySelector('input.ss-input').value, '本机工作台', 'the name still lives in the rename field')
-  assert.match(container.querySelector('.ss-row[data-peer]').textContent, /隔壁的 Mac/)
+  assert.ok(container.querySelector('.ss-self'), 'this machine is the local card, not a device row')
+  assert.deepEqual([...container.querySelectorAll('[data-peer]')].map((row) => row.getAttribute('data-peer')), ['peer-mac'], 'its own address is never a device row')
+  assert.equal(container.querySelector('.ss-self input.ss-input').value, '本机工作台', 'the name still lives in the rename field')
+  const macRow = container.querySelector('[data-peer="peer-mac"]')
+  assert.ok(macRow, 'the other machine is listed as a device')
+  assert.match(macRow.textContent, /隔壁的 Mac/)
 
-  const showButton = [...container.querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  const showButton = macRow.querySelector('.ss-device-name')
   await act(async () => {
     showButton.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
   })
@@ -676,10 +698,9 @@ test('a peer on this machine is grouped under 本机, not counted as a device', 
   await act(async () => { root.render(React.createElement(panel.component, { t })) })
   await act(async () => { await Promise.resolve() })
 
-  assert.equal(container.querySelector('.ss-local-group'), null, 'same-host instances are not shown at all')
-  assert.doesNotMatch(container.textContent, /同一台机器上的其他 DSH 实例/)
-  assert.equal(container.querySelectorAll('.ss-row[data-peer]').length, 1, 'only the other machine is a device row')
-  assert.match(container.querySelector('.ss-row[data-peer]').textContent, /隔壁的 Mac/)
+  assert.doesNotMatch(container.textContent, /同机另一个 profile/, 'same-host instances are not shown at all')
+  assert.equal(container.querySelectorAll('[data-peer]').length, 1, 'only the other machine is a device row')
+  assert.match(container.querySelector('[data-peer]').textContent, /隔壁的 Mac/)
   assert.match(container.textContent, /1 在线 \/ 共 1/, 'the total counts other machines only')
 
   await act(async () => { root.unmount() })
@@ -705,7 +726,7 @@ test('two profiles on one address collapse into a single device row', async () =
   await act(async () => { root.render(React.createElement(panel.component, { t })) })
   await act(async () => { await Promise.resolve() })
 
-  assert.equal(container.querySelectorAll('.ss-row[data-peer]').length, 1, 'one IP is one device, whatever the port')
+  assert.equal(container.querySelectorAll('[data-peer]').length, 1, 'one IP is one device, whatever the port')
   assert.match(container.textContent, /1 在线 \/ 共 1/, 'the count follows the collapsed list')
   await act(async () => { root.unmount() })
 })
@@ -736,7 +757,7 @@ test('a session dragged over a real sidebar row drops into that workspace', asyn
   const panelRoot = createRoot(document.getElementById('root'))
   await act(async () => { panelRoot.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
-  const open = [...document.getElementById('root').querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  const open = document.getElementById('root').querySelector('[data-peer="peer-1"] .ss-device-name')
   await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 
@@ -831,7 +852,7 @@ test('a nested expanded group accepts the drop anywhere inside it', async () => 
   const panelRoot = createRoot(document.getElementById('root'))
   await act(async () => { panelRoot.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
-  const open = [...document.getElementById('root').querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  const open = document.getElementById('root').querySelector('[data-peer="peer-1"] .ss-device-name')
   await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 
@@ -907,7 +928,7 @@ test('a row nested inside DSH\'s div/span section resolves to its group header',
   const panelRoot = createRoot(document.getElementById('root'))
   await act(async () => { panelRoot.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
-  const open = [...document.getElementById('root').querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  const open = document.getElementById('root').querySelector('[data-peer="peer-1"] .ss-device-name')
   await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 

@@ -138,7 +138,7 @@ test('settings page renders an empty but honest device list', () => {
   const html = renderToStaticMarkup(React.createElement(settings.component, { t }))
   assert.match(html, /会话同步/)
   assert.match(html, /本机/)
-  assert.match(html, /暂未发现其他设备/)
+  assert.match(html, /让另一台设备也安装这个插件/)
   assert.match(html, /同步设置/)
 })
 

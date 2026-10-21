@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0 — 2026-10-21
+
+- **Session panel, rebuilt.** Status chips (online / ports / own address), a slim local-device card, one row per device with meta line, and the sessions toolbar now live in one flat, DSH-native layout.
+- **Search, filter, sort.** The session list gained a search box (`/` focuses it), 全部 / 未拉取 / 已拉取 filters and a time/title sort — plus ↑↓ / Space / Enter keyboard navigation.
+- **Quieter rows.** Every row carries a status chip (未拉取 / 已拉取); 校验 and 拉取 appear on hover or keyboard focus, so a long list no longer reads as a wall of buttons.
+- **Device card + ⋯ menu.** Rename, copy LAN address, refresh, push and forget moved into a per-device menu; clicking the name opens its sessions. The whole card stays a push drop target.
+- **Queue moved out of the list.** Transfers now summarise in a bottom bar and open in a right-side drawer, leaving the session list uninterrupted.
+- **Settings trimmed.** Language, auto-sync folder, custom folder and auto-pull stay visible; ports, manual addresses, cross-subnet scan and seeds fold under “Network & advanced”.
+- **Better empty state.** Three steps, one-click copy of this machine's address and an inline manual address box.
+- `preview.png` refreshed; 42 tests pass.
+
 ## 0.4.3 — 2026-10-21
 
 - **修复拖拽时的重影。** 浏览器原生拖影和插件胶囊会同时出现、互相压字（截图中「未命名会话」盖在侧栏行上）。现在把原生拖影换成 1×1 透明图，只用插件自己的拖影（标题 / 事件数 / `+N`），跟随指针并有最大边界，不再压住侧栏文字。
