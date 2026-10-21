@@ -594,7 +594,7 @@ test('checking a session enables the selection actions and scopes the plan', asy
   await act(async () => { root.unmount() })
 })
 
-test('the device list always shows this machine, and unnamed sessions carry their id', async () => {
+test('the device list never shows this machine, and unnamed sessions carry their id', async () => {
   const { registered, t } = loadComponents()
   const json = (data) => ({ ok: true, status: 200, async json() { return data } })
   globalThis.fetch = async (url, init) => {
@@ -605,7 +605,10 @@ test('the device list always shows this machine, and unnamed sessions carry thei
         sessions: [{ id: 'session-abcdef12-9999-4f2c', title: '', createdAt: Date.now(), events: 3, cwd: '/work' }],
       })
     }
-    return json(statePayload({ self: { id: 'self-1', name: '本机工作台', ip: '10.1.2.3', port: 47802 } }))
+    return json(statePayload({
+      self: { id: 'self-1', name: '本机工作台', ip: '10.1.2.3', port: 47802 },
+      peers: [{ id: 'peer-mac', name: '隔壁的 Mac', remoteName: 'mac', address: '10.1.2.9', port: 47802, online: true, lastSeen: Date.now(), sameMachine: false }],
+    }))
   }
   const panel = registered.find((entry) => entry.options.key === 'session-sync')
   assert.ok(panel, 'the main panel is registered under the plugin id')
@@ -616,11 +619,10 @@ test('the device list always shows this machine, and unnamed sessions carry thei
   })
   await act(async () => { await Promise.resolve() })
 
-  const selfRow = container.querySelector('.ss-self')
-  assert.ok(selfRow, 'this device is listed even when no peer answered')
-  assert.match(selfRow.textContent, /本机工作台/)
-  assert.match(selfRow.textContent, /10\.1\.2\.3:47802/, 'the address other machines can dial is visible')
-  assert.equal(container.querySelectorAll('.ss-self').length, 1, 'self is shown once, outside the peer list')
+  assert.equal(container.querySelector('.ss-self'), null, 'this machine is not a device row')
+  assert.doesNotMatch(container.textContent, /10\.1\.2\.3:47802/, 'its own address is not advertised to the user as a device')
+  assert.equal(container.querySelector('input.ss-input').value, '本机工作台', 'the name still lives in the rename field')
+  assert.match(container.querySelector('.ss-row[data-peer]').textContent, /隔壁的 Mac/)
 
   const showButton = [...container.querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
   await act(async () => {
@@ -663,5 +665,30 @@ test('a peer on this machine is grouped under 本机, not counted as a device', 
   assert.match(container.querySelector('.ss-row[data-peer]').textContent, /隔壁的 Mac/)
   assert.match(container.textContent, /1 在线 \/ 共 1/, 'the total counts other machines only')
 
+  await act(async () => { root.unmount() })
+})
+
+test('two profiles on one address collapse into a single device row', async () => {
+  const { registered, t } = loadComponents()
+  const json = (data) => ({ ok: true, status: 200, async json() { return data } })
+  globalThis.fetch = async (url, init) => {
+    const body = JSON.parse(init.body)
+    if (body.action === 'peerSessions') return json({ ok: true, sessions: [] })
+    return json(statePayload({
+      self: { id: 'self-1', name: '本机工作台', ip: '10.1.2.3', port: 47802 },
+      peers: [
+        { id: 'peer-a', name: '工作室的 iMac', remoteName: 'imac', address: '10.9.0.7', port: 47802, online: true, lastSeen: Date.now() },
+        { id: 'peer-b', name: '工作室的 iMac', remoteName: 'imac', address: '10.9.0.7', port: 47803, online: false, lastSeen: Date.now() - 900_000 },
+      ],
+    }))
+  }
+  const panel = registered.find((entry) => entry.options.key === 'session-sync')
+  const container = document.getElementById('root')
+  const root = createRoot(container)
+  await act(async () => { root.render(React.createElement(panel.component, { t })) })
+  await act(async () => { await Promise.resolve() })
+
+  assert.equal(container.querySelectorAll('.ss-row[data-peer]').length, 1, 'one IP is one device, whatever the port')
+  assert.match(container.textContent, /1 在线 \/ 共 1/, 'the count follows the collapsed list')
   await act(async () => { root.unmount() })
 })

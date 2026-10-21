@@ -140,7 +140,7 @@ The GUI side (`/session-sync/api`) runs on DSH's own loopback web server and is 
 - **Imports keep the source `createdAt`, re-index ids and seq.** The id must be unique per machine; seq starts at 0 and stays contiguous; `createdAt` is preserved so content fingerprints agree.
 - **Cross-machine `cwd`.** The source cwd is kept when it exists here, otherwise it falls back to `process.cwd()` — a session pointing at a path that does not exist would vanish from the workspace list.
 - **SHA-256 is byte-exact.** Exports and imports serialize the same object, so key order is identical and digests are comparable. Mismatch aborts before persistence.
-- **One address is one machine.** Peers whose address belongs to this host (another profile, another port) are dropped from the device list entirely; the counter only ever means *other machines*.
+- **Your own machine is not a device.** The device list only ever holds other machines: peers on this host's address are dropped on arrival (and pruned from history on boot), and several peers on one IP collapse into the freshest row. Rename this machine in the 本机 section; the counter only means *other machines*.
 - **Fingerprints, not ids, dedupe auto-pull.** `state.signatures[sha1(createdAt, event shape, first preview)]` is recorded on export and import; auto-pull skips anything already known. Without it, two auto-pulling machines would keep re-importing the same conversation under new ids.
 - **Everything local stays local.** Nicknames, import records and settings never leave `<home>/session-sync/state.json`.
 
