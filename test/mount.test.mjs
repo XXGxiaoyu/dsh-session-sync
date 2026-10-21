@@ -325,3 +325,271 @@ test('the language select pins the copy and stores the choice on the host', asyn
   await act(async () => { root.unmount() })
   container.remove()
 })
+
+function jsonReply(data) {
+  return { ok: true, status: 200, async json() { return data } }
+}
+
+function sessionPayload() {
+  const now = Date.now()
+  return {
+    version: 4,
+    id: 'l-1',
+    createdAt: now - 60_000,
+    cwd: '/tmp/ws',
+    events: [
+      { seq: 0, type: 'session', time: now - 60_000, data: {} },
+      { seq: 1, type: 'user/message', time: now - 50_000, data: { content: [{ type: 'text', text: 'hi' }] } },
+    ],
+  }
+}
+
+function transfer() {
+  const store = new Map()
+  return {
+    types: ['application/x-dsh-session-sync'],
+    setData: (type, value) => store.set(type, value),
+    getData: (type) => store.get(type) ?? '',
+  }
+}
+
+test('a background refresh never wipes what the user is typing', async () => {
+  const { registered, t } = loadComponents()
+  const calls = []
+  stubFetch(() => statePayload(), calls)
+  const container = document.getElementById('root')
+  const root = createRoot(container)
+  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  await act(async () => { root.render(React.createElement(page.component, { t })) })
+  await act(async () => { await Promise.resolve() })
+
+  const name = container.querySelector('input.ss-input')
+  await act(async () => { setInputValue(name, '还没保存的名字') })
+  assert.equal(name.value, '还没保存的名字')
+
+  const refresh = [...container.querySelectorAll('button')].find((button) => button.textContent === t('common.refresh'))
+  await act(async () => { refresh.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
+
+  assert.equal(container.querySelector('input.ss-input').value, '还没保存的名字', 'typing survives the poll')
+  await act(async () => { root.unmount() })
+})
+
+test('one-click sync dedupes imported sessions and reports them as skipped', async () => {
+  const { registered, t } = loadComponents()
+  const calls = []
+  globalThis.fetch = async (url, init) => {
+    const body = JSON.parse(init.body)
+    calls.push({ url: String(url), body })
+    if (body.action === 'peerSessions') {
+      return jsonReply({
+        ok: true,
+        sessions: [
+          { id: 'remote-1', title: '未拉取的会话', createdAt: Date.now() - 1000, eventCount: 3, imported: null },
+          { id: 'remote-2', title: '已经拉过的会话', createdAt: Date.now() - 2000, eventCount: 3, imported: { localId: 'l-2' } },
+        ],
+      })
+    }
+    if (body.action === 'pull') return jsonReply({ ok: true, imported: { localId: 'new-1', title: '未拉取的会话' } })
+    if (body.action === 'localSessions') return jsonReply({ ok: true, sessions: [{ id: 'l-1', title: '本机会话', cwd: '/tmp/ws', updatedAt: Date.now() }] })
+    return jsonReply(statePayload())
+  }
+  const container = document.getElementById('root')
+  const root = createRoot(container)
+  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  await act(async () => { root.render(React.createElement(page.component, { t })) })
+  await act(async () => { await Promise.resolve() })
+
+  const open = [...container.querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
+  assert.match(container.textContent, /未拉取的会话/)
+
+  const syncAll = [...container.querySelectorAll('button')].find((button) => button.textContent === t('device.pullAll'))
+  await act(async () => { syncAll.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  assert.ok(container.querySelector('.ss-modal'), 'a second confirmation is required')
+  assert.match(container.querySelector('.ss-modal').textContent, /1/, 'the duplicate is called out')
+
+  const confirm = [...container.querySelectorAll('.ss-modal button')].find((button) => button.textContent === t('plan.confirm'))
+  await act(async () => { confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 400)) })
+
+  const pulls = calls.filter((call) => call.body.action === 'pull')
+  assert.equal(pulls.length, 1, 'only the session that is not imported yet is transferred')
+  assert.equal(pulls[0].body.sessionId, 'remote-1')
+  assert.equal(calls.filter((call) => call.body.action === 'push').length, 0, 'sync means pull direction')
+  assert.match(container.textContent, /跳过|Skipped/, 'the duplicate is reported as skipped in the queue')
+  await act(async () => { root.unmount() })
+})
+
+test('dragging a peer session onto a workspace folder pulls it into that folder', async () => {
+  const { registered, t } = loadComponents()
+  const calls = []
+  globalThis.fetch = async (url, init) => {
+    const body = JSON.parse(init.body)
+    calls.push({ url: String(url), body })
+    if (body.action === 'peerSessions') {
+      return jsonReply({
+        ok: true,
+        sessions: [{ id: 'remote-1', title: '拖过来的会话', createdAt: Date.now() - 1000, eventCount: 3, imported: null, cwd: '/Users/wang/projects/a' }],
+      })
+    }
+    if (body.action === 'pull') return jsonReply({ ok: true, imported: { localId: 'new-1', title: '拖过来的会话' } })
+    if (body.action === 'localSessions') return jsonReply({ ok: true, sessions: [{ id: 'l-1', title: '本机会话', cwd: '/tmp/ws', updatedAt: Date.now() }] })
+    return jsonReply(statePayload())
+  }
+  const container = document.getElementById('root')
+  const root = createRoot(container)
+  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  await act(async () => { root.render(React.createElement(page.component, { t })) })
+  await act(async () => { await Promise.resolve() })
+
+  const open = [...container.querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
+
+  const item = container.querySelector('.ss-item[draggable="true"]')
+  const folder = [...container.querySelectorAll('.ss-drop')].find((row) => row.textContent.includes('/tmp/ws'))
+  assert.ok(item, 'sessions are draggable')
+  assert.ok(folder, 'known folders are drop targets')
+
+  const data = transfer()
+  const dragStart = new dom.window.Event('dragstart', { bubbles: true })
+  Object.defineProperty(dragStart, 'dataTransfer', { value: data })
+  await act(async () => { item.dispatchEvent(dragStart) })
+  assert.match(data.getData('application/x-dsh-session-sync'), /"direction":"pull"/)
+
+  const drop = new dom.window.Event('drop', { bubbles: true })
+  Object.defineProperty(drop, 'dataTransfer', { value: data })
+  await act(async () => { folder.dispatchEvent(drop) })
+  assert.ok(container.querySelector('.ss-modal'), 'dropping opens the confirmation dialog')
+  assert.match(container.querySelector('.ss-modal').textContent, /\/tmp\/ws/)
+
+  const confirm = [...container.querySelectorAll('.ss-modal button')].find((button) => button.textContent === t('plan.confirm'))
+  await act(async () => { confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 400)) })
+
+  const pull = calls.find((call) => call.body.action === 'pull')
+  assert.ok(pull, 'the drop results in a pull')
+  assert.equal(pull.body.sessionId, 'remote-1')
+  assert.equal(pull.body.cwd, '/tmp/ws', 'the conversation lands in the folder it was dropped on')
+  await act(async () => { root.unmount() })
+})
+
+function threeSessionFetch(calls, options = {}) {
+  return async (url, init) => {
+    const body = JSON.parse(init.body)
+    calls.push({ url: String(url), body })
+    if (body.action === 'peerSessions') {
+      return jsonReply({
+        ok: true,
+        sessions: [
+          { id: 'remote-1', title: '会话一', createdAt: Date.now() - 1000, eventCount: 3, imported: null },
+          { id: 'remote-2', title: '会话二', createdAt: Date.now() - 2000, eventCount: 3, imported: { localId: 'l-2' } },
+          { id: 'remote-3', title: '会话三', createdAt: Date.now() - 3000, eventCount: 3, imported: null },
+        ],
+      })
+    }
+    if (body.action === 'pull') return jsonReply({ ok: true, imported: { localId: `new-${body.sessionId}` } })
+    if (body.action === 'localSessions') return jsonReply({ ok: true, sessions: [{ id: 'l-1', title: '本机会话', cwd: '/tmp/ws', updatedAt: Date.now() }] })
+    return jsonReply(statePayload(options.state ?? {}))
+  }
+}
+
+test('a skipped item keeps the rest of the queue moving', async () => {
+  const { registered, t } = loadComponents()
+  const calls = []
+  globalThis.fetch = threeSessionFetch(calls)
+  const container = document.getElementById('root')
+  const root = createRoot(container)
+  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  await act(async () => { root.render(React.createElement(page.component, { t })) })
+  await act(async () => { await Promise.resolve() })
+
+  const open = [...container.querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
+
+  const syncAll = [...container.querySelectorAll('button')].find((button) => button.textContent === t('device.pullAll'))
+  await act(async () => { syncAll.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+
+  const select = container.querySelector('.ss-modal select.ss-select')
+  assert.ok(select, 'the duplicate row offers a choice')
+  await act(async () => {
+    const setter = Object.getOwnPropertyDescriptor(dom.window.HTMLSelectElement.prototype, 'value').set
+    setter.call(select, 'skip')
+    select.dispatchEvent(new dom.window.Event('change', { bubbles: true }))
+  })
+
+  const confirm = [...container.querySelectorAll('.ss-modal button')].find((button) => button.textContent === t('plan.confirm'))
+  await act(async () => { confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 600)) })
+
+  const pulls = calls.filter((call) => call.body.action === 'pull').map((call) => call.body.sessionId)
+  assert.deepEqual(pulls.sort(), ['remote-1', 'remote-3'], 'both fresh sessions go through, the skipped one does not block them')
+  const text = container.textContent
+  assert.match(text, /跳过|Skipped/)
+  await act(async () => { root.unmount() })
+})
+
+test('choosing overwrite asks the receiver to bypass its fingerprint check', async () => {
+  const { registered, t } = loadComponents()
+  const calls = []
+  globalThis.fetch = threeSessionFetch(calls)
+  const container = document.getElementById('root')
+  const root = createRoot(container)
+  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  await act(async () => { root.render(React.createElement(page.component, { t })) })
+  await act(async () => { await Promise.resolve() })
+
+  const open = [...container.querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
+
+  const syncAll = [...container.querySelectorAll('button')].find((button) => button.textContent === t('device.pullAll'))
+  await act(async () => { syncAll.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+
+  const select = container.querySelector('.ss-modal select.ss-select')
+  await act(async () => {
+    const setter = Object.getOwnPropertyDescriptor(dom.window.HTMLSelectElement.prototype, 'value').set
+    setter.call(select, 'copy')
+    select.dispatchEvent(new dom.window.Event('change', { bubbles: true }))
+  })
+  const confirm = [...container.querySelectorAll('.ss-modal button')].find((button) => button.textContent === t('plan.confirm'))
+  await act(async () => { confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 600)) })
+
+  const overwrite = calls.find((call) => call.body.action === 'pull' && call.body.sessionId === 'remote-2')
+  assert.ok(overwrite, 'the duplicated session is transferred')
+  assert.equal(overwrite.body.force, true)
+  await act(async () => { root.unmount() })
+})
+
+test('checking a session enables the selection actions and scopes the plan', async () => {
+  const { registered, t } = loadComponents()
+  const calls = []
+  globalThis.fetch = threeSessionFetch(calls)
+  const container = document.getElementById('root')
+  const root = createRoot(container)
+  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  await act(async () => { root.render(React.createElement(page.component, { t })) })
+  await act(async () => { await Promise.resolve() })
+
+  const open = [...container.querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
+
+  const boxes = [...container.querySelectorAll('input.ss-check')]
+  assert.ok(boxes.length >= 4, 'the header has a select-all box and every session has one')
+  await act(async () => { boxes[1].click() })
+  await act(async () => { await Promise.resolve() })
+
+  assert.match(container.textContent, new RegExp(t('sessions.selected', { n: 1 })))
+  const selectedButton = [...container.querySelectorAll('button')].find((button) => button.textContent === t('sessions.syncSelected'))
+  assert.equal(selectedButton.disabled, false, 'selecting one session enables the action')
+
+  await act(async () => { selectedButton.click() })
+  const rows = [...container.querySelectorAll('.ss-modal-row')]
+  assert.equal(rows.length, 1, 'the dialog plans only the selected session')
+  await act(async () => { root.unmount() })
+})

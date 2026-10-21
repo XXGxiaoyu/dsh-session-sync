@@ -22,6 +22,8 @@
 | **📡 Zero-config discovery**<br/>UDP broadcast on every IPv4 interface with a 4s beacon. A peer that just appeared gets an immediate unicast reply, so new devices show up without waiting for the next round. | **🏷️ Local-only nicknames**<br/>Stored in `<home>/session-sync/state.json` and keyed by a stable **device id** (uuid) — not IP, not hostname. The peer renaming itself never overwrites your label. |
 | **🗂️ Browse · pull · push**<br/>See each device's sessions with title, cwd and time; pull one into this machine or push one of yours out. Imported rows are marked as pulled. | **🔐 SHA-256 verification**<br/>Exports carry `sha256 = SHA-256(JSON.stringify({format, session, events}))`; imports compare it **before writing a byte** and refuse with HTTP 409 `checksum-mismatch`. Each row has a *Verify* action. |
 | **🔁 Optional auto-pull**<br/>Every 20s, pull sessions you have not pulled yet. Content fingerprints (not ids) stop two machines with auto-pull on from bouncing one conversation back and forth forever. | **🎨 Native look, i18n**<br/>Built from DSH design tokens (colors, radii, type scale, 0.2s transitions), so light/dark follow the host. Language follows DSH by default, with explicit 中文 / English overrides. |
+| **🖱️ Drag, select, drop**<br/>Select one or many sessions and drag them onto any known folder — every drop asks for confirmation and names the folder the conversation will be imported into. | **🚦 Confirmed transfer queue**<br/>Repeated pushes/pulls are detected up front; a dialog lets you keep the local copy, overwrite it, or drop that single item. The rest of the queue keeps running in order. |
+| **⚡ One-click sync**<br/>**Sync all** / **Push all** plan the whole device in one go, skip sessions already present by content fingerprint, and report each row as done, skipped or failed. | **🌐 Cross-subnet scanning**<br/>Broadcast stays on the local segment; add CIDRs or IPs under *Cross-subnet scan* and the plugin probes those hosts' discovery ports in the background, so devices in another VLAN show up too. |
 
 ## 🚀 Installation
 
@@ -107,6 +109,7 @@ The UI uses DSH's own CSS variables rather than copied hex values: `--dsw-alias-
 | `home` | `$DSH_HOME` or `~/.dsh` | Root for state and sessions |
 | `autoPullIntervalMs` | `20000` | Auto-pull interval (lowered in tests) |
 | `verbose` | `true` | Turn plugin logging off |
+| `subnets` | `[]` | Extra CIDRs/IPs to sweep for devices when UDP broadcast cannot cross a router (e.g. `192.168.5.0/24`, `10.0.0.7`) |
 
 ## 🔌 LAN protocol (`/v1/*`)
 
@@ -118,7 +121,7 @@ Binds `0.0.0.0`; every route except `/v1/health` requires `x-dsh-session-sync: 1
 | GET | `/v1/info` | Device id, name, session count, version |
 | GET | `/v1/sessions?limit=N` | Session summaries |
 | GET | `/v1/sessions/:id` | Export `{format:'dsh-session-sync/1', session, events, sha256}` |
-| POST | `/v1/sessions` | Import the same payload (verified when `sha256` is present), returns the new id |
+| POST | `/v1/sessions` | Import the same payload (verified when `sha256` is present), returns the new id; `?force=1` skips the receiver-side fingerprint check |
 
 Discovery is a UDP broadcast: every 4s a `dsh-session-sync/hello` datagram (`{id, name, port, platform, version, sessions}`) goes to each IPv4 interface's broadcast address, `127.0.0.1`, and any configured seeds; unknown ids are answered by unicast right away.
 

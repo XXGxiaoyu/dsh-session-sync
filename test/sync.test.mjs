@@ -18,6 +18,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import { apply as applyPlugin } from '../lib/index.js'
+import { expandTarget } from '../lib/discovery.js'
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -465,5 +466,61 @@ test('sha256 pins every byte of a session, and a tampered payload is refused', a
   } finally {
     await a.stop()
     a.handle.store.dispose()
+  }
+})
+
+test('cross-subnet scan targets are validated, persisted and expanded', async () => {
+  assert.deepEqual(expandTarget('192.168.5.0/30'), ['192.168.5.1', '192.168.5.2'])
+  assert.deepEqual(expandTarget('10.0.0.7'), ['10.0.0.7'])
+  assert.deepEqual(expandTarget('nonsense'), [])
+  assert.equal(expandTarget('10.0.0.0/16').length, 4096, 'a /16 is capped at 4096 probes, not 65k')
+  assert.deepEqual(expandTarget('10.0.0.0/8'), [], 'a /8 is refused outright')
+
+  const inst = await bootInstance({ tag: 'subnets', discoveryPort: 47891 })
+  try {
+    const before = await inst.api('state')
+    assert.deepEqual(before.body.settings.subnets, [])
+
+    const saved = await inst.api('settings', { patch: { subnets: [' 192.168.5.0/24 ', '10.1.2.3', '  '] } })
+    assert.deepEqual(saved.body.settings.subnets, ['192.168.5.0/24', '10.1.2.3'])
+  } finally {
+    await inst.stop()
+  }
+  // Same home → the list survives a restart, so a cross-subnet peer stays
+  // reachable without retyping it.
+  const again = await bootInstance({ tag: 'subnets', discoveryPort: 47892, home: inst.home, config: { seeds: [] } })
+  try {
+    const state = await again.api('state')
+    assert.deepEqual(state.body.settings.subnets, ['192.168.5.0/24', '10.1.2.3'])
+  } finally {
+    await again.stop()
+  }
+})
+
+test('the receiver dedupes a session pushed twice', async () => {
+  const portA = 52000 + Math.floor(Math.random() * 400)
+  const portB = portA + 1
+  const a = await bootInstance({ tag: 'dedupe-a', discoveryPort: portA, seeds: [`127.0.0.1:${portB}`] })
+  const b = await bootInstance({ tag: 'dedupe-b', discoveryPort: portB, seeds: [`127.0.0.1:${portA}`] })
+  try {
+    seedSession(a.store, 'session-dedupe', '只应存在一份')
+    await waitFor(async () => (await a.api('state')).body.peers.some((entry) => entry.online === true), { label: 'B online' })
+
+    const peers = (await a.api('state')).body.peers
+    const peer = peers.find((entry) => entry.online === true)
+    assert.ok(peer, 'B must be discovered before pushing')
+
+    const first = await a.api('push', { peerId: peer.id, sessionId: 'session-dedupe' })
+    assert.equal(first.body.skipped === true, false)
+    const second = await a.api('push', { peerId: peer.id, sessionId: 'session-dedupe' })
+    assert.equal(second.body.skipped, true, 'the second push is a duplicate')
+    assert.equal(b.store.map.size, 1, 'the receiver kept exactly one copy')
+
+    const forced = await a.api('push', { peerId: peer.id, sessionId: 'session-dedupe', force: true })
+    assert.equal(forced.body.skipped === true, false, 'force bypasses dedupe')
+    assert.equal(b.store.map.size, 2)
+  } finally {
+    await a.stop()
+    await b.stop()
   }
 })
