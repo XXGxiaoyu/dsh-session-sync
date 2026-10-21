@@ -878,11 +878,15 @@ test('a nested expanded group accepts the drop anywhere inside it', async () => 
   const dragStart = new dom.window.Event('dragstart', { bubbles: true })
   Object.defineProperty(dragStart, 'dataTransfer', { value: data })
   await act(async () => { item.dispatchEvent(dragStart) })
-  assert.ok(document.querySelector('.ss-dragghost') !== null, 'our own ghost replaces the native drag image')
+  assert.equal(document.querySelector('.ss-dragghost'), null, 'no ghost is left behind before the pointer moves')
 
   const over = new dom.window.Event('dragover', { bubbles: true, cancelable: true, clientX: 120, clientY: 240 })
   Object.defineProperty(over, 'dataTransfer', { value: data })
   await act(async () => { member.dispatchEvent(over) })
+  const ghost = document.querySelector('.ss-dragghost')
+  assert.ok(ghost !== null, 'the first dragover paints our own ghost')
+  assert.doesNotMatch(ghost.textContent, /dnd\./, 'the ghost label is translated, never a raw key')
+  assert.match(ghost.textContent, /拉取|Pull/, 'the ghost says what the drop will do')
   assert.ok(header.classList.contains('ss-ws-over'), 'a row two levels down still resolves its group')
   assert.ok(group.classList.contains('ss-ws-group'), 'the whole group container is tinted')
   assert.ok(member.classList.contains('ss-ws-member'), 'the nested member row is tinted')
@@ -994,4 +998,44 @@ test('the probe summary renders with a wall-clock time instead of throwing', asy
   assert.match(text, /21:03:12/, 'the scan time is rendered as HH:MM:SS')
   assert.match(text, /6/, 'the scan target count is shown')
   assert.match(text, /2/, 'the scan found count is shown')
+})
+
+test('a drag that never reports dragend still removes the ghost and the pill', async () => {
+  const { registered, t } = loadComponents()
+  const calls = []
+  const json = (data) => ({ ok: true, status: 200, async json() { return data } })
+  globalThis.fetch = async (url, init) => {
+    const body = JSON.parse(init.body)
+    calls.push({ url: String(url), body })
+    if (body.action === 'peerSessions') {
+      return json({ ok: true, sessions: [{ id: 'session-1', title: '共享会话', createdAt: Date.now(), events: 19, cwd: '/work' }] })
+    }
+    return json(statePayload())
+  }
+  const container = document.getElementById('root')
+  const root = createRoot(container)
+  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  await act(async () => { root.render(React.createElement(page.component, { t })) })
+  await act(async () => { await Promise.resolve() })
+
+  const open = container.querySelector('[data-peer="peer-1"] .ss-device-name')
+  await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
+
+  const item = container.querySelector('.ss-item[draggable="true"]')
+  assert.ok(item, 'a peer session row is draggable')
+  const data = transfer()
+  const dragStart = new dom.window.Event('dragstart', { bubbles: true })
+  Object.defineProperty(dragStart, 'dataTransfer', { value: data })
+  await act(async () => { item.dispatchEvent(dragStart) })
+
+  const over = new dom.window.Event('dragover', { bubbles: true, cancelable: true, clientX: 200, clientY: 300 })
+  Object.defineProperty(over, 'dataTransfer', { value: data })
+  await act(async () => { document.body.dispatchEvent(over) })
+  assert.ok(document.querySelector('.ss-dragghost') !== null, 'the ghost follows the pointer')
+
+  // The browser never sends dragend when the window loses focus mid-drag.
+  await act(async () => { dom.window.dispatchEvent(new dom.window.Event('blur')) })
+  assert.equal(document.querySelector('.ss-dragghost'), null, 'losing focus drops the ghost')
+  assert.equal(document.querySelector('.ss-dnd-tip[data-show]'), null, 'losing focus hides the hint pill')
 })

@@ -255,3 +255,16 @@ test('a render crash is contained by an error boundary instead of a blank panel'
   assert.match(source, /function Diagnostics\(/)
   assert.match(source, /h\(Boundary, \{ t: \(key\) => translateNow\(key\) \}/, 'both the settings section and the main panel are wrapped')
 })
+
+test('every runtime-translated key exists in both dictionaries', () => {
+  const { registration } = loadBundle()
+  const { locales } = makeContext(registration)
+  const dictionaries = locales[0].dictionaries
+  const keys = new Set([...source.matchAll(/translateNow\(\s*'([^']+)'/g)].map((match) => match[1]))
+  assert.ok(keys.size > 0, 'the bundle resolves some strings at runtime')
+  for (const key of keys) {
+    for (const language of ['zh', 'en']) {
+      assert.ok(dictionaries[language][key] !== undefined, `${language} is missing ${key}`)
+    }
+  }
+})
