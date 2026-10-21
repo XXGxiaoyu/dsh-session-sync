@@ -634,3 +634,37 @@ test('the device list always shows this machine, and unnamed sessions carry thei
 
   await act(async () => { root.unmount() })
 })
+
+
+test('a peer on this machine is grouped under 本机, not counted as a device', async () => {
+  const { registered, t } = loadComponents()
+  const json = (data) => ({ ok: true, status: 200, async json() { return data } })
+  globalThis.fetch = async (url, init) => {
+    const body = JSON.parse(init.body)
+    if (body.action === 'peerSessions') return json({ ok: true, sessions: [] })
+    return json(statePayload({
+      self: { id: 'self-1', name: '本机工作台', ip: '10.1.2.3', port: 47802 },
+      peers: [
+        { id: 'peer-local', name: '同机另一个 profile', remoteName: 'work', address: '10.1.2.3', port: 47803, online: true, lastSeen: Date.now(), sameMachine: true },
+        { id: 'peer-local-old', name: '同机另一个 profile', remoteName: 'work', address: '10.1.2.3', port: 47803, online: false, lastSeen: Date.now() - 600_000, sameMachine: true },
+        { id: 'peer-remote', name: '隔壁的 Mac', remoteName: 'mac', address: '10.1.2.9', port: 47802, online: true, lastSeen: Date.now(), sameMachine: false },
+      ],
+    }))
+  }
+  const panel = registered.find((entry) => entry.options.key === 'session-sync')
+  const container = document.getElementById('root')
+  const root = createRoot(container)
+  await act(async () => { root.render(React.createElement(panel.component, { t })) })
+  await act(async () => { await Promise.resolve() })
+
+  const group = container.querySelector('.ss-local-group')
+  assert.ok(group, 'same-host instances get their own group')
+  assert.match(group.textContent, /同一台机器上的其他 DSH 实例/)
+  assert.match(group.textContent, /同机另一个 profile/)
+  assert.equal(group.querySelectorAll('.ss-local-instance').length, 1, 'stale records for the same address:port collapse into one')
+  assert.equal(container.querySelectorAll('.ss-row[data-peer]').length, 1, 'only the other machine is a device row')
+  assert.match(container.querySelector('.ss-row[data-peer]').textContent, /隔壁的 Mac/)
+  assert.match(container.textContent, /1 在线 \/ 共 1/, 'the total counts other machines only')
+
+  await act(async () => { root.unmount() })
+})

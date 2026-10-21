@@ -27,7 +27,7 @@
 
 ### Three UI promises
 
-- **“This device” is always the first row.** A fixed card at the top of the device list shows the name you gave this machine, its LAN address:sync port, and the version that is actually running. It never appears among peers, so the list count always means “other devices”.
+- **“This device” is always the first row, and one IP is never two devices.** The card shows this machine's name, `LAN address:sync port` and running version. Any peer whose address belongs to this host is grouped underneath it as “other DSH instances on this machine” (browsable and pushable, so cross-profile sync still works) instead of counting as a device — the list and its counters only ever mean **other machines**.
 - **Untitled sessions carry `#first-8-chars-of-session-id`.** A pile of “Untitled” rows looks identical; the id is what tells them apart. The pull plan's “already present” flag is keyed by the same peer + session id, so renaming a session never turns a duplicate into a fresh copy.
 - **A crashing UI is never blank.** Render errors hit an error boundary that prints platform, Node version, host version, ports, UA and a stack summary, with *Reload* / *Copy diagnostics*. If Windows still shows nothing, paste that block into an issue.
 
@@ -149,7 +149,7 @@ The GUI side (`/session-sync/api`) runs on DSH's own loopback web server and is 
 node --test --test-force-exit --test-timeout=120000 'test/*.test.mjs'
 ```
 
-34 cases: client bundle contract, dictionary parity, footer, stale-host hint and version pinning (13), jsdom mount and interactions (5), two-instance end-to-end — discovery, rename persistence, restart, pull/push, auto-pull dedupe, receiver dedupe, SHA-256 tamper rejection and HTTP-only discovery (8), and the probe fallback contract (7).
+35 cases: client bundle contract, dictionary parity, footer, stale-host hint and version pinning (13), jsdom mount and interactions (5), two-instance end-to-end — discovery, rename persistence, restart, pull/push, auto-pull dedupe, receiver dedupe, SHA-256 tamper rejection and HTTP-only discovery (8), and the probe fallback contract (7).
 
 Run a headless instance without the desktop shell:
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.4 — 2026-10-21
+
+- **Fixed — one IP is no longer two devices.** Device identity is a `deviceId`, and every profile has its own, so the desktop profile and a scratch profile on the same machine showed up in the device list — reading as if `10.178.48.147:47802` were another computer. Peers now classify by **host address**: anything on a local address moves under the 本机 card as “other DSH instances on this machine”, excluded from the device list and its counters, and duplicate records for the same `address:port` collapse into the freshest one.
+- Those same-host rows keep 查看会话 / 推送会话, so cross-profile sync still works.
+- Tests: 35 (was 34).
+
 ## 0.3.3 — 2026-10-21
 
 - **Fixed — a Windows blank panel is now diagnosable, not silent.** Render errors are caught by an error boundary that prints platform, Node/host version, ports, UA and a stack summary, with *Reload* and *Copy diagnostics*. The page also stopped depending on a hard-coded 100% height, which could collapse to zero on a different shell layout.

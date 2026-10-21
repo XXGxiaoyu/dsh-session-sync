@@ -231,6 +231,7 @@ test('LAN discovery, custom naming cache, pull and push', async () => {
     assert.equal(peerB.online, true)
     assert.equal(peerB.id, b.handle.state.self.id)
     assert.equal(peerB.port, b.handle.lan.port)
+    assert.equal(peerB.sameMachine, true, 'a peer on 127.0.0.1 is this machine, not another device')
 
     // ── custom name is local-only and cached ────────────────────────────
     const renamed = await a.api('rename', { peerId: peerB.id, name: '客厅那台 Mac' })
