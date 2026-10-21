@@ -82,6 +82,7 @@ A **Session Sync** row appears under **Plugins** in the left sidebar (`sidebar.p
 - **Rename / Forget** — a per-device nickname for this machine only. Offline devices keep their row (and their nickname), greyed out.
 - **Sessions / Pull / Push** — list a peer's sessions, copy one here, or send one over.
 - **Verify** — re-fetch the peer's payload, recompute SHA-256 and compare it with the local copy (`sha256 2b12f7854d80… verified`).
+- **Integrity, not identity.** A digest proves the bytes match; it does not prove who sent them — anyone can recompute it. So verification stays automatic and fail-closed, and there is no per-transfer “confirm the hash” prompt (that only trains people to click through). When you genuinely need authenticity, copy the full digest and compare it out-of-band (phone, terminal); the copy action sits next to the verified row.
 - **Sync settings** — UI language, auto-pull, and manual peer addresses for networks where broadcast is blocked (`ip` or `ip:udpPort`, one per line).
 
 ## 🌏 UI language

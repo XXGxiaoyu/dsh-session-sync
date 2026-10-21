@@ -191,6 +191,12 @@ test('settings page shows discovered devices and renames one inline', async () =
 test('the main panel lists a peer\'s sessions and verifies one by sha256', async () => {
   const { registered, t } = loadComponents()
   const calls = []
+  const copied = []
+  const previousClipboard = Object.getOwnPropertyDescriptor(globalThis.navigator, 'clipboard')
+  Object.defineProperty(globalThis.navigator, 'clipboard', {
+    value: { writeText: async (value) => { copied.push(value) } },
+    configurable: true,
+  })
   const json = (data) => ({ ok: true, status: 200, async json() { return data } })
   globalThis.fetch = async (url, init) => {
     const body = JSON.parse(init.body)
@@ -244,6 +250,17 @@ test('the main panel lists a peer\'s sessions and verifies one by sha256', async
   })
   assert.match(box.textContent, /校验通过/)
   assert.match(box.textContent, /aaaaaaaaaaaa/)
+
+  // Option A: the digest stays automatic, but the full value is copyable so it
+  // can be compared out-of-band when that is actually needed.
+  const copy = [...box.querySelectorAll('button')].find((button) => button.textContent === t('sessions.copyHash'))
+  assert.ok(copy, 'the verified row exposes a copy action')
+  await act(async () => {
+    copy.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
+  })
+  assert.deepEqual(copied, ['a'.repeat(64)], 'the clipboard gets the full 64-char digest')
+  if (previousClipboard === undefined) delete globalThis.navigator.clipboard
+  else Object.defineProperty(globalThis.navigator, 'clipboard', previousClipboard)
 
   await act(async () => { root.unmount() })
   host.remove()
