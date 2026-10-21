@@ -795,7 +795,10 @@ test('a session dragged over a real sidebar row drops into that workspace', asyn
   const pill = document.querySelector('.ss-dnd-tip.ws')
   assert.ok(pill !== null, 'the pointer pill names the target')
   assert.match(pill.querySelector('.ss-dnd-name').textContent, /Alpha|ds-harness-workspace/)
-  assert.match(pill.querySelector('.ss-dnd-hint').textContent, /整组可放|Whole group/)
+  assert.match(pill.querySelector('.ss-dnd-hint').textContent, /插入到此位置|Insert right here/)
+  const insertLine = document.querySelector('.ss-insert')
+  assert.ok(insertLine !== null, 'a drop line marks the insertion point between rows')
+  assert.equal(insertLine.dataset.show, '1', 'the insertion line is visible while hovering a session row')
 
   const outside = new dom.window.Event('dragover', { bubbles: true, cancelable: true })
   Object.defineProperty(outside, 'dataTransfer', { value: data })
@@ -811,6 +814,9 @@ test('a session dragged over a real sidebar row drops into that workspace', asyn
   const drop = new dom.window.Event('drop', { bubbles: true, cancelable: true })
   Object.defineProperty(drop, 'dataTransfer', { value: data })
   await act(async () => { member.dispatchEvent(drop) })
+  // Chrome fires dragend right after drop, before the 90 ms success state ends;
+  // the drop must already own its payload or the transfer silently disappears.
+  await act(async () => { item.dispatchEvent(new dom.window.Event('dragend', { bubbles: true })) })
   // The success state holds for ~90ms before the confirmation dialog opens.
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 160)) })
 
@@ -818,13 +824,15 @@ test('a session dragged over a real sidebar row drops into that workspace', asyn
   assert.ok(modal.querySelector('.ss-modal-card'), 'the confirmation is a centred dialog card')
   assert.match(modal.className, /ss-modal/, 'the dialog sits in a mask overlay')
   assert.ok(modal, 'dropping opens the confirmation dialog')
-  assert.match(modal.textContent, /\/tmp\/alpha/)
+  assert.match(modal.textContent, /Alpha/, 'the dialog names the workspace the user dropped on')
   const confirm = [...modal.querySelectorAll('button')].find((button) => button.textContent === t('plan.confirm'))
   await act(async () => { confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 400)) })
   const pull = calls.find((call) => call.body.action === 'pull')
   assert.ok(pull, 'the drop pulls the session')
   assert.equal(pull.body.cwd, '/tmp/alpha', 'the conversation lands in the row the user dropped on')
+  assert.equal(pull.body.workspace, 'w1', 'the request names the workspace so the host can attach the session')
+  assert.equal(pull.body.before, 'remote-9', 'the request keeps the insertion anchor')
 
   await act(async () => { panelRoot.unmount() })
   sidebar.remove()
