@@ -657,11 +657,8 @@ test('a peer on this machine is grouped under 本机, not counted as a device', 
   await act(async () => { root.render(React.createElement(panel.component, { t })) })
   await act(async () => { await Promise.resolve() })
 
-  const group = container.querySelector('.ss-local-group')
-  assert.ok(group, 'same-host instances get their own group')
-  assert.match(group.textContent, /同一台机器上的其他 DSH 实例/)
-  assert.match(group.textContent, /同机另一个 profile/)
-  assert.equal(group.querySelectorAll('.ss-local-instance').length, 1, 'stale records for the same address:port collapse into one')
+  assert.equal(container.querySelector('.ss-local-group'), null, 'same-host instances are not shown at all')
+  assert.doesNotMatch(container.textContent, /同一台机器上的其他 DSH 实例/)
   assert.equal(container.querySelectorAll('.ss-row[data-peer]').length, 1, 'only the other machine is a device row')
   assert.match(container.querySelector('.ss-row[data-peer]').textContent, /隔壁的 Mac/)
   assert.match(container.textContent, /1 在线 \/ 共 1/, 'the total counts other machines only')

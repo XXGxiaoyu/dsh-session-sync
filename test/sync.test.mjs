@@ -158,6 +158,9 @@ async function bootInstance({ tag, discoveryPort, seeds, home: reuseHome, config
     lanPort: 0,
     seeds,
     verbose: false,
+    // The suite runs every instance on 127.0.0.1, which the host would otherwise
+    // classify as "this machine" and hide.
+    allowLoopbackPeers: true,
     ...config,
   })
   await handle.ready
@@ -561,6 +564,25 @@ test('a peer behind a UDP-blocking network is found over HTTP', async () => {
       await a.stop()
     }
   } finally {
+    await b.stop()
+  }
+})
+
+test('peers on this machine never reach the device list', async () => {
+  const discoveryA = 53000 + Math.floor(Math.random() * 500)
+  const discoveryB = discoveryA + 1
+  const a = await bootInstance({ tag: 'hide-a', discoveryPort: discoveryA, seeds: [], config: { allowLoopbackPeers: false } })
+  const b = await bootInstance({ tag: 'hide-b', discoveryPort: discoveryB, seeds: [] })
+  try {
+    // Point A at B's beacon port: both run on 127.0.0.1, i.e. this machine.
+    await a.api('settings', { patch: { seeds: [`127.0.0.1:${discoveryB}`] } })
+    await sleep(2500)
+    const stateA = (await a.api('state')).body
+    assert.equal(stateA.peers.length, 0, 'a peer on this host address is not another device')
+    assert.equal(stateA.peers.filter((peer) => peer.online).length, 0, 'no peer is reported online')
+    assert.equal(stateA.self.ip !== undefined, true, 'the machine itself is still shown')
+  } finally {
+    await a.stop()
     await b.stop()
   }
 })

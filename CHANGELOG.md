@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.5 — 2026-10-21
+
+- 同一台机器上的其他 profile 不再单独成组，而是**完全不进设备列表**：宿主在吸收 peer 时按本机地址直接跳过，启动时也会清掉历史里同地址的记录。
+- 设备数、在线数只表示其他机器；「本机」卡片仍然常驻。
+- 测试 36 项（新增「本机地址的 peer 永远不出现在设备列表」）。
+- 测试专用开关 `allowLoopbackPeers`（默认 false），仅测试套件在 127.0.0.1 上跑多实例时开启。
+
 ## 0.3.4 — 2026-10-21
 
 - **Fixed — one IP is no longer two devices.** Device identity is a `deviceId`, and every profile has its own, so the desktop profile and a scratch profile on the same machine showed up in the device list — reading as if `10.178.48.147:47802` were another computer. Peers now classify by **host address**: anything on a local address moves under the 本机 card as “other DSH instances on this machine”, excluded from the device list and its counters, and duplicate records for the same `address:port` collapse into the freshest one.
