@@ -33,6 +33,8 @@ Requires DSH **0.2.1-rc.2** (the version bundled with the current desktop app) a
 
 Then restart the DSH desktop app (host-side changes load at boot; open pages pick up the new UI on refresh). The install is auto-activated: the package declares `dsh.bundle`, so `dsh plugin add` adds it to `dsh.profile.bundles` on its own.
 
+Prebuilt tarball (no build step): <https://github.com/XXGxiaoyu/dsh-session-sync/releases/latest/download/dsh-session-sync.tgz>
+
 <details>
 <summary>Manual install from a local checkout</summary>
 

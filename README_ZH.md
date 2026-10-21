@@ -33,6 +33,8 @@ dsh plugin --profile web add github:XXGxiaoyu/dsh-session-sync
 
 然后重启 DSH 桌面应用（宿主半边的改动在启动时加载，页面刷新即可拿到新 UI）。装完会自动启用：包里声明了 `dsh.bundle`，`dsh plugin add` 会自己把它加进 `dsh.profile.bundles`。
 
+预构建 tarball（免构建）：<https://github.com/XXGxiaoyu/dsh-session-sync/releases/latest/download/dsh-session-sync.tgz>
+
 <details>
 <summary>从本地目录手动安装</summary>
 
