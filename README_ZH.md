@@ -15,6 +15,8 @@
 
 ![会话同步面板](docs/preview.png)
 
+![规划一次传输：选目录，逐条确认](docs/preview-transfer.png)
+
 ## ✨ 功能
 
 | | |

@@ -15,6 +15,8 @@
 
 ![Session Sync panel](docs/preview.png)
 
+![Planning a transfer: pick a folder, confirm every item](docs/preview-transfer.png)
+
 ## ✨ Features
 
 | | |
