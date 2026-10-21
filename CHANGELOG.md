@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.3 — 2026-10-21
+
+- **Fixed — a Windows blank panel is now diagnosable, not silent.** Render errors are caught by an error boundary that prints platform, Node/host version, ports, UA and a stack summary, with *Reload* and *Copy diagnostics*. The page also stopped depending on a hard-coded 100% height, which could collapse to zero on a different shell layout.
+- **New — “this device” is always visible.** The device list opens with a fixed row for the machine you are on: its name, `LAN address:sync port` and the running version. It is never mixed into the peer list, so the list count keeps meaning “other devices”.
+- **Fixed — look-alike untitled sessions.** Every row now shows `#first-8-of-session-id`, and the pull plan's “already present” decision is documented as keyed by the same peer + session id (it always was — now it is visible and tested), so renaming cannot fake a duplicate.
+- **Compatibility** — a fallback subscription is used when a host ships React without `useSyncExternalStore`.
+- Tests: 33 (was 32).
+
 ## 0.3.2 — 2026-10-21
 
 - **Fixed — the footer no longer looks like a wrong release.** It now prints the version of the build it shipped with (`CLIENT_VERSION`, enforced equal to `package.json` by a test), and appends `host v…` plus *“restart DSH to apply it”* when the running host process is older than the bundle. A page that shows v0.1.0 next to a v0.3.2 release is a stale process, not a mismatched publication.

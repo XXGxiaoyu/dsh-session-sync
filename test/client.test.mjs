@@ -245,6 +245,6 @@ test('a stale host is called out instead of looking like a wrong version', () =>
   }
   const section = registered.find((entry) => entry.options.id === 'session-sync')
   const html = renderToStaticMarkup(React.createElement(section.component, { t }))
-  assert.match(html, /v0\.3\.2/, 'the footer advertises the build it was shipped with')
+  assert.match(html, new RegExp(`v${JSON.parse(fs.readFileSync(path.join(here, '..', 'package.json'), 'utf8')).version.replace(/\./g, '\\.')}`), 'the footer advertises the build it was shipped with')
   assert.doesNotMatch(html, /宿主 v/, 'no stale-host line when host and bundle agree')
 })

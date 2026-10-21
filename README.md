@@ -25,6 +25,12 @@
 | **🖱️ Drag, select, drop**<br/>Select one or many sessions and drag them onto any known folder — every drop asks for confirmation and names the folder the conversation will be imported into. | **🚦 Confirmed transfer queue**<br/>Repeated pushes/pulls are detected up front; a dialog lets you keep the local copy, overwrite it, or drop that single item. The rest of the queue keeps running in order. |
 | **⚡ One-click sync**<br/>**Sync all** / **Push all** plan the whole device in one go, skip sessions already present by content fingerprint, and report each row as done, skipped or failed. | **🌐 Cross-subnet scanning**<br/>Broadcast stays on the local segment; add CIDRs, IPs or `ip:port` under *Cross-subnet scan*. CIDRs get silent UDP discovery packets, single IPs are also probed over HTTP on 47802–47817 — a firewall that drops UDP no longer hides the peer. |
 
+### Three UI promises
+
+- **“This device” is always the first row.** A fixed card at the top of the device list shows the name you gave this machine, its LAN address:sync port, and the version that is actually running. It never appears among peers, so the list count always means “other devices”.
+- **Untitled sessions carry `#first-8-chars-of-session-id`.** A pile of “Untitled” rows looks identical; the id is what tells them apart. The pull plan's “already present” flag is keyed by the same peer + session id, so renaming a session never turns a duplicate into a fresh copy.
+- **A crashing UI is never blank.** Render errors hit an error boundary that prints platform, Node version, host version, ports, UA and a stack summary, with *Reload* / *Copy diagnostics*. If Windows still shows nothing, paste that block into an issue.
+
 ## 🚀 Installation
 
 ```sh
@@ -143,7 +149,7 @@ The GUI side (`/session-sync/api`) runs on DSH's own loopback web server and is 
 node --test --test-force-exit --test-timeout=120000 'test/*.test.mjs'
 ```
 
-32 cases: client bundle contract, dictionary parity, footer, stale-host hint and version pinning (13), jsdom mount and interactions (4), two-instance end-to-end — discovery, rename persistence, restart, pull/push, auto-pull dedupe, receiver dedupe, SHA-256 tamper rejection and HTTP-only discovery (8), and the probe fallback contract (7).
+33 cases: client bundle contract, dictionary parity, footer, stale-host hint and version pinning (13), jsdom mount and interactions (5), two-instance end-to-end — discovery, rename persistence, restart, pull/push, auto-pull dedupe, receiver dedupe, SHA-256 tamper rejection and HTTP-only discovery (8), and the probe fallback contract (7).
 
 Run a headless instance without the desktop shell:
 

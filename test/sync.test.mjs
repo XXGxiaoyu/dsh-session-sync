@@ -251,6 +251,13 @@ test('LAN discovery, custom naming cache, pull and push', async () => {
     assert.equal(storedLocale.settings.locale, 'en', 'the choice survives a restart')
 
     // The peer's own name is untouched on the peer side.
+    const diag = (await a.api('diag')).body
+    assert.equal(diag.platform, process.platform, 'diagnostics identify the host platform')
+    assert.equal(typeof diag.node, 'string')
+    assert.equal(diag.version, stateA.version)
+    assert.equal(diag.selfIp.length > 0, true, 'the self card needs a dialable address')
+    assert.equal(diag.ports.lan, (await a.api('state')).body.self.port)
+
     const stateB = (await b.api('state')).body
     assert.equal(stateB.self.name, b.handle.state.self.name)
 

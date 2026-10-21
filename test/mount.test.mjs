@@ -593,3 +593,44 @@ test('checking a session enables the selection actions and scopes the plan', asy
   assert.equal(rows.length, 1, 'the dialog plans only the selected session')
   await act(async () => { root.unmount() })
 })
+
+test('the device list always shows this machine, and unnamed sessions carry their id', async () => {
+  const { registered, t } = loadComponents()
+  const json = (data) => ({ ok: true, status: 200, async json() { return data } })
+  globalThis.fetch = async (url, init) => {
+    const body = JSON.parse(init.body)
+    if (body.action === 'peerSessions') {
+      return json({
+        ok: true,
+        sessions: [{ id: 'session-abcdef12-9999-4f2c', title: '', createdAt: Date.now(), events: 3, cwd: '/work' }],
+      })
+    }
+    return json(statePayload({ self: { id: 'self-1', name: '本机工作台', ip: '10.1.2.3', port: 47802 } }))
+  }
+  const panel = registered.find((entry) => entry.options.key === 'session-sync')
+  assert.ok(panel, 'the main panel is registered under the plugin id')
+  const container = document.getElementById('root')
+  const root = createRoot(container)
+  await act(async () => {
+    root.render(React.createElement(panel.component, { t }))
+  })
+  await act(async () => { await Promise.resolve() })
+
+  const selfRow = container.querySelector('.ss-self')
+  assert.ok(selfRow, 'this device is listed even when no peer answered')
+  assert.match(selfRow.textContent, /本机工作台/)
+  assert.match(selfRow.textContent, /10\.1\.2\.3:47802/, 'the address other machines can dial is visible')
+  assert.equal(container.querySelectorAll('.ss-self').length, 1, 'self is shown once, outside the peer list')
+
+  const showButton = [...container.querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  await act(async () => {
+    showButton.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
+  })
+  await act(async () => { await Promise.resolve() })
+
+  const text = container.textContent
+  assert.match(text, /未命名会话/, 'untitled sessions keep their human label')
+  assert.match(text, /#abcdef12/, 'and expose the id slice so look-alike rows can be told apart')
+
+  await act(async () => { root.unmount() })
+})
