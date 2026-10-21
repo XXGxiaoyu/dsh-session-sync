@@ -10,7 +10,7 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "lib",
+    "lib/",
     "cordis.patch.yml",
     "README.md",
     "README_ZH.md",
@@ -18,8 +18,7 @@
     "CHANGELOG_ZH.md",
     "LICENSE",
     "icon.svg",
-    "screenshots.json",
-    "docs"
+    "screenshots.json"
   ],
   "engines": {
     "node": ">=22"
