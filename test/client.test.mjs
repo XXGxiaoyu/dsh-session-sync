@@ -98,12 +98,12 @@ test('bundle registers under its package id and declares slots + locale', () => 
   assert.match(appended[0].textContent, /\.ss-page/)
   assert.equal(exports.name, 'dsh-session-sync')
   assert.deepEqual(exports.inject, ['slots', 'locale'])
-  assert.deepEqual(injected, ['settings.section', 'sidebar.panellist', 'shell.overlay', 'main'])
+  assert.deepEqual(injected, ['settings.section', 'sidebar.panellist', 'main'])
   assert.deepEqual(
     registered.map((entry) => entry.options.name),
-    ['settings.section', 'sidebar.panellist', 'shell.overlay', 'main'],
+    ['settings.section', 'sidebar.panellist', 'main'],
   )
-  const [section, row, , panel] = registered
+  const [section, row, panel] = registered
   assert.equal(section.options.id, 'session-sync')
   assert.equal(row.options.id, 'session-sync', 'the sidebar row opens the keyed panel of the same id')
   assert.equal(panel.options.key, 'session-sync')

@@ -710,7 +710,7 @@ test('two profiles on one address collapse into a single device row', async () =
   await act(async () => { root.unmount() })
 })
 
-test('a session dragged anywhere can be dropped onto a workspace via the drop layer', async () => {
+test('a session dragged over a real sidebar row drops into that workspace', async () => {
   const { registered, t } = loadComponents()
   const calls = []
   globalThis.fetch = async (url, init) => {
@@ -731,8 +731,7 @@ test('a session dragged anywhere can be dropped onto a workspace via the drop la
     }))
   }
   const page = registered.find((entry) => entry.options.id === 'session-sync')
-  const overlay = registered.find((entry) => entry.options.name === 'shell.overlay')
-  assert.ok(overlay, 'the drop layer is registered in shell.overlay')
+  assert.ok(page, 'the sidebar row opens the page')
 
   const panelRoot = createRoot(document.getElementById('root'))
   await act(async () => { panelRoot.render(React.createElement(page.component, { t })) })
@@ -741,28 +740,36 @@ test('a session dragged anywhere can be dropped onto a workspace via the drop la
   await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 
-  const layerHost = document.createElement('div')
-  document.body.appendChild(layerHost)
-  const layerRoot = createRoot(layerHost)
-  await act(async () => { layerRoot.render(React.createElement(overlay.component, { t })) })
-  assert.equal(layerHost.querySelector('.ss-dropside'), null, 'nothing is shown until a drag starts')
+  // DSH renders workspace rows with this stable attribute; the plugin only
+  // listens on document, it never rewrites the row.
+  const sidebar = document.createElement('div')
+  const workspaceRow = document.createElement('div')
+  workspaceRow.setAttribute('data-row-key', 'workspace:w1')
+  const ungroupedRow = document.createElement('div')
+  ungroupedRow.setAttribute('data-row-key', 'workspace:')
+  sidebar.append(workspaceRow, ungroupedRow)
+  document.body.append(sidebar)
 
   const item = document.getElementById('root').querySelector('.ss-item[draggable="true"]')
   const data = transfer()
   const dragStart = new dom.window.Event('dragstart', { bubbles: true })
   Object.defineProperty(dragStart, 'dataTransfer', { value: data })
   await act(async () => { item.dispatchEvent(dragStart) })
-  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 200)) })
 
-  const targets = [...layerHost.querySelectorAll('.ss-droptarget')]
-  assert.equal(targets.length, 2, '未分组 plus every workspace')
-  assert.match(layerHost.textContent, /Alpha/)
-  assert.match(layerHost.textContent, /未分组/)
+  const over = new dom.window.Event('dragover', { bubbles: true, cancelable: true })
+  Object.defineProperty(over, 'dataTransfer', { value: data })
+  await act(async () => { workspaceRow.dispatchEvent(over) })
+  assert.ok(workspaceRow.classList.contains('ss-ws-over'), 'the official row lights up under the pointer')
 
-  const alpha = targets.find((target) => target.textContent.includes('/tmp/alpha'))
-  const drop = new dom.window.Event('drop', { bubbles: true })
+  const overUngrouped = new dom.window.Event('dragover', { bubbles: true, cancelable: true })
+  Object.defineProperty(overUngrouped, 'dataTransfer', { value: data })
+  await act(async () => { ungroupedRow.dispatchEvent(overUngrouped) })
+  assert.ok(ungroupedRow.classList.contains('ss-ws-over'), '未分组 resolves through its empty key')
+  assert.ok(!workspaceRow.classList.contains('ss-ws-over'), 'only one row is marked at a time')
+
+  const drop = new dom.window.Event('drop', { bubbles: true, cancelable: true })
   Object.defineProperty(drop, 'dataTransfer', { value: data })
-  await act(async () => { alpha.dispatchEvent(drop) })
+  await act(async () => { workspaceRow.dispatchEvent(drop) })
 
   const modal = document.getElementById('root').querySelector('.ss-modal')
   assert.ok(modal, 'dropping opens the confirmation dialog')
@@ -772,9 +779,8 @@ test('a session dragged anywhere can be dropped onto a workspace via the drop la
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 400)) })
   const pull = calls.find((call) => call.body.action === 'pull')
   assert.ok(pull, 'the drop pulls the session')
-  assert.equal(pull.body.cwd, '/tmp/alpha', 'the conversation lands in the chosen workspace')
+  assert.equal(pull.body.cwd, '/tmp/alpha', 'the conversation lands in the row the user dropped on')
 
   await act(async () => { panelRoot.unmount() })
-  await act(async () => { layerRoot.unmount() })
-  layerHost.remove()
+  sidebar.remove()
 })
