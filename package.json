@@ -1,6 +1,6 @@
 {
   "name": "dsh-session-sync",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "DSH LAN session sync: auto-discover devices running this plugin, browse/pull/push sessions over HTTP, verify them with SHA-256, and keep a local-only nickname per device.",
   "type": "module",
   "main": "lib/index.js",
@@ -18,7 +18,8 @@
     "CHANGELOG_ZH.md",
     "LICENSE",
     "icon.svg",
-    "screenshots.json"
+    "screenshots.json",
+    "scripts/repair-sessions.mjs"
   ],
   "engines": {
     "node": ">=22"

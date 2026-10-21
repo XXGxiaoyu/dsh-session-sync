@@ -5,6 +5,7 @@
  */
 import assert from 'node:assert/strict'
 import http from 'node:http'
+import { createServer } from 'node:net'
 import { test } from 'node:test'
 import { DEFAULT_SYNC_PORTS, parseTarget, probeHost, probeTargets } from '../lib/probe.js'
 
@@ -44,7 +45,16 @@ test('parseTarget accepts bare IPs and IP:port, rejects anything else', () => {
 test('probeHost finds the peer among dead ports and requires the protocol header', async () => {
   const { server, port } = await fakePeer()
   try {
-    const ports = [port + 1 > 65535 ? port - 1 : port + 1, port]
+    // A neighbouring port could belong to another test's fake peer when the
+    // suite runs in parallel, so reserve one and close it instead of guessing.
+    const dead = await new Promise((resolve) => {
+      const probe = createServer(() => {})
+      probe.listen(0, '127.0.0.1', () => {
+        const { port: deadPort } = probe.address()
+        probe.close(() => resolve(deadPort))
+      })
+    })
+    const ports = [dead, port]
     const found = await probeHost('127.0.0.1', ports, { timeoutMs: 400 })
     assert.equal(found?.port, port)
     assert.equal(found?.info.id, 'peer-device')

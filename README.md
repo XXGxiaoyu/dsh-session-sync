@@ -148,13 +148,22 @@ The GUI side (`/session-sync/api`) runs on DSH's own loopback web server and is 
 - **Fingerprints, not ids, dedupe auto-pull.** `state.signatures[sha1(createdAt, event shape, first preview)]` is recorded on export and import; auto-pull skips anything already known. Without it, two auto-pulling machines would keep re-importing the same conversation under new ids.
 - **Everything local stays local.** Nicknames, import records and settings never leave `<home>/session-sync/state.json`.
 
+## 🩺 Troubleshooting
+
+A build before 0.5.5 imported sessions with `isSeeded: false` but kept the peer's inherited end-seed marker, so DSH refused to open them (`released v2 unseeded Session contains an inherited end-seed marker`). Open *Network & advanced → Repair old sessions* to fix everything under `<DSH_HOME>/sessions`, or run it offline:
+
+```bash
+node scripts/repair-sessions.mjs            # rewrite affected logs, keep *.bak
+node scripts/repair-sessions.mjs --dry-run  # only report what would change
+```
+
 ## 🧪 Development
 
 ```bash
 node --test --test-force-exit --test-timeout=120000 'test/*.test.mjs'
 ```
 
-35 cases: client bundle contract, dictionary parity, footer, stale-host hint and version pinning (13), jsdom mount and interactions (5), two-instance end-to-end — discovery, rename persistence, restart, pull/push, auto-pull dedupe, receiver dedupe, SHA-256 tamper rejection and HTTP-only discovery (8), and the probe fallback contract (7).
+56 cases: client bundle contract, dictionary parity, footer, stale-host hint and version pinning (13), jsdom mount and interactions (5), two-instance end-to-end — discovery, rename persistence, restart, pull/push, auto-pull dedupe, receiver dedupe, SHA-256 tamper rejection and HTTP-only discovery (8), and the probe fallback contract (7).
 
 Run a headless instance without the desktop shell:
 

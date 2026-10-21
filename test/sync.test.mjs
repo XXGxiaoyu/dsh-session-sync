@@ -60,6 +60,11 @@ function fakeStore() {
           if (closed) throw new Error('closed')
           for (const [index, event] of events.entries()) {
             if (event.seq !== record.events.length + index) throw new Error(`gap at ${event.seq}`)
+            // Mirror restoreReleasedV4Artifact: an unseeded log must not carry an
+            // inherited end-seed marker, or DSH refuses to load it later.
+            if (record.header.isSeeded === false && event.type === 'session/end-seed' && event.data?.inherited === true) {
+              throw new Error('released v2 unseeded Session contains an inherited end-seed marker')
+            }
           }
           record.events.push(...structuredClone(events))
         },
@@ -632,5 +637,57 @@ test('the workspace picker reads names from DSH storage', async () => {
     assert.match(state.syncDir, /session-sync\/unsorted$/, '未分组 is the default target')
   } finally {
     await instance.stop()
+  }
+})
+
+test('importing a seeded session drops the inherited prefix instead of copying a corrupt log', async () => {
+  const portA = 50000 + Math.floor(Math.random() * 1200)
+  const a = await bootInstance({ tag: 'seed-src', discoveryPort: portA })
+  try {
+    // A forked session: the inherited block ends with a tagged marker, then the
+    // session continues on its own. Copying that marker into an unseeded copy is
+    // exactly what made DSH report
+    // "released v2 unseeded Session contains an inherited end-seed marker".
+    const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-sync-seed-'))
+    const events = [
+      { type: 'message', seq: 0, time: 1_700_000_000_000, data: { role: 'user', content: 'inherited question' } },
+      { type: 'session/end-seed', seq: 1, time: 1_700_000_001_000, data: { inherited: true } },
+      { type: 'message', seq: 2, time: 1_700_000_002_000, data: { role: 'user', content: 'own question' } },
+      { type: 'message', seq: 3, time: 1_700_000_003_000, data: { role: 'assistant', content: 'own answer' } },
+    ]
+    a.store.map.set('session-seeded', {
+      header: {
+        type: 'session',
+        version: 4,
+        id: 'session-seeded',
+        createdAt: 1_700_000_000_000,
+        cwd,
+        parentSession: 'session-parent',
+        isSeeded: true,
+        delegationDepth: 0,
+        agentPreset: 'standard',
+      },
+      events,
+    })
+
+    const exported = await a.handle.bridge.exportSession('session-seeded')
+    const imported = await a.handle.bridge.importSession(exported, { cwd })
+
+    const stored = a.store.map.get(imported.id)
+    assert.ok(stored, 'the import must be materialised')
+    assert.equal(stored.header.isSeeded, false, 'an imported copy is never seeded')
+    assert.equal(stored.header.parentSession, undefined, 'the copy does not point at a foreign parent')
+    const inherited = stored.events.filter(
+      (event) => event.type === 'session/end-seed' && event.data?.inherited === true,
+    )
+    assert.deepEqual(inherited, [], 'no inherited marker may survive the import')
+    assert.deepEqual(stored.events.map((event) => event.seq), stored.events.map((_, index) => index), 'seq stays dense')
+    assert.deepEqual(
+      stored.events.map((event) => event.data?.content ?? event.type),
+      ['own question', 'own answer'],
+      'only the events the source authored itself are copied',
+    )
+  } finally {
+    await a.handle.store.dispose()
   }
 })

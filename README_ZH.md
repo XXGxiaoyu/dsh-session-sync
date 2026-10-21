@@ -148,6 +148,15 @@ GUI 的 `/session-sync/api` 跑在 DSH 自己的回环 web 服务上，受宿主
 - **去重靠指纹不靠 id**：`state.signatures[sha1(createdAt, 事件形状, 首条预览)]` 在导出/导入时登记，自动拉取遇到就跳过。没有它，两台都开自动拉取的机器会把同一段对话换 id 反复互导。
 - **本机可见**：外号、导入记录、设置全在 `<home>/session-sync/state.json`，不上传、不同步。
 
+## 🩺 常见问题
+
+0.5.5 之前的版本导入会话时写的是 `isSeeded: false`，却保留了对方的继承标记，DSH 会拒绝打开（`released v2 unseeded Session contains an inherited end-seed marker`）。在「网络与高级 → 修复历史会话」里点一下即可修复 `<DSH_HOME>/sessions` 下的全部记录，也可以离线跑：
+
+```bash
+node scripts/repair-sessions.mjs            # 就地修复，保留 *.bak
+node scripts/repair-sessions.mjs --dry-run  # 只报告，不写盘
+```
+
 ## 🧪 开发
 
 ```bash
