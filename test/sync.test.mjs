@@ -524,3 +524,35 @@ test('the receiver dedupes a session pushed twice', async () => {
     await b.stop()
   }
 })
+
+test('a peer behind a UDP-blocking network is found over HTTP', async () => {
+  // Both instances get a random discovery port, so neither beacon socket is
+  // reachable by the other's broadcast: the only path left is the HTTP probe
+  // against the peer's explicit `ip:port` entry.
+  const b = await bootInstance({ tag: 'http-b', discoveryPort: 0, seeds: [] })
+  try {
+    const bId = (await b.api('state')).body.self.id
+    const bSyncPort = b.handle.lan.port
+    assert.ok(Number.isInteger(bSyncPort), 'the peer must expose a sync port')
+
+    const a = await bootInstance({ tag: 'http-a', discoveryPort: 0, seeds: [], config: { subnets: [`127.0.0.1:${bSyncPort}`] } })
+    try {
+      await waitFor(async () => {
+        const state = (await a.api('state')).body
+        return state.peers.some((peer) => peer.id === bId && peer.online === true)
+      }, { timeout: 20000, interval: 300, label: 'HTTP-discovered peer' })
+
+      const peer = (await a.api('state')).body.peers.find((entry) => entry.id === bId)
+      assert.equal(peer.via, 'http', 'UDP cannot have delivered this peer')
+      assert.equal(peer.port, bSyncPort)
+
+      // The same port serves the sync API the pull would use.
+      const listed = await fetch(`http://127.0.0.1:${peer.port}/v1/sessions`, { headers: { 'x-dsh-session-sync': '1' } })
+      assert.equal(listed.status, 200)
+    } finally {
+      await a.stop()
+    }
+  } finally {
+    await b.stop()
+  }
+})

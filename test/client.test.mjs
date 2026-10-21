@@ -209,3 +209,21 @@ test('without a DSH locale the plugin falls back to the system language', () => 
     Object.defineProperty(globalThis, 'navigator', { value: original, configurable: true })
   }
 })
+
+test('the page footer credits the version, the license and the repository', () => {
+  const { registration } = loadBundle()
+  const { registered, locales } = makeContext(registration)
+  const t = (key, params) => {
+    const template = locales[0].dictionaries.zh[key] ?? key
+    if (params === undefined) return template
+    return template.replace(/\{(\w+)\}/g, (match, name) => (name in params ? String(params[name]) : match))
+  }
+  const section = registered.find((entry) => entry.options.id === 'session-sync')
+  const html = renderToStaticMarkup(React.createElement(section.component, { t }))
+  assert.match(html, /ss-footer/)
+  assert.match(html, /MIT 协议/)
+  assert.match(html, /https:\/\/github\.com\/XXGxiaoyu\/dsh-session-sync/)
+  assert.match(html, /Star/)
+  assert.match(html, /target="_blank"/)
+  assert.match(html, /rel="noreferrer noopener"/)
+})

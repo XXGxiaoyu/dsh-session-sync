@@ -23,7 +23,7 @@
 | **🗂️ Browse · pull · push**<br/>See each device's sessions with title, cwd and time; pull one into this machine or push one of yours out. Imported rows are marked as pulled. | **🔐 SHA-256 verification**<br/>Exports carry `sha256 = SHA-256(JSON.stringify({format, session, events}))`; imports compare it **before writing a byte** and refuse with HTTP 409 `checksum-mismatch`. Each row has a *Verify* action. |
 | **🔁 Optional auto-pull**<br/>Every 20s, pull sessions you have not pulled yet. Content fingerprints (not ids) stop two machines with auto-pull on from bouncing one conversation back and forth forever. | **🎨 Native look, i18n**<br/>Built from DSH design tokens (colors, radii, type scale, 0.2s transitions), so light/dark follow the host. Language follows DSH by default, with explicit 中文 / English overrides. |
 | **🖱️ Drag, select, drop**<br/>Select one or many sessions and drag them onto any known folder — every drop asks for confirmation and names the folder the conversation will be imported into. | **🚦 Confirmed transfer queue**<br/>Repeated pushes/pulls are detected up front; a dialog lets you keep the local copy, overwrite it, or drop that single item. The rest of the queue keeps running in order. |
-| **⚡ One-click sync**<br/>**Sync all** / **Push all** plan the whole device in one go, skip sessions already present by content fingerprint, and report each row as done, skipped or failed. | **🌐 Cross-subnet scanning**<br/>Broadcast stays on the local segment; add CIDRs or IPs under *Cross-subnet scan* and the plugin probes those hosts' discovery ports in the background, so devices in another VLAN show up too. |
+| **⚡ One-click sync**<br/>**Sync all** / **Push all** plan the whole device in one go, skip sessions already present by content fingerprint, and report each row as done, skipped or failed. | **🌐 Cross-subnet scanning**<br/>Broadcast stays on the local segment; add CIDRs, IPs or `ip:port` under *Cross-subnet scan*. CIDRs get silent UDP discovery packets, single IPs are also probed over HTTP on 47802–47817 — a firewall that drops UDP no longer hides the peer. |
 
 ## 🚀 Installation
 
@@ -109,7 +109,7 @@ The UI uses DSH's own CSS variables rather than copied hex values: `--dsw-alias-
 | `home` | `$DSH_HOME` or `~/.dsh` | Root for state and sessions |
 | `autoPullIntervalMs` | `20000` | Auto-pull interval (lowered in tests) |
 | `verbose` | `true` | Turn plugin logging off |
-| `subnets` | `[]` | Extra CIDRs/IPs to sweep for devices when UDP broadcast cannot cross a router (e.g. `192.168.5.0/24`, `10.0.0.7`) |
+| `subnets` | `[]` | Extra CIDRs/IPs/`ip:port` for devices that UDP broadcast cannot reach (e.g. `192.168.5.0/24`, `10.0.0.7`, `10.0.0.7:47802`). CIDRs use UDP discovery packets; bare IPs are also probed over HTTP on 47802–47817 |
 
 ## 🔌 LAN protocol (`/v1/*`)
 
@@ -143,7 +143,7 @@ The GUI side (`/session-sync/api`) runs on DSH's own loopback web server and is 
 node --test --test-force-exit --test-timeout=120000 'test/*.test.mjs'
 ```
 
-16 cases: client bundle contract and language resolution (7), jsdom mount and interactions (4), two-instance end-to-end — discovery, rename persistence, restart, pull/push, auto-pull dedupe, locale persistence (5), and SHA-256 tamper rejection (1).
+30 cases: client bundle contract, dictionary parity, footer and language resolution (11), jsdom mount and interactions (4), two-instance end-to-end — discovery, rename persistence, restart, pull/push, auto-pull dedupe, receiver dedupe, SHA-256 tamper rejection and HTTP-only discovery (8), and the probe fallback contract (7).
 
 Run a headless instance without the desktop shell:
 

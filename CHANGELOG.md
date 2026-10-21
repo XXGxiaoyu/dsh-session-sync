@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.1 — 2026-10-21
+
+- **Fixed — cross-subnet scan actually reaches the peer port.** The sweeper used to send every hello to its *own* discovery port; entries now accept `ip:port` and the packet goes to the port written in the entry.
+- **New — HTTP fallback for UDP-blocked networks.** A bare IP (or `ip:port`) is also probed over HTTP on ports 47802–47817 in parallel, using the same header-fenced `/v1/info` API; devices behind a firewall that drops UDP still show up, and the device row reports which path found them (`via: udp | http`).
+- **Fixed — scan settings apply immediately.** Saving *Cross-subnet scan* or the manual address list now rebuilds the sweep list and runs a probe right away, instead of waiting up to a minute.
+- **New — footer credits.** Version, MIT license, a GitHub link and a small “star this repo” line, all on design tokens.
+- **Fixed — English dictionary completed** for the probe-status and footer strings.
+- **Verified against a live DSH desktop instance**: HTTP probe found it on port 47802 in 411 ms while UDP could not cross the test boundary.
+- Tests: 30 (was 24) — port-aware sweep targets, `parseTarget` validation, probe against a fake peer (header fence, dead ports), an end-to-end discovery where only HTTP can succeed, and the footer contract.
+
 ## 0.3.0 — 2026-10-21
 
 - **Fixed — typed text no longer disappears.** The 4s poll used to overwrite the local-name field, the seeds box and the new cross-subnet box on every refresh; fields now only sync from the host when the user is not editing them.
