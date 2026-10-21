@@ -161,4 +161,5 @@ DSH_HOME=/tmp/dsh-ss-home node <dsh>/lib/bin.js --profile ssync --no-open --host
 
 ## 📄 许可证
 
-[MIT](./LICENSE)
+[MIT](./LICENSE)- **自动同步目录，含「未分组」。** `syncDir` 决定自动拉取的会话落在哪里：插件自己的 `unsorted` 目录（不归任何工作区）、已有工作区，或任意绝对路径（保存时自动创建）。
+

@@ -692,3 +692,72 @@ test('two profiles on one address collapse into a single device row', async () =
   assert.match(container.textContent, /1 在线 \/ 共 1/, 'the count follows the collapsed list')
   await act(async () => { root.unmount() })
 })
+
+test('a session dragged anywhere can be dropped onto a workspace via the drop layer', async () => {
+  const { registered, t } = loadComponents()
+  const calls = []
+  globalThis.fetch = async (url, init) => {
+    const body = JSON.parse(init.body)
+    calls.push({ url: String(url), body })
+    if (body.action === 'peerSessions') {
+      return jsonReply({
+        ok: true,
+        sessions: [{ id: 'remote-9', title: '拖到工作区', createdAt: Date.now() - 1000, eventCount: 2, imported: null, cwd: '/Users/wang/a' }],
+      })
+    }
+    if (body.action === 'pull') return jsonReply({ ok: true, imported: { localId: 'new-9', title: '拖到工作区' } })
+    if (body.action === 'localSessions') return jsonReply({ ok: true, sessions: [] })
+    return jsonReply(statePayload({
+      workspaces: [{ id: 'w1', path: '/tmp/alpha', title: 'Alpha' }],
+      unsortedDir: '/tmp/unsorted',
+      syncDir: '',
+    }))
+  }
+  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  const overlay = registered.find((entry) => entry.options.name === 'shell.overlay')
+  assert.ok(overlay, 'the drop layer is registered in shell.overlay')
+
+  const panelRoot = createRoot(document.getElementById('root'))
+  await act(async () => { panelRoot.render(React.createElement(page.component, { t })) })
+  await act(async () => { await Promise.resolve() })
+  const open = [...document.getElementById('root').querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
+
+  const layerHost = document.createElement('div')
+  document.body.appendChild(layerHost)
+  const layerRoot = createRoot(layerHost)
+  await act(async () => { layerRoot.render(React.createElement(overlay.component, { t })) })
+  assert.equal(layerHost.querySelector('.ss-dropside'), null, 'nothing is shown until a drag starts')
+
+  const item = document.getElementById('root').querySelector('.ss-item[draggable="true"]')
+  const data = transfer()
+  const dragStart = new dom.window.Event('dragstart', { bubbles: true })
+  Object.defineProperty(dragStart, 'dataTransfer', { value: data })
+  await act(async () => { item.dispatchEvent(dragStart) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 200)) })
+
+  const targets = [...layerHost.querySelectorAll('.ss-droptarget')]
+  assert.equal(targets.length, 2, '未分组 plus every workspace')
+  assert.match(layerHost.textContent, /Alpha/)
+  assert.match(layerHost.textContent, /未分组/)
+
+  const alpha = targets.find((target) => target.textContent.includes('/tmp/alpha'))
+  const drop = new dom.window.Event('drop', { bubbles: true })
+  Object.defineProperty(drop, 'dataTransfer', { value: data })
+  await act(async () => { alpha.dispatchEvent(drop) })
+
+  const modal = document.getElementById('root').querySelector('.ss-modal')
+  assert.ok(modal, 'dropping opens the confirmation dialog')
+  assert.match(modal.textContent, /\/tmp\/alpha/)
+  const confirm = [...modal.querySelectorAll('button')].find((button) => button.textContent === t('plan.confirm'))
+  await act(async () => { confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 400)) })
+  const pull = calls.find((call) => call.body.action === 'pull')
+  assert.ok(pull, 'the drop pulls the session')
+  assert.equal(pull.body.cwd, '/tmp/alpha', 'the conversation lands in the chosen workspace')
+
+  await act(async () => { panelRoot.unmount() })
+  await act(async () => { layerRoot.unmount() })
+  layerHost.remove()
+})

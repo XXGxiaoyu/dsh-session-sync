@@ -586,3 +586,51 @@ test('peers on this machine never reach the device list', async () => {
     await b.stop()
   }
 })
+
+test('the auto-sync folder is validated, created, persisted and used by auto-pull', async () => {
+  const discoveryA = 54000 + Math.floor(Math.random() * 400)
+  const a = await bootInstance({ tag: 'sync-dir-a', discoveryPort: discoveryA, seeds: [], config: { autoPullIntervalMs: 1000 } })
+  const b = await bootInstance({ tag: 'sync-dir-b', discoveryPort: discoveryA + 1, seeds: [], config: { autoPullIntervalMs: 1000 } })
+  try {
+    await a.api('settings', { patch: { seeds: [`127.0.0.1:${discoveryA + 1}`] } })
+    await b.api('settings', { patch: { seeds: [`127.0.0.1:${discoveryA}`] } })
+    await waitFor(async () => (await a.api('state')).body.peers.some((peer) => peer.online), { label: 'peer online' })
+    const target = path.join(a.home, 'workspace', 'synced')
+    const saved = await a.api('settings', { patch: { syncDir: target } })
+    assert.equal(saved.status, 200)
+    assert.equal(saved.body.settings.syncDir, target, 'the folder is stored verbatim')
+    assert.equal(fs.existsSync(target), true, 'the folder is created on save')
+
+    const rejected = await a.api('settings', { patch: { syncDir: 'relative/dir' } })
+    assert.equal(rejected.status, 400, 'only absolute paths are accepted')
+
+    // Auto-pull must land in the configured folder, not in the source cwd.
+    seedSession(b.store, 'session-auto-dir', 'B 的目录测试')
+    await a.api('settings', { patch: { autoPull: true } })
+    await waitFor(() => (a.store.map.has('session-auto-dir') ? true : [...a.store.map.keys()].some((id) => id !== 'session-auto-dir')), { label: 'auto pull' })
+    const imported = [...a.store.map.values()].find((entry) => entry.header.cwd === target)
+    assert.ok(imported, 'the auto-pulled session keeps the configured folder as cwd')
+  } finally {
+    await a.stop()
+    await b.stop()
+  }
+})
+
+test('the workspace picker reads names from DSH storage', async () => {
+  const instance = await bootInstance({ tag: 'workspaces', discoveryPort: 54300 + Math.floor(Math.random() * 200), seeds: [] })
+  try {
+    const storages = path.join(instance.home, 'storages')
+    fs.mkdirSync(storages, { recursive: true })
+    fs.writeFileSync(path.join(storages, 'workspace.json'), JSON.stringify({
+      unit: { name: 'workspace', version: 2 },
+      global: { workspaceIds: ['w1'] },
+      tables: { workspaces: { w1: { path: path.join(instance.home, 'projects', 'alpha'), title: 'alpha' } } },
+    }))
+    const state = (await instance.api('state')).body
+    assert.equal(state.workspaces.length, 1)
+    assert.equal(state.workspaces[0].title, 'alpha')
+    assert.match(state.syncDir, /session-sync\/unsorted$/, '未分组 is the default target')
+  } finally {
+    await instance.stop()
+  }
+})
