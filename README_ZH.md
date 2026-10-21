@@ -7,7 +7,7 @@
 [![CI](https://github.com/XXGxiaoyu/dsh-session-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/XXGxiaoyu/dsh-session-sync/actions/workflows/ci.yml)
 [![GitHub stars](https://img.shields.io/github/stars/XXGxiaoyu/dsh-session-sync)](https://github.com/XXGxiaoyu/dsh-session-sync/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![DSH](https://img.shields.io/badge/DSH-0.2.1--rc.1%2B-4d6bfe)](https://www.npmjs.com/package/@deepseek-ai/dsh)
+[![DSH](https://img.shields.io/badge/DSH-0.2.1--rc.2-4d6bfe)](https://www.npmjs.com/package/@deepseek-ai/dsh)
 
 🌏 **简体中文** · [English](./README.md)
 
@@ -28,6 +28,8 @@
 ```sh
 dsh plugin --profile web add github:XXGxiaoyu/dsh-session-sync
 ```
+
+需要 DSH **0.2.1-rc.2**（当前桌面版内置的版本）与 Node 22+。
 
 然后重启 DSH 桌面应用（宿主半边的改动在启动时加载，页面刷新即可拿到新 UI）。装完会自动启用：包里声明了 `dsh.bundle`，`dsh plugin add` 会自己把它加进 `dsh.profile.bundles`。
 
