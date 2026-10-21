@@ -1,0 +1,46 @@
+name: Bug report
+description: Something in the Session Sync panel or the LAN sync does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please include the DSH version and the plugin version — most sync problems are version skew between two machines.
+  - type: input
+    id: dsh-version
+    attributes:
+      label: DSH version
+      placeholder: 0.2.1-rc.2
+    validations:
+      required: true
+  - type: input
+    id: plugin-version
+    attributes:
+      label: dsh-session-sync version
+      placeholder: 0.2.0
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Plugin log lines
+      description: Lines starting with `[dsh-session-sync]`, and any HTTP error from the panel.
+      render: text
+  - type: dropdown
+    id: network
+    attributes:
+      label: Network
+      options:
+        - Same subnet, wired
+        - Same subnet, Wi-Fi
+        - Different subnets / VPN (manual seeds)
+        - Loopback only (two instances on one machine)
+    validations:
+      required: true

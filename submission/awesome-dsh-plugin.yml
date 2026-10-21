@@ -1,0 +1,10 @@
+# Submit this as data/plugins/XXGxiaoyu__dsh-session-sync.yml in
+# https://github.com/awesome-dsh-plugin/awesome-dsh-plugin
+# One PR adds exactly one file; the repository must be at least 1 day old and
+# carry the `dsh-plugin` topic.
+url: https://github.com/XXGxiaoyu/dsh-session-sync
+name: XXGxiaoyu/dsh-session-sync
+category: session
+description:
+  en: "Discover DSH installs on your LAN, browse, pull and push sessions over HTTP, verify them with SHA-256, and keep a per-device nickname that exists only on your machine."
+  zh: "在局域网里自动发现装了本插件的 DSH 设备，浏览、拉取、推送会话，支持 SHA-256 校验与仅存本机的设备自定义命名。"

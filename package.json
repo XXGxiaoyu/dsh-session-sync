@@ -1,0 +1,65 @@
+{
+  "name": "dsh-session-sync",
+  "version": "0.2.0",
+  "description": "DSH LAN session sync: auto-discover devices running this plugin, browse/pull/push sessions over HTTP, verify them with SHA-256, and keep a local-only nickname per device.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "README_ZH.md",
+    "CHANGELOG.md",
+    "CHANGELOG_ZH.md",
+    "LICENSE",
+    "icon.svg",
+    "screenshots.json",
+    "docs"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "deepseek",
+    "session-sync",
+    "lan",
+    "p2p",
+    "session"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-slots"
+      ]
+    },
+    "manifestVersion": 1
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "jsdom": "^30.1.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/XXGxiaoyu/dsh-session-sync.git"
+  },
+  "homepage": "https://github.com/XXGxiaoyu/dsh-session-sync#readme",
+  "bugs": {
+    "url": "https://github.com/XXGxiaoyu/dsh-session-sync/issues"
+  },
+  "packageManager": "pnpm@11.15.1"
+}

@@ -1,0 +1,15 @@
+# dsh-session-sync bundle patch
+#
+# 只有一条挂载行：本包装进 profile（`dsh.profile.bundles` 或 profile 的
+# cordis.patch.yml）后，loader 会按这里的 id/name 挂载插件实例。
+# 想改配置就再写一条 override，例如：
+#
+#   - override:
+#       - id: session-sync
+#         config:
+#           lanPort: 47802
+#           discoveryPort: 47801
+#           verbose: false
+- insert:
+    - id: session-sync
+      name: dsh-session-sync
