@@ -5,3 +5,6 @@ node_modules/
 coverage/
 .idea/
 .vscode/
+
+# release assets are attached to GitHub Releases, not committed
+*.tgz

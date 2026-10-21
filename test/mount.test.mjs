@@ -806,3 +806,147 @@ test('a session dragged over a real sidebar row drops into that workspace', asyn
   await act(async () => { panelRoot.unmount() })
   sidebar.remove()
 })
+
+test('a nested expanded group accepts the drop anywhere inside it', async () => {
+  const { registered, t } = loadComponents()
+  const calls = []
+  globalThis.fetch = async (_input, init = {}) => {
+    const body = JSON.parse(init.body ?? '{}')
+    calls.push({ body })
+    if (body.action === 'peerSessions') {
+      return jsonReply({
+        ok: true,
+        sessions: [{ id: 'remote-9', title: '嵌套分组', createdAt: Date.now() - 1000, eventCount: 2, imported: null, cwd: '/Users/wang/a' }],
+      })
+    }
+    if (body.action === 'pull') return jsonReply({ ok: true, imported: { localId: 'new-9', title: '嵌套分组' } })
+    if (body.action === 'localSessions') return jsonReply({ ok: true, sessions: [] })
+    return jsonReply(statePayload({
+      workspaces: [{ id: 'w1', path: '/tmp/alpha', title: 'Alpha' }],
+      unsortedDir: '/tmp/unsorted',
+      syncDir: '',
+    }))
+  }
+  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  const panelRoot = createRoot(document.getElementById('root'))
+  await act(async () => { panelRoot.render(React.createElement(page.component, { t })) })
+  await act(async () => { await Promise.resolve() })
+  const open = [...document.getElementById('root').querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
+
+  // DSH nests an expanded group: <li><row/><ul><li><session row/></li></ul></li>
+  const tree = document.createElement('div')
+  tree.setAttribute('role', 'tree')
+  const group = document.createElement('li')
+  const header = document.createElement('div')
+  header.setAttribute('data-row-key', 'workspace:w1')
+  header.setAttribute('aria-expanded', 'true')
+  const list = document.createElement('ul')
+  const nested = document.createElement('li')
+  const member = document.createElement('div')
+  member.setAttribute('data-row-key', 'session:remote-9')
+  nested.append(member)
+  list.append(nested)
+  group.append(header, list)
+  tree.append(group)
+  document.body.append(tree)
+
+  const item = document.getElementById('root').querySelector('.ss-item[draggable="true"]')
+  const data = transfer()
+  const dragStart = new dom.window.Event('dragstart', { bubbles: true })
+  Object.defineProperty(dragStart, 'dataTransfer', { value: data })
+  await act(async () => { item.dispatchEvent(dragStart) })
+  assert.ok(document.querySelector('.ss-dragghost') !== null, 'our own ghost replaces the native drag image')
+
+  const over = new dom.window.Event('dragover', { bubbles: true, cancelable: true, clientX: 120, clientY: 240 })
+  Object.defineProperty(over, 'dataTransfer', { value: data })
+  await act(async () => { member.dispatchEvent(over) })
+  assert.ok(header.classList.contains('ss-ws-over'), 'a row two levels down still resolves its group')
+  assert.ok(group.classList.contains('ss-ws-group'), 'the whole group container is tinted')
+  assert.ok(member.classList.contains('ss-ws-member'), 'the nested member row is tinted')
+  assert.ok(document.querySelector('.ss-dnd-tip.ws') !== null, 'the pill announces the group instead of blocking')
+
+  const drop = new dom.window.Event('drop', { bubbles: true, cancelable: true })
+  Object.defineProperty(drop, 'dataTransfer', { value: data })
+  await act(async () => { member.dispatchEvent(drop) })
+  assert.ok(document.querySelector('.ss-dragghost') === null, 'the ghost is cleared on drop')
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 160)) })
+  const modal = document.getElementById('root').querySelector('.ss-modal')
+  assert.ok(modal, 'dropping inside the expanded area opens the confirmation dialog')
+  const confirm = [...modal.querySelectorAll('button')].find((button) => button.textContent === t('plan.confirm'))
+  await act(async () => { confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 400)) })
+  const pull = calls.find((call) => call.body.action === 'pull')
+  assert.equal(pull?.body.cwd, '/tmp/alpha')
+  await act(async () => { panelRoot.unmount() })
+  tree.remove()
+})
+
+test('a row nested inside DSH\'s div/span section resolves to its group header', async () => {
+  const { registered, t } = loadComponents()
+  const calls = []
+  globalThis.fetch = async (_url, init = {}) => {
+    const body = JSON.parse(init.body ?? '{}')
+    calls.push({ body })
+    if (body.action === 'peerSessions') {
+      return jsonReply({
+        ok: true,
+        sessions: [{ id: 'remote-9', title: '生产结构', createdAt: Date.now() - 1000, eventCount: 2, imported: null, cwd: '/Users/wang/a' }],
+      })
+    }
+    if (body.action === 'pull') return jsonReply({ ok: true, imported: { localId: 'new-9', title: '生产结构' } })
+    if (body.action === 'localSessions') return jsonReply({ ok: true, sessions: [] })
+    return jsonReply(statePayload({
+      workspaces: [{ id: 'w1', path: '/tmp/alpha', title: 'Alpha' }],
+      unsortedDir: '/tmp/unsorted',
+      syncDir: '',
+    }))
+  }
+  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  const panelRoot = createRoot(document.getElementById('root'))
+  await act(async () => { panelRoot.render(React.createElement(page.component, { t })) })
+  await act(async () => { await Promise.resolve() })
+  const open = [...document.getElementById('root').querySelectorAll('button')].find((button) => button.textContent === t('sessions.show'))
+  await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
+
+  // Mirrors the real sidebar: list > section > (header | span > sessionRow).
+  const list = document.createElement('div')
+  const section = document.createElement('div')
+  const header = document.createElement('div')
+  header.setAttribute('data-row-key', 'workspace:w1')
+  const span = document.createElement('span')
+  const row = document.createElement('div')
+  row.className = 'jJkEga_sessionRow'
+  row.setAttribute('data-row-key', 'session:session-1')
+  span.append(row)
+  section.append(header, span)
+  list.append(section)
+  document.body.append(list)
+
+  const item = document.getElementById('root').querySelector('.ss-item[draggable="true"]')
+  const data = transfer()
+  const dragStart = new dom.window.Event('dragstart', { bubbles: true })
+  Object.defineProperty(dragStart, 'dataTransfer', { value: data })
+  await act(async () => { item.dispatchEvent(dragStart) })
+
+  const over = new dom.window.Event('dragover', { bubbles: true, cancelable: true, clientX: 100, clientY: 200 })
+  Object.defineProperty(over, 'dataTransfer', { value: data })
+  await act(async () => { row.dispatchEvent(over) })
+  assert.ok(header.classList.contains('ss-ws-over'), 'the header two levels up lights up')
+  assert.ok(section.classList.contains('ss-ws-group'), 'the section itself is tinted')
+  assert.ok(row.classList.contains('ss-ws-member'), 'the session row is tinted')
+
+  const drop = new dom.window.Event('drop', { bubbles: true, cancelable: true })
+  Object.defineProperty(drop, 'dataTransfer', { value: data })
+  await act(async () => { row.dispatchEvent(drop) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 160)) })
+  const modal = document.getElementById('root').querySelector('.ss-modal')
+  const confirm = [...modal.querySelectorAll('button')].find((button) => button.textContent === t('plan.confirm'))
+  await act(async () => { confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 400)) })
+  assert.equal(calls.find((call) => call.body.action === 'pull')?.body.cwd, '/tmp/alpha')
+  await act(async () => { panelRoot.unmount() })
+  list.remove()
+})

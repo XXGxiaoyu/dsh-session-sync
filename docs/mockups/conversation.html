@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"/><title>会话主界面 · UI/UX/动效设计稿</title>
+<style>
+  :root{--bg:#151517;--panel:#1b1b1e;--layer:#232326;--layer2:#2c2c2e;--text:#e6e6e8;--secondary:#a9a9b0;--tertiary:#7c7c85;--caption:#66666f;
+    --b1:#ffffff14;--b2:#ffffff1f;--b3:#ffffff2e;--brand:#4d6bfe;--brand-soft:#4d6bfe1f;--ok:#3ecf8e;--err:#f2545b;--warn:#f5a524;
+    --r-xs:4px;--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,monospace}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/22px var(--sans);padding:30px 38px 46px}
+  h1{font-size:20px;line-height:28px;font-weight:500;margin:0 0 4px}
+  .sub{color:var(--tertiary);font-size:13px;line-height:20px;margin:0 0 22px;max-width:960px}
+  .board{display:grid;grid-template-columns:196px minmax(0,1fr);gap:0;border:.5px solid var(--b2);border-radius:var(--r-lg);background:var(--panel);margin-bottom:22px}
+  .side{padding:12px 8px;border-right:.5px solid var(--b1);display:flex;flex-direction:column;gap:2px;background:#ffffff03}
+  .side-title{font-size:11px;line-height:16px;letter-spacing:.4px;text-transform:uppercase;color:var(--caption);padding:4px 8px}
+  .side-row{display:flex;align-items:center;gap:8px;height:30px;padding:0 8px;border-radius:var(--r-sm);font-size:12.5px;color:var(--tertiary);white-space:nowrap;overflow:hidden}
+  .side-row.on{color:var(--text);background:#ffffff0f}
+  .side-row .c{margin-left:auto;color:var(--caption);font-size:11px}
+  .main{display:flex;flex-direction:column;padding-bottom:10px;position:relative}
+  .main.live{height:372px;min-height:0}
+  .main.live[style*="height:auto"] .thread{overflow:visible}
+  .main.live .thread{flex:1 1 auto;min-height:0;overflow-y:auto}
+  .main.tight{min-height:0}
+  .topbar{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:.5px solid var(--b1)}
+  .topbar .ttl{font-size:14px;font-weight:500}
+  .topbar .meta{margin-left:auto;color:var(--caption);font-size:12px}
+  .thread{flex:none;padding:20px 28px 10px 24px;display:flex;flex-direction:column;gap:18px;max-width:100%}
+  .thread.narrow{max-width:700px;margin:0 auto}
+  .msg{display:flex;gap:10px;max-width:100%}
+  .avatar{width:24px;height:24px;border-radius:8px;background:#ffffff12;display:grid;place-items:center;font-size:11px;color:var(--secondary);flex:none;margin-top:2px}
+  .body{min-width:0;display:flex;flex-direction:column;gap:8px}
+  .body p{margin:0;font-size:14px;line-height:23px;color:var(--text)}
+  .body p.muted{color:var(--secondary)}
+  .body ul{margin:0;padding-left:18px;font-size:14px;line-height:23px;color:var(--text)}
+  .body li{margin:2px 0}
+  .msg.user{width:100%;justify-content:flex-end}
+  .user{margin-left:auto;max-width:78%;display:block;background:var(--layer2);border:.5px solid var(--b1);border-radius:16px 16px 4px 16px;padding:9px 13px;font-size:14px;line-height:22px}
+  .user.narrow{max-width:55%}
+  .stamp{font-size:11px;line-height:15px;color:var(--caption);opacity:0;transition:opacity .15s ease}
+  .msg:hover .stamp{opacity:1}
+  .hoverbar{position:absolute;right:-2px;top:0;display:flex;gap:2px;padding:2px;border-radius:8px;background:var(--layer);border:.5px solid var(--b2);opacity:0;transition:opacity .15s ease;box-shadow:0 6px 18px #0006}
+  .msg:hover .hoverbar{opacity:1}
+  .hoverbar span{width:24px;height:22px;display:grid;place-items:center;border-radius:6px;color:var(--tertiary);font-size:11px}
+  .hoverbar span:hover{background:#ffffff14;color:var(--text)}
+  .relwrap{position:relative;display:flex;flex-direction:column;gap:8px}
+  .code{border:.5px solid var(--b2);border-radius:var(--r-md);overflow:hidden;background:#101012;max-width:880px}
+  .code-hd{display:flex;align-items:center;gap:8px;height:30px;padding:0 10px;background:#ffffff08;border-bottom:.5px solid var(--b1);font:11px/16px var(--mono);color:var(--tertiary)}
+  .code-hd .lang{color:var(--secondary)}
+  .code-hd .sp{margin-left:auto;display:flex;gap:4px}
+  .code-hd .sp span{padding:0 6px;height:18px;display:grid;place-items:center;border-radius:4px;color:var(--tertiary);font:11px/16px var(--sans)}
+  .code-hd .sp span:hover{background:#ffffff14;color:var(--text)}
+  .code pre{margin:0;padding:10px 12px;font:12.5px/20px var(--mono);color:#d7dae1;overflow:auto}
+  .tok-k{color:#c3a6ff}.tok-s{color:#9ad5a0}.tok-c{color:#6f7480}.tok-n{color:#f0b26b}
+  .code-more{display:flex;align-items:center;justify-content:center;gap:6px;height:28px;border-top:.5px solid var(--b1);background:linear-gradient(#10101200,#101012);color:var(--secondary);font-size:12px}
+  .tools{border:.5px solid var(--b2);border-radius:var(--r-md);background:#ffffff06;max-width:880px}
+  .tools-hd{display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:12.5px;color:var(--secondary)}
+  .tools-hd .dot{width:6px;height:6px;border-radius:999px;background:var(--ok);flex:none}
+  .tools-hd .dur{margin-left:auto;font-size:11px;color:var(--caption);font-variant-numeric:tabular-nums}
+  .tools-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-top:.5px solid var(--b1);font-size:12px;color:var(--tertiary)}
+  .tools-row .name{color:var(--secondary)}
+  .tools-row .st{margin-left:auto;font-size:11px;color:var(--caption)}
+  .tools-row.err .st{color:var(--err)}
+  .quote{border-left:2px solid var(--brand);background:var(--brand-soft);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:6px 10px;font-size:13px;line-height:20px;color:var(--secondary);max-width:880px}
+  .composer{position:relative;margin:0 20px 6px;border:.5px solid var(--b3);border-radius:var(--r-lg);background:var(--layer);padding:10px 12px;display:flex;flex-direction:column;gap:8px;max-width:952px}
+  .composer.focus{box-shadow:0 0 0 1.5px var(--brand)}
+  .composer.drop{border-style:dashed;border-color:var(--brand);background:var(--brand-soft)}
+  .composer .ph{color:var(--tertiary);font-size:14px}
+  .composer .row{display:flex;align-items:center;gap:8px;color:var(--tertiary);font-size:12px}
+  .composer .pill{display:flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:999px;border:.5px solid var(--b2);font-size:11px;color:var(--secondary)}
+  .composer .send{margin-left:auto;width:28px;height:28px;border-radius:999px;background:var(--brand);display:grid;place-items:center;color:#fff;font-size:13px}
+  .composer .stop{margin-left:auto;gap:6px;display:flex;align-items:center;height:28px;padding:0 12px;border-radius:999px;background:var(--err);color:#fff;font-size:12px;font-weight:500}
+  .composer .kbd{font:11px/16px var(--mono);border:.5px solid var(--b2);border-radius:4px;padding:0 4px;color:var(--secondary)}
+  .float{position:absolute;left:50%;transform:translateX(-50%);bottom:96px;display:flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;background:var(--layer2);border:.5px solid var(--b3);font-size:12px;color:var(--secondary);box-shadow:0 10px 26px #0007}
+  .float b{color:var(--text);font-weight:600}
+  .cursor{display:inline-block;width:7px;height:15px;border-radius:2px;background:var(--brand);vertical-align:-2px;margin-left:2px;animation:pulse 1.1s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+  .annot{position:absolute;right:10px;top:0;font-size:11px;color:var(--caption);background:var(--panel);padding:0 4px}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;color:var(--tertiary);font-size:12px;margin:6px 0 26px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  h2{font-size:15px;line-height:22px;font-weight:600;margin:26px 0 10px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:.5px solid var(--b1);vertical-align:top}
+  th{color:var(--tertiary);font-weight:500;font-size:11px;letter-spacing:.3px;text-transform:uppercase}
+  td b{font-weight:600;color:var(--text)}
+  td{color:var(--secondary)}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .card{border:.5px solid var(--b2);border-radius:var(--r-md);padding:14px 16px;background:var(--panel)}
+  .card h3{margin:0 0 6px;font-size:13px;font-weight:600}
+  .card ul{margin:0;padding-left:16px;color:var(--tertiary);font-size:12px;line-height:19px}
+  .bad{color:var(--err)}.good{color:var(--ok)}
+</style>
+</head>
+<body>
+  <h1>会话主界面 · UI / UX / 动效自检稿</h1>
+  <p class="sub">范围：消息阅读列、消息内元素（代码块 / 工具调用 / 引用）、输入区与流式状态。约束：只动会话页自身的排版与交互，不改 DSH 的 DOM 结构与既有快捷键；颜色、圆角、动效全部取现有 <code>--dsw-*</code> 令牌。</p>
+
+  <h2>① 阅读节奏：对照</h2>
+  <div class="board">
+    <div class="side">
+      <div class="side-title">工作区</div>
+      <div class="side-row">未分组 <span class="c">6</span></div>
+      <div class="side-row on">ds-harness-workspace <span class="c">28</span></div>
+      <div class="side-row">开发 dsh 局域网会话同步插件</div>
+      <div class="side-row">dsh-session-sync 0.4.2 发布记录</div>
+      <div class="side-row">AMD 平台 VTD 与 DMA 反检…</div>
+    </div>
+    <div class="main live" style="height:404px">
+      <div class="topbar"><span class="ttl">现状 · 55% 用户气泡 + 920px 正文</span><span class="meta">行高 22 · 轮次间距 12</span></div>
+      <div class="thread">
+        <div class="msg user narrow"><span>帮我把拖拽改成整组可放，顺便出一版悬停稿。</span></div>
+        <div class="msg">
+          <div class="avatar">DS</div>
+          <div class="body">
+            <p>命中判定改成向上回溯最近的 <code>data-row-key="workspace:*"</code>，会话行与空白都算命中；标题行保留描边，成员行铺 10% 品牌底加左侧 2px 轨道。</p>
+            <div class="code">
+              <div class="code-hd"><span class="lang">js</span><span class="sp"><span>复制</span></span></div>
+              <pre><span class="tok-k">const</span> owner = ownerWorkspaceRow(row)
+<span class="tok-k">if</span> (owner === <span class="tok-k">null</span>) <span class="tok-k">return</span> <span class="tok-k">null</span>
+markGroup(owner, <span class="tok-k">true</span>)</pre>
+            </div>
+            <p class="muted">行高偏紧、段落之间没有呼吸感；代码块与正文同宽，长行会横向滚动。</p>
+          </div>
+        </div>
+      </div>
+      <div class="composer"><div class="ph">给 DeepSeek Harness 发消息…</div><div class="row"><span class="pill">标准模式</span><span class="pill">DeepSeek V3.2</span><span class="send">↑</span></div></div>
+    </div>
+  </div>
+
+  <div class="board">
+    <div class="side">
+      <div class="side-title">工作区</div>
+      <div class="side-row">未分组 <span class="c">6</span></div>
+      <div class="side-row on">ds-harness-workspace <span class="c">28</span></div>
+      <div class="side-row">开发 dsh 局域网会话同步插件</div>
+      <div class="side-row">dsh-session-sync 0.4.2 发布记录</div>
+      <div class="side-row">AMD 平台 VTD 与 DMA 反检…</div>
+    </div>
+    <div class="main live" style="height:566px">
+      <div class="topbar"><span class="ttl">建议 · 760px 正文（代码/表格 880px）+ 78% 用户气泡</span><span class="meta">行高 23（1.64）· 轮次间距 24</span></div>
+      <div class="thread narrow">
+        <div class="msg user"><span>帮我把拖拽改成整组可放，顺便出一版悬停稿。</span></div>
+        <div class="msg">
+          <div class="avatar">DS</div>
+          <div class="body relwrap">
+            <p>命中判定改成向上回溯最近的 <code>data-row-key="workspace:*"</code>，会话行与空白都算命中；标题行保留描边，成员行铺 10% 品牌底加左侧 2px 轨道。</p>
+            <div class="code">
+              <div class="code-hd"><span class="lang">js</span><span class="sp"><span>换行</span><span>复制</span></span></div>
+              <pre><span class="tok-c">// 从任意成员行回溯到所属分组</span>
+<span class="tok-k">const</span> owner = ownerWorkspaceRow(row)
+<span class="tok-k">if</span> (owner === <span class="tok-k">null</span>) <span class="tok-k">return</span> <span class="tok-k">null</span>
+markGroup(owner, <span class="tok-k">true</span>)</pre>
+            </div>
+            <div class="quote">下一步：把「回到最新」与流式停止键做成同一套磁吸手势。</div>
+            <div class="hoverbar"><span>⧉</span><span>↺</span><span>⋯</span></div>
+          </div>
+          <div class="stamp">14:32</div>
+        </div>
+      </div>
+      <div class="composer focus"><div class="ph" style="color:var(--secondary)">继续描述你的需求…</div><div class="row"><span class="pill">标准模式</span><span class="pill">DeepSeek V3.2</span><span class="kbd">⌘↵ 发送</span><span class="send">↑</span></div></div>
+    </div>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--brand)"></i>brand · 焦点环 / 光标 / 引用</span>
+    <span><i style="background:#ffffff14"></i>interactive-bg-hover · 消息工具条</span>
+    <span><i style="background:var(--layer2)"></i>bg-layer-2 · 用户气泡</span>
+    <span><i style="background:#101012"></i>代码块底（比面板深 1 级）</span>
+  </div>
+
+  <h2>② 消息内元素</h2>
+  <div class="board">
+    <div class="side">
+      <div class="side-title">元素</div>
+      <div class="side-row on">工具调用组</div>
+      <div class="side-row">代码块</div>
+      <div class="side-row">引用 / 附件</div>
+    </div>
+    <div class="main live" style="height:auto">
+      <div class="topbar"><span class="ttl">工具调用：连续 3 次合并为一张卡</span><span class="meta">默认折叠 · 展开 180ms</span></div>
+      <div class="thread narrow">
+        <div class="tools">
+          <div class="tools-hd"><span class="dot"></span><b style="font-weight:500;color:var(--text)">3 个工具调用</b><span class="dur">1.8s</span></div>
+          <div class="tools-row"><span>▤</span><span class="name">read_file</span><span>lib/client.js:717</span><span class="st">完成</span></div>
+          <div class="tools-row"><span>⌕</span><span class="name">grep</span><span>ownerWorkspaceRow</span><span class="st">完成</span></div>
+          <div class="tools-row err"><span>⚑</span><span class="name">bash</span><span>node --test</span><span class="st">失败 · 2 项</span></div>
+        </div>
+        <div class="code">
+          <div class="code-hd"><span class="lang">diff</span><span class="sp"><span>复制</span></span></div>
+          <pre><span class="tok-c">- .ss-ws-member{background:10%}</span>
+<span class="tok-s">+ .ss-ws-member{background:10%; box-shadow:inset 2px 0 0 brand}</span></pre>
+          <div class="code-more">展开全部 42 行</div>
+        </div>
+        <div class="quote">用户引用：整组可放，不要只认标题行。</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>③ 状态与动效</h2>
+  <div class="board">
+    <div class="side">
+      <div class="side-title">状态</div>
+      <div class="side-row on">流式中</div>
+      <div class="side-row">离开底部</div>
+      <div class="side-row">拖入附件</div>
+    </div>
+    <div class="main live">
+      <div class="topbar"><span class="ttl">流式 · 顶部状态 + 磁吸停止</span><span class="meta">150ms 淡入 · reduced-motion 关闭</span></div>
+      <div class="thread narrow">
+        <div class="msg"><div class="avatar">DS</div><div class="body"><p>先量一下现有内容列宽：<code>--dsh-chat-content-width</code> 是 64% 夹在 680–920 之间，所以大屏上正文会偏宽<span class="cursor"></span></p></div></div>
+        <div class="float"><b>2 条新消息</b><span>回到最新 ↓</span></div>
+      </div>
+      <div class="composer"><div class="ph">给 DeepSeek Harness 发消息…</div><div class="row"><span class="pill">标准模式</span><span class="pill">DeepSeek V3.2</span><span class="stop">■ 停止</span></div></div>
+    </div>
+  </div>
+  <div class="board">
+    <div class="side">
+      <div class="side-title">状态</div>
+      <div class="side-row">流式中</div>
+      <div class="side-row on">拖入附件</div>
+      <div class="side-row">聚焦</div>
+    </div>
+    <div class="main live">
+      <div class="topbar"><span class="ttl">拖入附件 · 整卡虚线 + 品牌 8% 底</span><span class="meta">100ms 进入</span></div>
+      <div class="thread narrow"><p class="muted" style="font-size:13px;line-height:20px;margin:0">松手后附件以 28px chip 排在输入框上方，可单个删除；拖出整卡恢复 0.5px 实线。</p></div>
+      <div class="composer drop"><div class="ph" style="color:var(--secondary)">松开即可添加到这条消息</div><div class="row"><span class="pill">2 个文件 · 1.2 MB</span><span class="send">↑</span></div></div>
+    </div>
+  </div>
+
+  <h2>设计决定与度量</h2>
+  <table>
+    <thead><tr><th>项目</th><th>现状</th><th>建议</th><th>理由</th></tr></thead>
+    <tbody>
+      <tr><td><b>正文列</b></td><td>64% 夹 680–920，代码同宽</td><td>正文 760px，代码/表格允许 880px</td><td>中文 14px 在 760px 约 54 字/行，接近 45–60 字舒适区；代码不横向滚动</td></tr>
+      <tr><td><b>用户气泡</b></td><td>55%，圆角 16</td><td>78%，圆角 16 / 右下 4</td><td>短句不再被挤成 3 行，长文仍受控</td></tr>
+      <tr><td><b>行高</b></td><td>22px（1.57）</td><td>23px（1.64）</td><td>中文加 1px 明显更松，不破坏密度</td></tr>
+      <tr><td><b>轮次间距</b></td><td>12px</td><td>24px（同轮内 10px）</td><td>轮次边界一眼可辨</td></tr>
+      <tr><td><b>代码块</b></td><td>无头，长行横向滚</td><td>30px 头（语言 / 换行 / 复制）+ max-height 420 + 展开</td><td>复制与语言识别是高频动作</td></tr>
+      <tr><td><b>工具调用</b></td><td>逐条展开</td><td>连续调用合并卡片，状态 / 耗时 / 失败可重试</td><td>长会话里工具噪声占一半屏</td></tr>
+      <tr><td><b>流式</b></td><td>底部停止按钮</td><td>光标脉冲 + 磁吸 danger 停止键</td><td>停止键随时可点，位置不跳</td></tr>
+      <tr><td><b>离开底部</b></td><td>无提示</td><td>>240px 出现「2 条新消息 · 回到最新」</td><td>不打断阅读，又能回到流</td></tr>
+      <tr><td><b>动效</b></td><td>较少</td><td>消息进入 160ms 上移 4px；展开 180ms；hover 150ms；全部尊重 reduced-motion</td><td>统一节奏，避免“突然出现”</td></tr>
+    </tbody>
+  </table>
+
+  <div class="cols" style="margin-top:18px">
+    <div class="card"><h3>不改什么</h3><ul>
+      <li>不改 DOM 结构与既有快捷键（⌘K、↑ 编辑上一条等）</li>
+      <li>不动模型选择、模式切换的位置与顺序</li>
+      <li>不引入新字体；仅用现有 font stack 与 12/13/14/20 阶梯</li>
+    </ul></div>
+    <div class="card"><h3>验收口径</h3><ul>
+      <li>1440 宽下正文 ≤ 760px、代码 ≤ 880px；1280 下不出现横向滚动</li>
+      <li>连续 3 次工具调用在会话里只占 1 张卡</li>
+      <li>流式时停止键与发送键位置完全重合</li>
+      <li><code>prefers-reduced-motion: reduce</code> 下无位移动画</li>
+    </ul></div>
+  </div>
+</body></html>
