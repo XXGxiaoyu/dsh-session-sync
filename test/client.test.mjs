@@ -227,3 +227,24 @@ test('the page footer credits the version, the license and the repository', () =
   assert.match(html, /target="_blank"/)
   assert.match(html, /rel="noreferrer noopener"/)
 })
+
+test('the bundled client version tracks package.json', () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(here, '..', 'package.json'), 'utf8'))
+  const bundled = /const CLIENT_VERSION = '([^']+)'/.exec(source)?.[1]
+  assert.ok(bundled !== undefined, 'CLIENT_VERSION must be a literal so the footer never lags a release')
+  assert.equal(bundled, pkg.version, 'bump both together — the footer shows the running build, not the latest tag')
+})
+
+test('a stale host is called out instead of looking like a wrong version', () => {
+  const { registration } = loadBundle()
+  const { registered, locales } = makeContext(registration)
+  const t = (key, params) => {
+    const template = locales[0].dictionaries.zh[key] ?? key
+    if (params === undefined) return template
+    return template.replace(/\{(\w+)\}/g, (match, name) => (name in params ? String(params[name]) : match))
+  }
+  const section = registered.find((entry) => entry.options.id === 'session-sync')
+  const html = renderToStaticMarkup(React.createElement(section.component, { t }))
+  assert.match(html, /v0\.3\.2/, 'the footer advertises the build it was shipped with')
+  assert.doesNotMatch(html, /宿主 v/, 'no stale-host line when host and bundle agree')
+})

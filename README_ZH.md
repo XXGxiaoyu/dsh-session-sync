@@ -33,7 +33,7 @@ dsh plugin --profile web add github:XXGxiaoyu/dsh-session-sync
 
 需要 DSH **0.2.1-rc.2**（当前桌面版内置的版本）与 Node 22+。
 
-然后重启 DSH 桌面应用（宿主半边的改动在启动时加载，页面刷新即可拿到新 UI）。装完会自动启用：包里声明了 `dsh.bundle`，`dsh plugin add` 会自己把它加进 `dsh.profile.bundles`。
+然后重启 DSH 桌面应用（宿主半边的改动在启动时加载，页面刷新即可拿到新 UI）。装完会自动启用：包里声明了 `dsh.bundle`，`dsh plugin add` 会自己把它加进 `dsh.profile.bundles`。页脚显示的是**真正在运行**的那份构建；如果比 Latest 版本旧，说明进程还没重启。
 
 预构建 tarball（免构建）：<https://github.com/XXGxiaoyu/dsh-session-sync/releases/latest/download/dsh-session-sync.tgz>
 
@@ -143,7 +143,7 @@ GUI 的 `/session-sync/api` 跑在 DSH 自己的回环 web 服务上，受宿主
 node --test --test-force-exit --test-timeout=120000 'test/*.test.mjs'
 ```
 
-30 个用例：客户端 bundle 契约、词典一致性与页脚（11）、jsdom 挂载与交互（4）、双实例端到端——发现/改名持久化/重启保留/拉取推送/自动拉取不反弹/接收端去重/SHA-256 篡改拒收/仅 HTTP 可发现的设备（8）、HTTP 兜底探测契约（7）。
+32 个用例：客户端 bundle 契约、词典一致性、页脚与版本一致性（13）、jsdom 挂载与交互（4）、双实例端到端——发现/改名持久化/重启保留/拉取推送/自动拉取不反弹/接收端去重/SHA-256 篡改拒收/仅 HTTP 可发现的设备（8）、HTTP 兜底探测契约（7）。
 
 单独起一个不带桌面壳的实例：
 

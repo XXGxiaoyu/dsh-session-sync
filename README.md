@@ -33,7 +33,7 @@ dsh plugin --profile web add github:XXGxiaoyu/dsh-session-sync
 
 Requires DSH **0.2.1-rc.2** (the version bundled with the current desktop app) and Node 22+.
 
-Then restart the DSH desktop app (host-side changes load at boot; open pages pick up the new UI on refresh). The install is auto-activated: the package declares `dsh.bundle`, so `dsh plugin add` adds it to `dsh.profile.bundles` on its own.
+Then restart the DSH desktop app (host-side changes load at boot; open pages pick up the new UI on refresh). The page footer shows the build that is actually running — if it reads an older number than the latest release, the process has not been restarted yet. The install is auto-activated: the package declares `dsh.bundle`, so `dsh plugin add` adds it to `dsh.profile.bundles` on its own.
 
 Prebuilt tarball (no build step): <https://github.com/XXGxiaoyu/dsh-session-sync/releases/latest/download/dsh-session-sync.tgz>
 
@@ -143,7 +143,7 @@ The GUI side (`/session-sync/api`) runs on DSH's own loopback web server and is 
 node --test --test-force-exit --test-timeout=120000 'test/*.test.mjs'
 ```
 
-30 cases: client bundle contract, dictionary parity, footer and language resolution (11), jsdom mount and interactions (4), two-instance end-to-end — discovery, rename persistence, restart, pull/push, auto-pull dedupe, receiver dedupe, SHA-256 tamper rejection and HTTP-only discovery (8), and the probe fallback contract (7).
+32 cases: client bundle contract, dictionary parity, footer, stale-host hint and version pinning (13), jsdom mount and interactions (4), two-instance end-to-end — discovery, rename persistence, restart, pull/push, auto-pull dedupe, receiver dedupe, SHA-256 tamper rejection and HTTP-only discovery (8), and the probe fallback contract (7).
 
 Run a headless instance without the desktop shell:
 

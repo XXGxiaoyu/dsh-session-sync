@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2 — 2026-10-21
+
+- **Fixed — the footer no longer looks like a wrong release.** It now prints the version of the build it shipped with (`CLIENT_VERSION`, enforced equal to `package.json` by a test), and appends `host v…` plus *“restart DSH to apply it”* when the running host process is older than the bundle. A page that shows v0.1.0 next to a v0.3.2 release is a stale process, not a mismatched publication.
+- Tests: 32 (was 30) — bundled version vs `package.json`, stale-host rendering.
+
 ## 0.3.1 — 2026-10-21
 
 - **Fixed — cross-subnet scan actually reaches the peer port.** The sweeper used to send every hello to its *own* discovery port; entries now accept `ip:port` and the packet goes to the port written in the entry.
