@@ -6,7 +6,7 @@
 - **New — “this device” is always visible.** The device list opens with a fixed row for the machine you are on: its name, `LAN address:sync port` and the running version. It is never mixed into the peer list, so the list count keeps meaning “other devices”.
 - **Fixed — look-alike untitled sessions.** Every row now shows `#first-8-of-session-id`, and the pull plan's “already present” decision is documented as keyed by the same peer + session id (it always was — now it is visible and tested), so renaming cannot fake a duplicate.
 - **Compatibility** — a fallback subscription is used when a host ships React without `useSyncExternalStore`.
-- Tests: 33 (was 32).
+- Tests: 34 (was 32).
 
 ## 0.3.2 — 2026-10-21
 

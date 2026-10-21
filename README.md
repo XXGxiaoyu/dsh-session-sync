@@ -149,7 +149,7 @@ The GUI side (`/session-sync/api`) runs on DSH's own loopback web server and is 
 node --test --test-force-exit --test-timeout=120000 'test/*.test.mjs'
 ```
 
-33 cases: client bundle contract, dictionary parity, footer, stale-host hint and version pinning (13), jsdom mount and interactions (5), two-instance end-to-end — discovery, rename persistence, restart, pull/push, auto-pull dedupe, receiver dedupe, SHA-256 tamper rejection and HTTP-only discovery (8), and the probe fallback contract (7).
+34 cases: client bundle contract, dictionary parity, footer, stale-host hint and version pinning (13), jsdom mount and interactions (5), two-instance end-to-end — discovery, rename persistence, restart, pull/push, auto-pull dedupe, receiver dedupe, SHA-256 tamper rejection and HTTP-only discovery (8), and the probe fallback contract (7).
 
 Run a headless instance without the desktop shell:
 
