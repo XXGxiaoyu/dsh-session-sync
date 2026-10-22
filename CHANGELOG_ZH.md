@@ -1,5 +1,11 @@
 # 更新日志
 
+## 0.8.5 — 2026-10-22
+
+- **修复 `cordis.patch.yml` 的 YAML 解析失败。** scoped 包名以 `@` 开头，在 YAML 里必须加引号；0.8.2–0.8.4 的 `name: @xxgxiaoyu/...` 会被解析器当成非法 mapping，导致 DSH 启动时报 `bad indentation of a mapping entry`。现在写成 `name: '@xxgxiaoyu/dsh-session-sync'`。
+- 0.8.2–0.8.4 已从 npm 标记为 deprecated；请升级到 0.8.5。
+- 代码与 0.8.4 一致；测试 **60 项**通过。
+
 ## 0.8.4 — 2026-10-22
 
 - **README 安装方式改为 npm 优先。** 主命令改成 `dsh plugin --profile web add @xxgxiaoyu/dsh-session-sync`；GitHub 安装保留为跟踪最新提交的备选。手动 profile 示例的依赖名和 `bundles` 也改成 scoped 名。

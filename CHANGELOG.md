@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.5 — 2026-10-22
+
+- **Fixed the `cordis.patch.yml` YAML parse failure.** A scoped package name starts with `@`, which YAML treats as a reserved indicator unless quoted; 0.8.2–0.8.4 shipped `name: @xxgxiaoyu/...` and DSH failed with `bad indentation of a mapping entry`. It is now `name: '@xxgxiaoyu/dsh-session-sync'`.
+- 0.8.2–0.8.4 are deprecated on npm; use 0.8.5.
+- Code identical to 0.8.4; **60** tests passing.
+
 ## 0.8.4 — 2026-10-22
 
 - **README now installs from npm first.** The primary command is `dsh plugin --profile web add @xxgxiaoyu/dsh-session-sync`; GitHub remains as the track-latest-commit fallback. The manual profile example uses the scoped dependency and bundle name.
