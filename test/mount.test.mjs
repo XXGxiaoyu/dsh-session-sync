@@ -208,6 +208,31 @@ test('settings page shows discovered devices and renames one inline', async () =
   await act(async () => { root.unmount() })
 })
 
+test('every known device is rendered, however many there are', async () => {
+  const { registered, t } = loadComponents()
+  const peers = Array.from({ length: 30 }, (_, index) => ({
+    id: `bulk-${index}`,
+    name: `device-${index}`,
+    address: `10.9.0.${index + 1}`,
+    port: 47802,
+    online: index % 3 === 0,
+    lastSeen: Date.now() - index * 1000,
+    sessions: index,
+    sameMachine: false,
+  }))
+  stubFetch(() => ({ ...statePayload(), peers }), [])
+  const container = document.getElementById('root')
+  const root = createRoot(container)
+  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  await act(async () => { root.render(React.createElement(page.component, { t })) })
+  await act(async () => { await Promise.resolve() })
+
+  const rows = container.querySelectorAll('.ss-device-item')
+  assert.equal(rows.length, 30, 'no device is truncated: the column scrolls instead')
+  assert.equal(rows[29].getAttribute('data-peer'), 'bulk-29', 'the last device is present')
+  await act(async () => { root.unmount() })
+})
+
 test('the main panel lists a peer\'s sessions and verifies one by sha256', async () => {
   const { registered, t } = loadComponents()
   const calls = []

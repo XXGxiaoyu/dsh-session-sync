@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.1 — 2026-10-22
+
+- **Device column overflow fixed**: `box-sizing` on the shell/column/rows, so the row's ⋯ button no longer spills across the column gap and over the session pane.
+- **Long device lists scroll instead of looking truncated**: the column caps its height and scrolls, and a hint states that every discovered (or previously seen) device is listed — other subnets are scanned from “Network & advanced”.
+- **Test**: renders 30 devices and asserts all 30 rows exist.
+
+Tests: 59.
+
 ## 0.7.0 — 2026-10-22
 
 - Panel redesigned around a master/detail layout: devices live in a left column, the selected device's sessions are always visible on the right — no hidden "click the card to expand" affordance. The first online device is selected automatically, device rows are full-row targets with a session count and chevron, and the right pane has 对端会话 / 本机会话 tabs.
