@@ -1,5 +1,11 @@
 # 更新日志
 
+## 0.8.4 — 2026-10-22
+
+- **README 安装方式改为 npm 优先。** 主命令改成 `dsh plugin --profile web add @xxgxiaoyu/dsh-session-sync`；GitHub 安装保留为跟踪最新提交的备选。手动 profile 示例的依赖名和 `bundles` 也改成 scoped 名。
+- 删掉失效的预构建 tarball 链接（Release 没有该 asset），改为指向 Releases 页面；补 npm 版本徽章。
+- 代码与 0.8.3 一致；测试 **60 项**通过。
+
 ## 0.8.3 — 2026-10-22
 
 - **隐私修复：移除所有含真实设备名、IP、路径和会话标题的截图。** 受影响的是 README 里的 `docs/preview*.png`、`docs/queue.png`，以及旧设计稿 `docs/mockups/*.png`。仓库不再包含这些图片，npm 包也不再打包它们。

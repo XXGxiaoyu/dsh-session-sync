@@ -6,6 +6,7 @@
 <div align="center">
 
 [![CI](https://github.com/XXGxiaoyu/dsh-session-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/XXGxiaoyu/dsh-session-sync/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@xxgxiaoyu/dsh-session-sync)](https://www.npmjs.com/package/@xxgxiaoyu/dsh-session-sync)
 [![GitHub stars](https://img.shields.io/github/stars/XXGxiaoyu/dsh-session-sync)](https://github.com/XXGxiaoyu/dsh-session-sync/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DSH](https://img.shields.io/badge/DSH-0.2.1--rc.2-4d6bfe)](https://www.npmjs.com/package/@deepseek-ai/dsh)
@@ -40,19 +41,23 @@
 
 ## 🚀 安装
 
-```sh
-# 从 GitHub 安装（推荐，包含最新提交）
-dsh plugin --profile web add github:XXGxiaoyu/dsh-session-sync
+从 npm 安装（scope 包名；npm 上的 `dsh-session-sync` 属于另一个项目）：
 
-# 或从 npm（scope 包名；npm 上的 dsh-session-sync 属于另一个项目）
+```sh
 dsh plugin --profile web add @xxgxiaoyu/dsh-session-sync
+```
+
+或从 GitHub 跟踪最新提交：
+
+```sh
+dsh plugin --profile web add github:XXGxiaoyu/dsh-session-sync
 ```
 
 需要 DSH **0.2.1-rc.2**（当前桌面版内置的版本）与 Node 22+。
 
 然后重启 DSH 桌面应用（宿主半边的改动在启动时加载，页面刷新即可拿到新 UI）。装完会自动启用：包里声明了 `dsh.bundle`，`dsh plugin add` 会自己把它加进 `dsh.profile.bundles`。页脚显示的是**真正在运行**的那份构建；如果比 Latest 版本旧，说明进程还没重启。
 
-预构建 tarball（免构建）：<https://github.com/XXGxiaoyu/dsh-session-sync/releases/latest/download/dsh-session-sync.tgz>
+发布页：<https://github.com/XXGxiaoyu/dsh-session-sync/releases>
 
 <details>
 <summary>从本地目录手动安装</summary>
@@ -61,11 +66,11 @@ dsh plugin --profile web add @xxgxiaoyu/dsh-session-sync
 // ~/.dsh/profiles/<profile>/package.json
 {
   "dependencies": {
-    "dsh-session-sync": "link:/absolute/path/to/dsh-session-sync"
+    "@xxgxiaoyu/dsh-session-sync": "link:/absolute/path/to/dsh-session-sync"
   },
   "dsh": {
     "profile": {
-      "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-session-sync"]
+      "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "@xxgxiaoyu/dsh-session-sync"]
     }
   }
 }

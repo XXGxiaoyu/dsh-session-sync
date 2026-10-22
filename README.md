@@ -6,6 +6,7 @@
 <div align="center">
 
 [![CI](https://github.com/XXGxiaoyu/dsh-session-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/XXGxiaoyu/dsh-session-sync/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@xxgxiaoyu/dsh-session-sync)](https://www.npmjs.com/package/@xxgxiaoyu/dsh-session-sync)
 [![GitHub stars](https://img.shields.io/github/stars/XXGxiaoyu/dsh-session-sync)](https://github.com/XXGxiaoyu/dsh-session-sync/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DSH](https://img.shields.io/badge/DSH-0.2.1--rc.2-4d6bfe)](https://www.npmjs.com/package/@deepseek-ai/dsh)
@@ -39,19 +40,23 @@
 
 ## 🚀 Installation
 
-```sh
-# From GitHub (recommended, tracks the latest commit)
-dsh plugin --profile web add github:XXGxiaoyu/dsh-session-sync
+From npm (scoped name; the unscoped `dsh-session-sync` belongs to another project):
 
-# Or from npm (scoped name; the unscoped dsh-session-sync belongs to another project)
+```sh
 dsh plugin --profile web add @xxgxiaoyu/dsh-session-sync
+```
+
+Or from GitHub to track the latest commit:
+
+```sh
+dsh plugin --profile web add github:XXGxiaoyu/dsh-session-sync
 ```
 
 Requires DSH **0.2.1-rc.2** (the version bundled with the current desktop app) and Node 22+.
 
 Then restart the DSH desktop app (host-side changes load at boot; open pages pick up the new UI on refresh). The page footer shows the build that is actually running — if it reads an older number than the latest release, the process has not been restarted yet. The install is auto-activated: the package declares `dsh.bundle`, so `dsh plugin add` adds it to `dsh.profile.bundles` on its own.
 
-Prebuilt tarball (no build step): <https://github.com/XXGxiaoyu/dsh-session-sync/releases/latest/download/dsh-session-sync.tgz>
+Releases: <https://github.com/XXGxiaoyu/dsh-session-sync/releases>
 
 <details>
 <summary>Manual install from a local checkout</summary>
@@ -60,11 +65,11 @@ Prebuilt tarball (no build step): <https://github.com/XXGxiaoyu/dsh-session-sync
 // ~/.dsh/profiles/<profile>/package.json
 {
   "dependencies": {
-    "dsh-session-sync": "link:/absolute/path/to/dsh-session-sync"
+    "@xxgxiaoyu/dsh-session-sync": "link:/absolute/path/to/dsh-session-sync"
   },
   "dsh": {
     "profile": {
-      "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-session-sync"]
+      "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "@xxgxiaoyu/dsh-session-sync"]
     }
   }
 }

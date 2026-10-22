@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.4 — 2026-10-22
+
+- **README now installs from npm first.** The primary command is `dsh plugin --profile web add @xxgxiaoyu/dsh-session-sync`; GitHub remains as the track-latest-commit fallback. The manual profile example uses the scoped dependency and bundle name.
+- Removed the broken prebuilt-tarball link (the release has no such asset) and pointed at Releases; added an npm badge.
+- Code identical to 0.8.3; **60** tests passing.
+
 ## 0.8.3 — 2026-10-22
 
 - **Privacy fix: removed every screenshot containing real device names, IPs, paths or session titles.** This covers the README images (`docs/preview*.png`, `docs/queue.png`) and the older `docs/mockups/*.png`. The repository no longer contains them, and the npm package no longer bundles them.
