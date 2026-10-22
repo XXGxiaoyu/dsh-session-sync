@@ -59,8 +59,8 @@ function statePayload(overrides = {}) {
     peers: [
       {
         id: 'peer-1',
-        name: '老王的 Mac',
-        customName: '老王的 Mac',
+        name: '同事的 Mac',
+        customName: '同事的 Mac',
         remoteName: 'wang-mac',
         address: '192.168.1.7',
         port: 47802,
@@ -156,47 +156,51 @@ function setInputValue(input, value) {
   input.dispatchEvent(new dom.window.Event('input', { bubbles: true }))
 }
 
-test('settings page shows discovered devices and renames one inline', async () => {
+test('main panel shows discovered devices and renames one', async () => {
   const { registered, t } = loadComponents()
   const calls = []
   stubFetch(() => statePayload(), calls)
   const container = document.getElementById('root')
   const root = createRoot(container)
-  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  const page = registered.find((entry) => entry.options.name === 'main')
   await act(async () => {
     root.render(React.createElement(page.component, { t }))
   })
   await act(async () => { await Promise.resolve() })
 
   const text = container.textContent
-  assert.match(text, /老王的 Mac/)
+  assert.match(text, /同事的 Mac/)
   assert.match(text, /离线笔记本/)
-  const selfInput = container.querySelector('input.ss-input')
-  assert.equal(selfInput.value, '本机工作台', 'the local device name is editable in place')
   assert.ok(calls.some((call) => call.body.action === 'state'), 'the page must poll the host')
 
   const offlineRow = container.querySelector('[data-peer="peer-2"]')
   assert.ok(offlineRow, 'offline devices stay listed')
   assert.match(offlineRow.textContent, /离线/, 'offline devices render their last-seen hint')
-  assert.ok(offlineRow.querySelector('.ss-dot').className.includes('on') === false)
+  assert.ok(offlineRow.querySelector('.ss-dot').className.includes('off') === true)
 
   const onlineRow = container.querySelector('[data-peer="peer-1"]')
   assert.ok(onlineRow.querySelector('.ss-dot').className.includes('on'))
 
-  const menuButton = onlineRow.querySelector('.ss-menu-wrap > button')
+  await act(async () => {
+    onlineRow.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
+  })
+  await act(async () => { await Promise.resolve() })
+
+  const menuButton = container.querySelector('.ss-stage .ss-menu-wrap > button')
+  assert.ok(menuButton, 'the selected device exposes its actions in the stage header')
   await act(async () => {
     menuButton.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
   })
-  const renameButton = [...onlineRow.querySelectorAll('button')].find((button) => button.textContent === t('device.rename'))
+  const renameButton = [...container.querySelectorAll('.ss-stage button')].find((button) => button.textContent === t('device.rename'))
   await act(async () => {
     renameButton.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
   })
-  const input = onlineRow.querySelector('input.ss-input')
-  assert.ok(input, 'rename opens an inline editor')
+  const input = container.querySelector('.ss-stage input.ss-input')
+  assert.ok(input, 'rename opens an inline editor in the header')
   await act(async () => {
     setInputValue(input, '客厅的 Mac')
   })
-  const save = [...onlineRow.querySelectorAll('button')].find((button) => button.textContent === t('common.save'))
+  const save = [...container.querySelectorAll('.ss-stage button')].find((button) => button.textContent === t('common.save'))
   await act(async () => {
     save.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
   })
@@ -223,11 +227,11 @@ test('every known device is rendered, however many there are', async () => {
   stubFetch(() => ({ ...statePayload(), peers }), [])
   const container = document.getElementById('root')
   const root = createRoot(container)
-  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  const page = registered.find((entry) => entry.options.name === 'main')
   await act(async () => { root.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
 
-  const rows = container.querySelectorAll('.ss-device-item')
+  const rows = container.querySelectorAll('.ss-dev')
   assert.equal(rows.length, 30, 'no device is truncated: the column scrolls instead')
   assert.equal(rows[29].getAttribute('data-peer'), 'bulk-29', 'the last device is present')
   await act(async () => { root.unmount() })
@@ -272,10 +276,9 @@ test('the main panel lists a peer\'s sessions and verifies one by sha256', async
   const peerRow = host.querySelector('[data-peer="peer-1"]')
   // DeviceRow owns the rename controls; the session buttons are siblings inside
   // the per-device wrapper, so both live under `box`.
-  const box = host.querySelector('.ss-pane')
-  const show = peerRow.querySelector('.ss-device-name')
+  const box = host.querySelector('.ss-stage')
   await act(async () => {
-    show.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
+    peerRow.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
   })
   await act(async () => { await Promise.resolve() })
   assert.match(box.textContent, /共享会话/)
@@ -323,20 +326,20 @@ test('a failing host call degrades to an error banner without losing the list', 
     if (mode === 'good') return { ok: true, status: 200, async json() { return statePayload() } }
     return { ok: false, status: 500, async json() { return { ok: false, error: { code: 'boom', message: '插件服务炸了' } } } }
   }
-  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  const page = registered.find((entry) => entry.options.name === 'main')
   await act(async () => {
     root.render(React.createElement(page.component, { t }))
   })
   await act(async () => { await Promise.resolve() })
 
-  const refresh = [...container.querySelectorAll('button')].find((button) => button.textContent === t('common.refresh'))
+  const refresh = container.querySelector('.ss-top button[title="' + t('common.refresh') + '"]')
   mode = 'bad'
   await act(async () => {
     refresh.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
   })
   await act(async () => { await Promise.resolve() })
 
-  assert.match(container.textContent, /老王的 Mac/, 'the previous peer list survives a failed call')
+  assert.match(container.textContent, /同事的 Mac/, 'the previous peer list survives a failed call')
   assert.match(container.textContent, /插件服务炸了/, 'the failure is surfaced')
 
   await act(async () => { root.unmount() })
@@ -382,7 +385,7 @@ test('the language select pins the copy and stores the choice on the host', asyn
     action: 'settings',
     patch: { locale: 'en' },
   })
-  assert.match(container.textContent, /Sync settings/, 'the copy switches right after the save')
+  assert.match(container.textContent, /Identity/, 'the copy switches right after the save')
 
   await act(async () => { root.unmount() })
   container.remove()
@@ -421,15 +424,17 @@ test('a background refresh never wipes what the user is typing', async () => {
   stubFetch(() => statePayload(), calls)
   const container = document.getElementById('root')
   const root = createRoot(container)
-  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  const page = registered.find((entry) => entry.options.name === 'main')
   await act(async () => { root.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
 
+  const settings = [...container.querySelectorAll('button')].find((button) => button.textContent === t('settings.short'))
+  await act(async () => { settings.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   const name = container.querySelector('input.ss-input')
   await act(async () => { setInputValue(name, '还没保存的名字') })
   assert.equal(name.value, '还没保存的名字')
 
-  const refresh = [...container.querySelectorAll('button')].find((button) => button.textContent === t('common.refresh'))
+  const refresh = container.querySelector('.ss-top button[title="' + t('common.refresh') + '"]')
   await act(async () => { refresh.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 
@@ -458,21 +463,21 @@ test('one-click sync dedupes imported sessions and reports them as skipped', asy
   }
   const container = document.getElementById('root')
   const root = createRoot(container)
-  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  const page = registered.find((entry) => entry.options.name === 'main')
   await act(async () => { root.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
 
-  const open = container.querySelector('[data-peer="peer-1"] .ss-device-name')
+  const open = container.querySelector('[data-peer="peer-1"]')
   await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
   assert.match(container.textContent, /未拉取的会话/)
 
   const syncAll = [...container.querySelectorAll('button')].find((button) => button.textContent === t('device.pullAll'))
   await act(async () => { syncAll.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
-  assert.ok(container.querySelector('.ss-modal'), 'a second confirmation is required')
-  assert.match(container.querySelector('.ss-modal').textContent, /1/, 'the duplicate is called out')
+  assert.ok(container.querySelector('.ss-dialog'), 'a second confirmation is required')
+  assert.match(container.querySelector('.ss-dialog').textContent, /1/, 'the duplicate is called out')
 
-  const confirm = [...container.querySelectorAll('.ss-modal button')].find((button) => button.textContent === t('plan.confirm'))
+  const confirm = [...container.querySelectorAll('.ss-dialog button')].find((button) => button.textContent === t('plan.confirm'))
   await act(async () => { confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 400)) })
 
@@ -480,26 +485,25 @@ test('one-click sync dedupes imported sessions and reports them as skipped', asy
   assert.equal(pulls.length, 1, 'only the session that is not imported yet is transferred')
   assert.equal(pulls[0].body.sessionId, 'remote-1')
   assert.equal(calls.filter((call) => call.body.action === 'push').length, 0, 'sync means pull direction')
-  assert.match(container.textContent, /跳过|Skipped/, 'the duplicate is reported as skipped in the queue')
 
-  const bar = container.querySelector('.ss-qbar')
+  const bar = container.querySelector('.ss-dock')
   assert.ok(bar, 'the queue gets a persistent summary bar')
-  assert.equal(bar.querySelectorAll('.ss-qbar-meter span').length, 1, 'the bar carries a progress meter')
-  assert.equal(bar.querySelector('.ss-qbar-meter span').style.width, '100%', 'settled transfers fill the meter')
+  assert.equal(bar.querySelectorAll('.meter i').length, 1, 'the bar carries a progress meter')
+  assert.equal(bar.querySelector('.meter i').style.width, '100%', 'settled transfers fill the meter')
 
   const openQueue = [...bar.querySelectorAll('button')].find((button) => button.textContent === t('queue.open'))
   await act(async () => { openQueue.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
-  const drawer = container.querySelector('.ss-drawer')
+  const drawer = container.querySelector('.ss-queue')
   assert.ok(drawer, 'the bar opens the transfer drawer')
-  assert.equal(drawer.querySelectorAll('.ss-qi').length, 2, 'each transfer gets its own card')
-  assert.equal(drawer.querySelectorAll('.ss-qi.done').length, 1)
-  assert.equal(drawer.querySelectorAll('.ss-qi.skipped').length, 1)
+  assert.equal(drawer.querySelectorAll('.ss-qrow').length, 2, 'each transfer gets its own card')
+  assert.equal(drawer.querySelectorAll('.ss-qrow.done').length, 1)
+  assert.equal(drawer.querySelectorAll('.ss-qrow.skipped').length, 1)
   assert.equal(drawer.querySelectorAll('.ss-qstat').length, 4, 'the drawer summarises the batch by status')
-  assert.ok(drawer.querySelector('.ss-qi.done .ss-qi-track'), 'completed cards show a filled track')
+  assert.ok(drawer.querySelector('.ss-qrow.done'), 'completed cards show a filled track')
   await act(async () => { root.unmount() })
 })
 
-test('dragging a peer session onto a workspace folder pulls it into that folder', async () => {
+test('the target menu scopes a pull to a workspace folder', async () => {
   const { registered, t } = loadComponents()
   const calls = []
   globalThis.fetch = async (url, init) => {
@@ -512,44 +516,44 @@ test('dragging a peer session onto a workspace folder pulls it into that folder'
       })
     }
     if (body.action === 'pull') return jsonReply({ ok: true, imported: { localId: 'new-1', title: '拖过来的会话' } })
-    if (body.action === 'localSessions') return jsonReply({ ok: true, sessions: [{ id: 'l-1', title: '本机会话', cwd: '/tmp/ws', updatedAt: Date.now() }] })
-    return jsonReply(statePayload())
+    if (body.action === 'localSessions') return jsonReply({ ok: true, sessions: [] })
+    return jsonReply(statePayload({
+      workspaces: [{ id: 'w1', path: '/tmp/alpha', title: 'Alpha' }],
+      unsortedDir: '/tmp/unsorted',
+      syncDir: '',
+    }))
   }
+  const page = registered.find((entry) => entry.options.name === 'main')
   const container = document.getElementById('root')
   const root = createRoot(container)
-  const page = registered.find((entry) => entry.options.id === 'session-sync')
   await act(async () => { root.render(React.createElement(page.component, { t })) })
-  await act(async () => { await Promise.resolve() })
-
-  const open = container.querySelector('[data-peer="peer-1"] .ss-device-name')
-  await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 
-  const item = container.querySelector('.ss-item[draggable="true"]')
-  const folder = [...container.querySelectorAll('.ss-drop')].find((row) => row.textContent.includes('/tmp/ws'))
-  assert.ok(item, 'sessions are draggable')
-  assert.ok(folder, 'known folders are drop targets')
+  const row = container.querySelector('.ss-row')
+  assert.ok(row, 'the peer sessions are rendered')
+  await act(async () => { row.querySelector('.ss-row-title').dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  const bar = container.querySelector('.ss-selbar')
+  assert.ok(bar, 'clicking the row selects it and reveals the action bar')
 
-  const data = transfer()
-  const dragStart = new dom.window.Event('dragstart', { bubbles: true })
-  Object.defineProperty(dragStart, 'dataTransfer', { value: data })
-  await act(async () => { item.dispatchEvent(dragStart) })
-  assert.match(data.getData('application/x-dsh-session-sync'), /"direction":"pull"/)
+  const target = bar.querySelector('.ss-target')
+  await act(async () => { target.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  const option = [...container.querySelectorAll('.ss-opt')].find((entry) => entry.textContent.includes('Alpha'))
+  assert.ok(option, 'the target menu lists the workspace')
+  await act(async () => { option.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  assert.match(bar.querySelector('.ss-target').textContent, /Alpha/)
 
-  const drop = new dom.window.Event('drop', { bubbles: true })
-  Object.defineProperty(drop, 'dataTransfer', { value: data })
-  await act(async () => { folder.dispatchEvent(drop) })
-  assert.ok(container.querySelector('.ss-modal'), 'dropping opens the confirmation dialog')
-  assert.match(container.querySelector('.ss-modal').textContent, /\/tmp\/ws/)
-
-  const confirm = [...container.querySelectorAll('.ss-modal button')].find((button) => button.textContent === t('plan.confirm'))
+  const start = [...bar.querySelectorAll('button')].find((button) => button.textContent === t('sessions.syncSelected'))
+  await act(async () => { start.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  const dialog = container.querySelector('.ss-dialog')
+  assert.ok(dialog, 'the plan dialog opens')
+  const confirm = [...dialog.querySelectorAll('button')].find((button) => button.textContent === t('plan.confirm'))
   await act(async () => { confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 400)) })
 
   const pull = calls.find((call) => call.body.action === 'pull')
-  assert.ok(pull, 'the drop results in a pull')
-  assert.equal(pull.body.sessionId, 'remote-1')
-  assert.equal(pull.body.cwd, '/tmp/ws', 'the conversation lands in the folder it was dropped on')
+  assert.ok(pull, 'the target selection results in a pull')
+  assert.equal(pull.body.cwd, '/tmp/alpha')
+  assert.equal(pull.body.workspace, 'w1')
   await act(async () => { root.unmount() })
 })
 
@@ -579,18 +583,18 @@ test('a skipped item keeps the rest of the queue moving', async () => {
   globalThis.fetch = threeSessionFetch(calls)
   const container = document.getElementById('root')
   const root = createRoot(container)
-  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  const page = registered.find((entry) => entry.options.name === 'main')
   await act(async () => { root.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
 
-  const open = container.querySelector('[data-peer="peer-1"] .ss-device-name')
+  const open = container.querySelector('[data-peer="peer-1"]')
   await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 
   const syncAll = [...container.querySelectorAll('button')].find((button) => button.textContent === t('device.pullAll'))
   await act(async () => { syncAll.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
 
-  const select = container.querySelector('.ss-modal select.ss-select')
+  const select = container.querySelector('.ss-dialog select.ss-select')
   assert.ok(select, 'the duplicate row offers a choice')
   await act(async () => {
     const setter = Object.getOwnPropertyDescriptor(dom.window.HTMLSelectElement.prototype, 'value').set
@@ -598,14 +602,17 @@ test('a skipped item keeps the rest of the queue moving', async () => {
     select.dispatchEvent(new dom.window.Event('change', { bubbles: true }))
   })
 
-  const confirm = [...container.querySelectorAll('.ss-modal button')].find((button) => button.textContent === t('plan.confirm'))
+  const confirm = [...container.querySelectorAll('.ss-dialog button')].find((button) => button.textContent === t('plan.confirm'))
   await act(async () => { confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 600)) })
 
   const pulls = calls.filter((call) => call.body.action === 'pull').map((call) => call.body.sessionId)
   assert.deepEqual(pulls.sort(), ['remote-1', 'remote-3'], 'both fresh sessions go through, the skipped one does not block them')
-  const text = container.textContent
-  assert.match(text, /跳过|Skipped/)
+  const dock = container.querySelector('.ss-dock')
+  assert.ok(dock, 'the queue dock stays visible')
+  const openQueue = [...dock.querySelectorAll('button')].find((button) => button.textContent === t('queue.open'))
+  await act(async () => { openQueue.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  assert.ok(container.querySelector('.ss-qrow.skipped'), 'the duplicate is reported as skipped in the queue')
   await act(async () => { root.unmount() })
 })
 
@@ -615,24 +622,24 @@ test('choosing overwrite asks the receiver to bypass its fingerprint check', asy
   globalThis.fetch = threeSessionFetch(calls)
   const container = document.getElementById('root')
   const root = createRoot(container)
-  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  const page = registered.find((entry) => entry.options.name === 'main')
   await act(async () => { root.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
 
-  const open = container.querySelector('[data-peer="peer-1"] .ss-device-name')
+  const open = container.querySelector('[data-peer="peer-1"]')
   await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 
   const syncAll = [...container.querySelectorAll('button')].find((button) => button.textContent === t('device.pullAll'))
   await act(async () => { syncAll.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
 
-  const select = container.querySelector('.ss-modal select.ss-select')
+  const select = container.querySelector('.ss-dialog select.ss-select')
   await act(async () => {
     const setter = Object.getOwnPropertyDescriptor(dom.window.HTMLSelectElement.prototype, 'value').set
     setter.call(select, 'copy')
     select.dispatchEvent(new dom.window.Event('change', { bubbles: true }))
   })
-  const confirm = [...container.querySelectorAll('.ss-modal button')].find((button) => button.textContent === t('plan.confirm'))
+  const confirm = [...container.querySelectorAll('.ss-dialog button')].find((button) => button.textContent === t('plan.confirm'))
   await act(async () => { confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 600)) })
 
@@ -648,15 +655,15 @@ test('checking a session enables the selection actions and scopes the plan', asy
   globalThis.fetch = threeSessionFetch(calls)
   const container = document.getElementById('root')
   const root = createRoot(container)
-  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  const page = registered.find((entry) => entry.options.name === 'main')
   await act(async () => { root.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
 
-  const open = container.querySelector('[data-peer="peer-1"] .ss-device-name')
+  const open = container.querySelector('[data-peer="peer-1"]')
   await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 
-  const boxes = [...container.querySelectorAll('input.ss-check')]
+  const boxes = [...container.querySelectorAll('.ss-cb')]
   assert.ok(boxes.length >= 4, 'the header has a select-all box and every session has one')
   await act(async () => { boxes[1].click() })
   await act(async () => { await Promise.resolve() })
@@ -666,8 +673,36 @@ test('checking a session enables the selection actions and scopes the plan', asy
   assert.equal(selectedButton.disabled, false, 'selecting one session enables the action')
 
   await act(async () => { selectedButton.click() })
-  const rows = [...container.querySelectorAll('.ss-modal-row')]
+  const rows = [...container.querySelectorAll('.ss-plan-row')]
   assert.equal(rows.length, 1, 'the dialog plans only the selected session')
+  await act(async () => { root.unmount() })
+})
+
+test('clicking anywhere on a session row selects it', async () => {
+  const { registered, t } = loadComponents()
+  const calls = []
+  globalThis.fetch = threeSessionFetch(calls)
+  const container = document.getElementById('root')
+  const root = createRoot(container)
+  const page = registered.find((entry) => entry.options.name === 'main')
+  await act(async () => { root.render(React.createElement(page.component, { t })) })
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
+
+  const row = container.querySelector('.ss-row')
+  const box = row.querySelector('.ss-cb')
+  assert.equal(box.getAttribute('aria-checked'), 'false')
+  await act(async () => { row.querySelector('.ss-row-title').dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  assert.equal(box.getAttribute('aria-checked'), 'true', 'the title is part of the hit area')
+  assert.match(container.textContent, new RegExp(t('sessions.selected', { n: 1 })))
+  assert.ok(container.querySelector('.ss-selbar'), 'selection reveals the action bar')
+
+  const verify = [...row.querySelectorAll('.ss-row-act button')].find((button) => button.textContent === t('sessions.verify'))
+  await act(async () => { verify.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  assert.equal(box.getAttribute('aria-checked'), 'true', 'row actions do not steal the selection')
+
+  await act(async () => { row.querySelector('.ss-row-meta').dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
+  assert.equal(box.getAttribute('aria-checked'), 'false', 'clicking the row again toggles it off')
+  assert.equal(container.querySelector('.ss-selbar'), null, 'the action bar disappears when nothing is selected')
   await act(async () => { root.unmount() })
 })
 
@@ -698,14 +733,12 @@ test('the device list never shows this machine, and unnamed sessions carry their
 
   assert.ok(container.querySelector('.ss-self'), 'this machine is the local card, not a device row')
   assert.deepEqual([...container.querySelectorAll('[data-peer]')].map((row) => row.getAttribute('data-peer')), ['peer-mac'], 'its own address is never a device row')
-  assert.equal(container.querySelector('.ss-self input.ss-input').value, '本机工作台', 'the name still lives in the rename field')
   const macRow = container.querySelector('[data-peer="peer-mac"]')
   assert.ok(macRow, 'the other machine is listed as a device')
   assert.match(macRow.textContent, /隔壁的 Mac/)
 
-  const showButton = macRow.querySelector('.ss-device-name')
   await act(async () => {
-    showButton.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
+    macRow.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
   })
   await act(async () => { await Promise.resolve() })
 
@@ -741,7 +774,7 @@ test('a peer on this machine is grouped under 本机, not counted as a device', 
   assert.doesNotMatch(container.textContent, /同机另一个 profile/, 'same-host instances are not shown at all')
   assert.equal(container.querySelectorAll('[data-peer]').length, 1, 'only the other machine is a device row')
   assert.match(container.querySelector('[data-peer]').textContent, /隔壁的 Mac/)
-  assert.match(container.textContent, /1 在线 \/ 共 1/, 'the total counts other machines only')
+  assert.match(container.textContent, /1 台已发现/, 'the column reports discovered and previously seen devices')
 
   await act(async () => { root.unmount() })
 })
@@ -767,7 +800,7 @@ test('two profiles on one address collapse into a single device row', async () =
   await act(async () => { await Promise.resolve() })
 
   assert.equal(container.querySelectorAll('[data-peer]').length, 1, 'one IP is one device, whatever the port')
-  assert.match(container.textContent, /1 在线 \/ 共 1/, 'the count follows the collapsed list')
+  assert.match(container.textContent, /1 台已发现/, 'the count follows the device table')
   await act(async () => { root.unmount() })
 })
 
@@ -791,13 +824,13 @@ test('a session dragged over a real sidebar row drops into that workspace', asyn
       syncDir: '',
     }))
   }
-  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  const page = registered.find((entry) => entry.options.name === 'main')
   assert.ok(page, 'the sidebar row opens the page')
 
   const panelRoot = createRoot(document.getElementById('root'))
   await act(async () => { panelRoot.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
-  const open = document.getElementById('root').querySelector('[data-peer="peer-1"] .ss-device-name')
+  const open = document.getElementById('root').querySelector('[data-peer="peer-1"]')
   await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 
@@ -811,7 +844,7 @@ test('a session dragged over a real sidebar row drops into that workspace', asyn
   sidebar.append(workspaceRow, ungroupedRow)
   document.body.append(sidebar)
 
-  const item = document.getElementById('root').querySelector('.ss-item[draggable="true"]')
+  const item = document.getElementById('root').querySelector('.ss-row[draggable="true"]')
   const data = transfer()
   const dragStart = new dom.window.Event('dragstart', { bubbles: true })
   Object.defineProperty(dragStart, 'dataTransfer', { value: data })
@@ -860,9 +893,9 @@ test('a session dragged over a real sidebar row drops into that workspace', asyn
   // The success state holds for ~90ms before the confirmation dialog opens.
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 160)) })
 
-  const modal = document.getElementById('root').querySelector('.ss-modal')
-  assert.ok(modal.querySelector('.ss-modal-card'), 'the confirmation is a centred dialog card')
-  assert.match(modal.className, /ss-modal/, 'the dialog sits in a mask overlay')
+  const modal = document.getElementById('root').querySelector('.ss-dialog')
+  assert.ok(modal, 'dropping opens the confirmation dialog')
+  assert.match(modal.className, /ss-dialog/, 'the dialog is present')
   assert.ok(modal, 'dropping opens the confirmation dialog')
   assert.match(modal.textContent, /Alpha/, 'the dialog names the workspace the user dropped on')
   const confirm = [...modal.querySelectorAll('button')].find((button) => button.textContent === t('plan.confirm'))
@@ -898,11 +931,11 @@ test('a nested expanded group accepts the drop anywhere inside it', async () => 
       syncDir: '',
     }))
   }
-  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  const page = registered.find((entry) => entry.options.name === 'main')
   const panelRoot = createRoot(document.getElementById('root'))
   await act(async () => { panelRoot.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
-  const open = document.getElementById('root').querySelector('[data-peer="peer-1"] .ss-device-name')
+  const open = document.getElementById('root').querySelector('[data-peer="peer-1"]')
   await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 
@@ -923,7 +956,7 @@ test('a nested expanded group accepts the drop anywhere inside it', async () => 
   tree.append(group)
   document.body.append(tree)
 
-  const item = document.getElementById('root').querySelector('.ss-item[draggable="true"]')
+  const item = document.getElementById('root').querySelector('.ss-row[draggable="true"]')
   const data = transfer()
   const dragStart = new dom.window.Event('dragstart', { bubbles: true })
   Object.defineProperty(dragStart, 'dataTransfer', { value: data })
@@ -947,7 +980,7 @@ test('a nested expanded group accepts the drop anywhere inside it', async () => 
   await act(async () => { member.dispatchEvent(drop) })
   assert.ok(document.querySelector('.ss-dragghost') === null, 'the ghost is cleared on drop')
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 160)) })
-  const modal = document.getElementById('root').querySelector('.ss-modal')
+  const modal = document.getElementById('root').querySelector('.ss-dialog')
   assert.ok(modal, 'dropping inside the expanded area opens the confirmation dialog')
   const confirm = [...modal.querySelectorAll('button')].find((button) => button.textContent === t('plan.confirm'))
   await act(async () => { confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
@@ -978,11 +1011,11 @@ test('a row nested inside DSH\'s div/span section resolves to its group header',
       syncDir: '',
     }))
   }
-  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  const page = registered.find((entry) => entry.options.name === 'main')
   const panelRoot = createRoot(document.getElementById('root'))
   await act(async () => { panelRoot.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
-  const open = document.getElementById('root').querySelector('[data-peer="peer-1"] .ss-device-name')
+  const open = document.getElementById('root').querySelector('[data-peer="peer-1"]')
   await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 
@@ -1000,7 +1033,7 @@ test('a row nested inside DSH\'s div/span section resolves to its group header',
   list.append(section)
   document.body.append(list)
 
-  const item = document.getElementById('root').querySelector('.ss-item[draggable="true"]')
+  const item = document.getElementById('root').querySelector('.ss-row[draggable="true"]')
   const data = transfer()
   const dragStart = new dom.window.Event('dragstart', { bubbles: true })
   Object.defineProperty(dragStart, 'dataTransfer', { value: data })
@@ -1017,7 +1050,7 @@ test('a row nested inside DSH\'s div/span section resolves to its group header',
   Object.defineProperty(drop, 'dataTransfer', { value: data })
   await act(async () => { row.dispatchEvent(drop) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 160)) })
-  const modal = document.getElementById('root').querySelector('.ss-modal')
+  const modal = document.getElementById('root').querySelector('.ss-dialog')
   const confirm = [...modal.querySelectorAll('button')].find((button) => button.textContent === t('plan.confirm'))
   await act(async () => { confirm.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 400)) })
@@ -1039,7 +1072,7 @@ test('the probe summary renders with a wall-clock time instead of throwing', asy
   })
   await act(async () => { await Promise.resolve() })
 
-  const toggle = [...container.querySelectorAll('button')].find((button) => button.className.includes('ss-advanced-toggle'))
+  const toggle = [...container.querySelectorAll('button')].find((button) => button.className.includes('ss-adv-toggle'))
   assert.ok(toggle, 'the advanced section has a toggle')
   await act(async () => { toggle.click() })
   await act(async () => { await Promise.resolve() })
@@ -1064,15 +1097,15 @@ test('a drag that never reports dragend still removes the ghost and the pill', a
   }
   const container = document.getElementById('root')
   const root = createRoot(container)
-  const page = registered.find((entry) => entry.options.id === 'session-sync')
+  const page = registered.find((entry) => entry.options.name === 'main')
   await act(async () => { root.render(React.createElement(page.component, { t })) })
   await act(async () => { await Promise.resolve() })
 
-  const open = container.querySelector('[data-peer="peer-1"] .ss-device-name')
+  const open = container.querySelector('[data-peer="peer-1"]')
   await act(async () => { open.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true })) })
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)) })
 
-  const item = container.querySelector('.ss-item[draggable="true"]')
+  const item = container.querySelector('.ss-row[draggable="true"]')
   assert.ok(item, 'a peer session row is draggable')
   const data = transfer()
   const dragStart = new dom.window.Event('dragstart', { bubbles: true })

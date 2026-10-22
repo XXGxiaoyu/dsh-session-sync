@@ -126,7 +126,7 @@ test('locale dictionaries stay in sync and cover every t() key used', () => {
   assert.deepEqual(missing, [], 'every t() key needs a dictionary entry')
 })
 
-test('settings page renders an empty but honest device list', () => {
+test('settings section renders identity, transfer and about rows', () => {
   const { registration } = loadBundle()
   const { registered, locales } = makeContext(registration)
   const t = (key, params) => {
@@ -134,12 +134,15 @@ test('settings page renders an empty but honest device list', () => {
     if (params === undefined) return template
     return template.replace(/\{(\w+)\}/g, (match, name) => (name in params ? String(params[name]) : match))
   }
-  const settings = registered.find((entry) => entry.options.id === 'session-sync')
-  const html = renderToStaticMarkup(React.createElement(settings.component, { t }))
-  assert.match(html, /会话同步/)
-  assert.match(html, /本机/)
-  assert.match(html, /让另一台设备也安装这个插件/)
-  assert.match(html, /同步设置/)
+  const section = registered.find((entry) => entry.options.id === 'session-sync')
+  const html = renderToStaticMarkup(React.createElement(section.component, { t }))
+  assert.match(html, /身份/)
+  assert.match(html, /传输/)
+  assert.match(html, /关于/)
+  assert.match(html, /界面语言/)
+  assert.match(html, /同时传输/)
+  assert.match(html, /局域网地址/)
+  assert.match(html, /ss-footer/)
 })
 
 test('sidebar row and main panel share the page', () => {
@@ -178,7 +181,7 @@ test('the plugin follows the DSH locale, and reads non-Chinese as English', () =
 
   const section = english.registered.find((entry) => entry.options.id === 'session-sync')
   const html = renderToStaticMarkup(React.createElement(section.component, {}))
-  assert.match(html, /Sync settings/)
+  assert.match(html, /Session Sync/)
   assert.match(html, /Follow DSH \/ system/, 'the language row offers the follow-option')
   assert.match(html, /<option value="zh">中文<\/option>/, 'Chinese stays selectable in either language')
   assert.match(html, /<option value="en">English<\/option>/, 'English stays selectable in either language')
@@ -223,7 +226,6 @@ test('the page footer credits the version, the license and the repository', () =
   assert.match(html, /ss-footer/)
   assert.match(html, /MIT 协议/)
   assert.match(html, /https:\/\/github\.com\/XXGxiaoyu\/dsh-session-sync/)
-  assert.match(html, /Star/)
   assert.match(html, /target="_blank"/)
   assert.match(html, /rel="noreferrer noopener"/)
 })

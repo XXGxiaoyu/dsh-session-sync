@@ -14,9 +14,9 @@
 
 </div>
 
-![Session Sync panel](docs/preview.png)
+> **0.8.0 UI rebuild**: session desk, whole-row selection, selection bar, transfer dock and settings were redrawn. The full draft (19 scenes, dark/light, zh/en) is in [`docs/redesign/index.html`](https://github.com/XXGxiaoyu/dsh-session-sync/tree/main/docs/redesign); implementation mapping and acceptance are in [`DESIGN.md`](https://github.com/XXGxiaoyu/dsh-session-sync/blob/main/docs/redesign/DESIGN.md). The whole-session file transfer design (chunks / resume) is in [`session-bundle-transfer.md`](https://github.com/XXGxiaoyu/dsh-session-sync/blob/main/docs/architecture/session-bundle-transfer.md) (next phase).
 
-![Planning a transfer: pick a folder, confirm every item](docs/preview-transfer.png)
+
 
 ## ✨ Features
 
@@ -25,8 +25,8 @@
 | **📡 Zero-config discovery**<br/>UDP broadcast on every IPv4 interface with a 4s beacon. A peer that just appeared gets an immediate unicast reply, so new devices show up without waiting for the next round. | **🏷️ Local-only nicknames**<br/>Stored in `<home>/session-sync/state.json` and keyed by a stable **device id** (uuid) — not IP, not hostname. The peer renaming itself never overwrites your label. |
 | **🗂️ Browse · pull · push**<br/>See each device's sessions with title, cwd and time; pull one into this machine or push one of yours out. Imported rows are marked as pulled. | **🔐 SHA-256 verification**<br/>Exports carry `sha256 = SHA-256(JSON.stringify({format, session, events}))`; imports compare it **before writing a byte** and refuse with HTTP 409 `checksum-mismatch`. Each row has a *Verify* action. |
 | **🔁 Optional auto-pull**<br/>Every 20s, pull sessions you have not pulled yet. Content fingerprints (not ids) stop two machines with auto-pull on from bouncing one conversation back and forth forever. | **🎨 Native look, i18n**<br/>Built from DSH design tokens (colors, radii, type scale, 0.2s transitions), so light/dark follow the host. Language follows DSH by default, with explicit 中文 / English overrides. |
-| **🔎 Find sessions fast**<br/>Search (press `/`), 全部 / 未拉取 / 已拉取 filters, sort by time or title, and ↑↓ / Space / Enter navigation. Rows stay quiet: one status chip, with 校验 and 拉取 on hover or focus. | **🧰 Tidy device cards & queue**<br/>A per-device ⋯ menu (rename, copy LAN address, refresh, push, forget), transfers summarised in a bottom bar and a detail drawer, and network/advanced options folded away. |
-| **🪟 Master / detail**<br/>Devices sit in a left column (session count + chevron, the whole row is the target) while the selected device's sessions stay visible on the right — no hidden "click a card to expand". The first online device is selected automatically. | **🧭 Per-device menu**<br/>Push here, rename, copy address, refresh and remove live in each row's ⋯ menu; rename still happens inline. |
+| **🔎 Find sessions fast**<br/>Search (press `/`), 全部 / 未拉取 / 已拉取 filters, sort by time or title, and ↑↓ / Space / Enter navigation. Rows stay quiet: one status chip, with 校验 and 拉取 on hover or focus. | **🧰 Tidy devices & queue**<br/>The rail only selects; rename, copy address, refresh, push and forget live in the stage header ⋯. Transfers sit in a bottom dock that expands into the queue; network/advanced options stay folded. |
+| **🪟 Master / detail**<br/>Devices sit in a left column (session count + chevron, the whole row is the target) while the selected device's sessions stay visible on the right — no hidden "click a card to expand". The first online device is selected automatically. | **🧭 Device actions**<br/>Push here, rename, copy address, refresh and remove live in the stage header ⋯; rename happens inline in the header. |
 | **🖱️ Drag, select, drop**<br/>Select one or many sessions and drag them onto any known folder **or straight onto a workspace row in DSH's own sidebar**: the header takes the whole group, a session row takes the pointer's position and shows an insertion line between rows. Every drop asks for confirmation and names the workspace it will land in. | **🚦 Confirmed transfer queue**<br/>Repeated pushes/pulls are detected up front; a dialog lets you keep the local copy, overwrite it, or drop that single item. The rest of the queue keeps running in order. |
 | **⚡ One-click sync**<br/>**Sync all** / **Push all** plan the whole device in one go, skip sessions already present by content fingerprint, and report each row as done, skipped or failed. | **🌐 Cross-subnet scanning**<br/>Broadcast stays on the local segment; add CIDRs, IPs or `ip:port` under *Cross-subnet scan*. CIDRs get silent UDP discovery packets, single IPs are also probed over HTTP on 47802–47817 — a firewall that drops UDP no longer hides the peer. |
 | **🚦 Queue that shows its work**<br/>Each transfer is a card with spinner, measured duration, failure reason and a progress track; pulls stream their bytes so the card and the sticky bar show **live percentages**. The queue runs several workers sized from the CPU count (capped at 5), or a fixed 1–16 concurrency you choose. |
@@ -40,7 +40,11 @@
 ## 🚀 Installation
 
 ```sh
+# From GitHub (recommended, tracks the latest commit)
 dsh plugin --profile web add github:XXGxiaoyu/dsh-session-sync
+
+# Or from npm (scoped name; the unscoped dsh-session-sync belongs to another project)
+dsh plugin --profile web add @xxgxiaoyu/dsh-session-sync
 ```
 
 Requires DSH **0.2.1-rc.2** (the version bundled with the current desktop app) and Node 22+.
@@ -105,7 +109,6 @@ settings.locale = 'auto' | 'zh' | 'en'   // persisted in <home>/session-sync/sta
 
 The plugin reads `ctx.locale.getSnapshot().active` (`zh*` → Chinese, everything else → English) and only falls back to `navigator.languages` when no locale service exists. A language change is written to disk **before** the UI switches, so it never reverts on the next open. Sidebar/settings labels are resolved by the host, so the plugin re-registers its slots when the language changes — the page and the sidebar row never disagree.
 
-![English UI](docs/preview-en.png)
 
 ## 🎨 Look and motion
 

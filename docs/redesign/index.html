@@ -1,0 +1,2666 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>会话同步 · UI 重构稿 v1</title>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-sync" viewBox="0 0 16 16">
+    <path d="M13.2 8a5.2 5.2 0 0 1-8.9 3.6"/><path d="M2.8 8a5.2 5.2 0 0 1 8.9-3.6"/>
+    <path d="M11.9 2.6v2.5H9.4"/><path d="M4.1 13.4v-2.5h2.5"/>
+  </symbol>
+  <symbol id="i-refresh" viewBox="0 0 16 16">
+    <path d="M13.2 7.2A5.3 5.3 0 1 0 13 10.2"/><path d="M13.5 3.2v4h-4"/>
+  </symbol>
+  <symbol id="i-sliders" viewBox="0 0 16 16">
+    <path d="M2.6 5.2h10.8M2.6 10.8h10.8"/>
+    <circle cx="6" cy="5.2" r="1.7"/><circle cx="10" cy="10.8" r="1.7"/>
+  </symbol>
+  <symbol id="i-search" viewBox="0 0 16 16">
+    <circle cx="7.1" cy="7.1" r="4.3"/><path d="m10.4 10.4 3 3"/>
+  </symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 16 16"><path d="m4.2 6.4 3.8 3.8 3.8-3.8"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 16 16"><path d="m6.2 3.8 4.2 4.2-4.2 4.2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 16 16"><path d="m3.2 8.4 3.1 3 6.5-6.8"/></symbol>
+  <symbol id="i-x" viewBox="0 0 16 16"><path d="m4 4 8 8M12 4l-8 8"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 16 16">
+    <rect x="5.4" y="5.4" width="7.6" height="7.6" rx="1.7"/>
+    <path d="M10.6 5.4V4.1a1.1 1.1 0 0 0-1.1-1.1H4.1A1.1 1.1 0 0 0 3 4.1v5.4a1.1 1.1 0 0 0 1.1 1.1h1.3"/>
+  </symbol>
+  <symbol id="i-pull" viewBox="0 0 16 16">
+    <path d="M8 2.8v6.6"/><path d="m5.2 6.8 2.8 2.6 2.8-2.6"/><path d="M3 11.4v1.4h10v-1.4"/>
+  </symbol>
+  <symbol id="i-push" viewBox="0 0 16 16">
+    <path d="M8 9.4V2.8"/><path d="m5.2 5.4 2.8-2.6 2.8 2.6"/><path d="M3 11.4v1.4h10v-1.4"/>
+  </symbol>
+  <symbol id="i-verify" viewBox="0 0 16 16">
+    <path d="M8 2.2 12.7 4v4.1c0 2.6-1.9 4.6-4.7 5.7C5.3 12.7 3.4 10.7 3.4 8.1V4L8 2.2Z"/>
+    <path d="m5.9 7.9 1.5 1.5 2.9-3.1"/>
+  </symbol>
+  <symbol id="i-alert" viewBox="0 0 16 16">
+    <path d="M8 2.7 14 13H2L8 2.7Z"/><path d="M8 6.6v2.9M8 11.4v.1"/>
+  </symbol>
+  <symbol id="i-folder" viewBox="0 0 16 16">
+    <path d="M2.6 4.6a1.2 1.2 0 0 1 1.2-1.2h2.4l1.3 1.6h4.7a1.2 1.2 0 0 1 1.2 1.2v5a1.2 1.2 0 0 1-1.2 1.2H3.8a1.2 1.2 0 0 1-1.2-1.2V4.6Z"/>
+  </symbol>
+  <symbol id="i-more" viewBox="0 0 16 16">
+    <circle cx="3.4" cy="8" r="1.1" fill="currentColor" stroke="none"/>
+    <circle cx="8" cy="8" r="1.1" fill="currentColor" stroke="none"/>
+    <circle cx="12.6" cy="8" r="1.1" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3.2v9.6M3.2 8h9.6"/></symbol>
+  <symbol id="i-devices" viewBox="0 0 16 16">
+    <rect x="2" y="3" width="8.6" height="6.6" rx="1.2"/>
+    <path d="M10.6 6.1h2.3a1 1 0 0 1 1 1v4.7a1 1 0 0 1-1 1H6.6"/>
+    <path d="M4.8 13.2h2.6"/>
+  </symbol>
+  <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.3"/><path d="M8 5v3.1l2.1 1.3"/></symbol>
+  <symbol id="i-external" viewBox="0 0 16 16">
+    <path d="M6.4 3.6H3.6v8.8h8.8V9.6"/><path d="M9.6 2.8h3.6v3.6M13.2 2.8 7.4 8.6"/>
+  </symbol>
+  <symbol id="i-pencil" viewBox="0 0 16 16">
+    <path d="M11.4 2.8 13.2 4.6 5.9 11.9 3 12.9l1-2.9Z"/><path d="m10.2 4 1.8 1.8"/>
+  </symbol>
+  <symbol id="i-radar" viewBox="0 0 16 16">
+    <circle cx="8" cy="8" r="1.5"/>
+    <path d="M8 2.4a5.6 5.6 0 1 1-5.6 5.6"/><path d="M8 5.2a2.8 2.8 0 1 0 2.8 2.8"/>
+  </symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 16 16"><path d="M3 8h9.2"/><path d="m9.2 5 3 3-3 3"/></symbol>
+  <symbol id="i-arrow-left" viewBox="0 0 16 16"><path d="M13 8H3.8"/><path d="m6.8 5-3 3 3 3"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 16 16"><path d="M6 3.5v9M10 3.5v9"/></symbol>
+  <symbol id="i-sort" viewBox="0 0 16 16">
+    <path d="M5 3.2v9.6M5 12.8 2.8 10.6M5 12.8l2.2-2.2"/>
+    <path d="M11 12.8V3.2M11 3.2 8.8 5.4M11 3.2l2.2 2.2"/>
+  </symbol>
+</svg>
+
+<header class="rv-top">
+  <div class="rv-brand">
+    <span class="rv-mark"><svg class="i" aria-hidden="true"><use href="#i-sync"/></svg></span>
+    <div>
+      <div class="rv-title">会话同步 · UI 重构稿</div>
+      <div class="rv-sub">dsh-session-sync · v1.1 · 2026-10-22</div>
+    </div>
+  </div>
+  <span class="rv-spacer"></span>
+  <span class="rv-hint">产品文案支持 中 / EN · 深浅主题</span>
+  <div class="rv-seg" role="group" aria-label="主题">
+    <button type="button" data-theme-btn="dark" aria-pressed="true">深色</button>
+    <button type="button" data-theme-btn="light" aria-pressed="false">浅色</button>
+  </div>
+  <div class="rv-seg" role="group" aria-label="语言">
+    <button type="button" data-lang-btn="zh" aria-pressed="true">中文</button>
+    <button type="button" data-lang-btn="en" aria-pressed="false">EN</button>
+  </div>
+</header>
+
+<main class="doc">
+  <nav class="toc" aria-label="稿子目录">
+    <div class="toc-group">
+      <div class="toc-h">界面</div>
+      <a href="#s-main"><b>01</b> 主面板 · 会话台</a>
+      <a href="#s-selection"><b>02</b> 多选与目标目录</a>
+      <a href="#s-verify"><b>03</b> 校验摘要</a>
+      <a href="#s-push"><b>04</b> 推送方向</a>
+      <a href="#s-plan"><b>05</b> 传输确认</a>
+      <a href="#s-queue"><b>06</b> 传输队列</a>
+      <a href="#s-migrate"><b>06a</b> 迁移预检</a>
+      <a href="#s-transfer-detail"><b>06b</b> 传输详情</a>
+      <a href="#s-empty"><b>07</b> 还没有设备</a>
+      <a href="#s-states"><b>08</b> 状态与异常</a>
+      <a href="#s-drag"><b>09</b> 拖拽</a>
+      <a href="#s-settings"><b>10</b> 设置（面板内）</a>
+      <a href="#s-host"><b>11</b> 设置（宿主设置页）</a>
+      <a href="#s-diag"><b>12</b> 诊断</a>
+      <a href="#s-narrow"><b>13</b> 窄窗口</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-h">规范</div>
+      <a href="#s-visual"><b>14</b> 视觉令牌</a>
+      <a href="#s-components"><b>15</b> 组件与状态</a>
+      <a href="#s-behaviour"><b>16</b> 交互与无障碍</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-h">交付</div>
+      <a href="#s-handoff"><b>17</b> 实现映射与验收</a>
+    </div>
+  </nav>
+
+  <div>
+    <section class="rv-lead">
+      <h1>一个人的局域网，两个屏幕之间的对话</h1>
+      <p>这是「会话同步」插件的完整界面重构稿：从主面板、会话选择、传输确认、队列、整包迁移预检、分片传输详情，到设置、空态、拖拽、异常和窄窗口，全部重画。设计目标是让整套操作像一台安静的仪器——<b>一屏一个主按钮，状态永远可见，动作永远在它发生的地方</b>。</p>
+      <p>所有界面沿用 DSH 自己的设计变量、控件高度与深浅主题，不引入外部字体、图标库或品牌色。稿子里的每个状态都可以单独打开、截图、对照验收。</p>
+      <div class="rv-meta">
+        <span>1180 × 760 主面板</span>
+        <span>19 个场景</span>
+        <span>中 / EN 双语文案</span>
+        <span>深 / 浅双主题</span>
+        <span>无新增依赖</span>
+      </div>
+    </section>
+
+    <!-- 01 ─────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-main">
+      <header class="scene-hd">
+        <span class="scene-no">01</span>
+        <div>
+          <h2>主面板 · 会话台</h2>
+          <p>打开插件的默认落点：第一台在线设备已经选中，右栏常驻它的会话列表。设备栏只负责「选谁」，所有动作发生在右侧。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-main">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="app" style="--app-w:1180px;--app-h:760px">
+          <div class="ss-page">
+            <header class="ss-top">
+              <div class="ss-top-l">
+                <h1 class="ss-h1" data-en="Session Sync">会话同步</h1>
+                <div class="ss-sub">
+                  <span class="ss-dot on"></span>
+                  <span><b>2</b> <span data-en="online">台在线</span></span>
+                  <span class="sep">·</span>
+                  <span><b>3</b> <span data-en="discovered">台已发现</span></span>
+                </div>
+              </div>
+              <div class="ss-top-r">
+                <button type="button" class="ss-icon" title="刷新" aria-label="刷新" data-en-title="Refresh" data-en-aria="Refresh">
+                  <svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg>
+                </button>
+                <button type="button" class="ss-btn sm">
+                  <svg class="i sm" aria-hidden="true"><use href="#i-sliders"/></svg>
+                  <span data-en="Settings">设置</span>
+                </button>
+              </div>
+            </header>
+
+            <div class="ss-desk">
+              <aside class="ss-rail">
+                <div class="ss-self">
+                  <div class="ss-self-hd">
+                    <span class="ss-dot on"></span>
+                    <span data-en="This device">本机</span>
+                    <button type="button" class="ss-icon xs" title="编辑设备名称" aria-label="编辑设备名称" data-en-title="Edit device name" data-en-aria="Edit device name">
+                      <svg class="i xs" aria-hidden="true"><use href="#i-pencil"/></svg>
+                    </button>
+                  </div>
+                  <div class="ss-self-name">my-macbook</div>
+                  <div class="ss-self-meta">
+                    <code>192.168.1.10:47802</code>
+                    <button type="button" class="ss-icon xs" title="复制地址" aria-label="复制本机地址" data-en-title="Copy address" data-en-aria="Copy this device address">
+                      <svg class="i xs" aria-hidden="true"><use href="#i-copy"/></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="ss-rail-scroll">
+                  <div class="ss-glabel"><span data-en="Online">在线</span> <span>2</span></div>
+
+                  <button type="button" class="ss-dev" aria-selected="true">
+                    <span class="ss-dot on"></span>
+                    <span>
+                      <span class="ss-dev-name">Studio Mac</span>
+                      <span class="ss-dev-meta">192.168.1.20:47802</span>
+                    </span>
+                    <span class="ss-dev-count" title="42 个会话">42</span>
+                  </button>
+
+                  <button type="button" class="ss-dev" aria-selected="false">
+                    <span class="ss-dot on"></span>
+                    <span>
+                      <span class="ss-dev-name">Windows 工作站</span>
+                      <span class="ss-dev-meta">192.168.1.21:47802</span>
+                    </span>
+                    <span class="ss-dev-count" title="9 个会话">9</span>
+                  </button>
+
+                  <div class="ss-glabel"><span data-en="Offline">离线</span> <span>1</span></div>
+
+                  <button type="button" class="ss-dev offline" aria-selected="false">
+                    <span class="ss-dot off"></span>
+                    <span>
+                      <span class="ss-dev-name">离线笔记本</span>
+                      <span class="ss-dev-meta">192.168.1.22:47803 · 5 小时前</span>
+                    </span>
+                    <span class="ss-dev-count" title="3 个会话">3</span>
+                  </button>
+                </div>
+
+                <div class="ss-rail-foot">
+                  <button type="button" class="ss-btn ghost sm">
+                    <svg class="i sm" aria-hidden="true"><use href="#i-plus"/></svg>
+                    <span data-en="Add address">添加地址</span>
+                  </button>
+                  <button type="button" class="ss-icon sm" title="跨网段扫描" aria-label="跨网段扫描" data-en-title="Scan subnets" data-en-aria="Scan subnets">
+                    <svg class="i sm" aria-hidden="true"><use href="#i-radar"/></svg>
+                  </button>
+                </div>
+              </aside>
+
+              <section class="ss-stage">
+                <header class="ss-stage-hd">
+                  <div class="ss-stage-id">
+                    <span class="ss-dot on"></span>
+                    <div style="min-width:0">
+                      <div class="ss-stage-name">Studio Mac</div>
+                      <div class="ss-stage-meta">
+                        <code>192.168.1.20:47802</code>
+                        <span class="ss-sep">·</span>
+                        <span><b>42</b> <span data-en="sessions">个会话</span></span>
+                        <span class="ss-sep">·</span>
+                        <span>macOS · v0.7.1</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ss-stage-actions">
+                    <button type="button" class="ss-btn primary sm">
+                      <svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg>
+                      <span data-en="Pull all">拉取全部</span>
+                    </button>
+                    <button type="button" class="ss-icon sm" title="设备操作" aria-label="设备操作" data-en-title="Device actions" data-en-aria="Device actions">
+                      <svg class="i sm" aria-hidden="true"><use href="#i-more"/></svg>
+                    </button>
+                  </div>
+                </header>
+
+                <div class="ss-tabs" role="tablist">
+                  <button type="button" class="ss-tab" role="tab" aria-selected="true">
+                    <svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg>
+                    <span data-en="Pull">拉取</span> <b>42</b>
+                  </button>
+                  <button type="button" class="ss-tab" role="tab" aria-selected="false">
+                    <svg class="i sm" aria-hidden="true"><use href="#i-push"/></svg>
+                    <span data-en="Push">推送</span> <b>80</b>
+                  </button>
+                </div>
+
+                <div class="ss-tools">
+                  <div class="ss-search">
+                    <svg class="i sm" aria-hidden="true"><use href="#i-search"/></svg>
+                    <input type="text" placeholder="搜索标题、#id 或路径" aria-label="搜索会话" data-en-ph="Search title, #id or path" data-en-aria="Search sessions">
+                    <kbd>/</kbd>
+                  </div>
+                  <div class="ss-filters" role="group" aria-label="筛选">
+                    <button type="button" class="ss-filter" aria-pressed="true"><span data-en="All">全部</span> <b>42</b></button>
+                    <button type="button" class="ss-filter" aria-pressed="false"><span data-en="Not synced">未同步</span> <b>6</b></button>
+                    <button type="button" class="ss-filter" aria-pressed="false"><span data-en="Synced">已同步</span> <b>36</b></button>
+                  </div>
+                  <button type="button" class="ss-btn ghost sm ss-sort">
+                    <span data-en="Recently updated">最近更新</span>
+                    <svg class="i sm" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+                  </button>
+                </div>
+
+                <div class="ss-list" role="listbox" aria-label="对端会话">
+                  <div class="ss-row is-hover" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：把同步插件做成 1.0"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">把同步插件做成 1.0</div>
+                      <div class="ss-row-meta"><code>#4f2c9b1e</code><span class="ss-sep">·</span>10-22 08:45<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/session-sync</span><span class="ss-sep">·</span>128 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div>
+                    <div class="ss-row-act">
+                      <button type="button" class="ss-btn ghost xs" data-en="Pull">拉取</button>
+                      <button type="button" class="ss-btn ghost xs" data-en="Verify">校验</button>
+                    </div>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：硬件虚拟化与内存隔离"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">硬件虚拟化与内存隔离</div>
+                      <div class="ss-row-meta"><code>#9a71d3c8</code><span class="ss-sep">·</span>10-22 07:25<span class="ss-sep">·</span><span class="ss-path">/Users/you/.dsh/profiles/desktop</span><span class="ss-sep">·</span>214 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div>
+                    <div class="ss-row-act">
+                      <button type="button" class="ss-btn ghost xs" data-en="Pull">拉取</button>
+                      <button type="button" class="ss-btn ghost xs" data-en="Verify">校验</button>
+                    </div>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：未命名会话"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title" data-en="Untitled session">未命名会话</div>
+                      <div class="ss-row-meta"><code>#b3e8f0aa</code><span class="ss-sep">·</span>10-22 06:25<span class="ss-sep">·</span><span class="ss-path">/tmp/dsh-ss-home/session-sync/unsorted</span><span class="ss-sep">·</span>36 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div>
+                    <div class="ss-row-act">
+                      <button type="button" class="ss-btn ghost xs"><svg class="i xs" aria-hidden="true"><use href="#i-verify"/></svg><span data-en="Verify">校验</span></button>
+                    </div>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：一个关于启动链的想法"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">一个关于启动链的想法</div>
+                      <div class="ss-row-meta"><code>#1d5c7e42</code><span class="ss-sep">·</span>10-22 03:05<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/session-sync</span><span class="ss-sep">·</span>57 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div>
+                    <div class="ss-row-act">
+                      <button type="button" class="ss-btn ghost xs"><svg class="i xs" aria-hidden="true"><use href="#i-verify"/></svg><span data-en="Verify">校验</span></button>
+                    </div>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：会话标题的中文排版与截断"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">会话标题的中文排版与截断</div>
+                      <div class="ss-row-meta"><code>#7c31ab90</code><span class="ss-sep">·</span>10-21 22:14<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/notes</span><span class="ss-sep">·</span>19 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div>
+                    <div class="ss-row-act">
+                      <button type="button" class="ss-btn ghost xs" data-en="Pull">拉取</button>
+                      <button type="button" class="ss-btn ghost xs" data-en="Verify">校验</button>
+                    </div>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：排查广播跨网段丢失"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">排查广播跨网段丢失</div>
+                      <div class="ss-row-meta"><code>#e91f4c02</code><span class="ss-sep">·</span>10-21 20:02<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/session-sync</span><span class="ss-sep">·</span>73 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div>
+                    <div class="ss-row-act">
+                      <button type="button" class="ss-btn ghost xs" data-en="Pull">拉取</button>
+                      <button type="button" class="ss-btn ghost xs" data-en="Verify">校验</button>
+                    </div>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：Windows 下依赖链接失败"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">Windows 下依赖链接失败</div>
+                      <div class="ss-row-meta"><code>#c0a7f315</code><span class="ss-sep">·</span>10-21 18:40<span class="ss-sep">·</span><span class="ss-path">C:\Users\you\work\harness</span><span class="ss-sep">·</span>88 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div>
+                    <div class="ss-row-act">
+                      <button type="button" class="ss-btn ghost xs"><svg class="i xs" aria-hidden="true"><use href="#i-verify"/></svg><span data-en="Verify">校验</span></button>
+                    </div>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：传输队列的并发上限"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">传输队列的并发上限</div>
+                      <div class="ss-row-meta"><code>#58b6de11</code><span class="ss-sep">·</span>10-21 16:12<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/session-sync</span><span class="ss-sep">·</span>41 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div>
+                    <div class="ss-row-act">
+                      <button type="button" class="ss-btn ghost xs" data-en="Pull">拉取</button>
+                      <button type="button" class="ss-btn ghost xs" data-en="Verify">校验</button>
+                    </div>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：发布前的最后检查"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">发布前的最后检查</div>
+                      <div class="ss-row-meta"><code>#2f8ad1c4</code><span class="ss-sep">·</span>10-21 14:20<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/session-sync</span><span class="ss-sep">·</span>62 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div>
+                    <div class="ss-row-act">
+                      <button type="button" class="ss-btn ghost xs" data-en="Pull">拉取</button>
+                      <button type="button" class="ss-btn ghost xs" data-en="Verify">校验</button>
+                    </div>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：UDP 发现的回礼逻辑"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">UDP 发现的回礼逻辑</div>
+                      <div class="ss-row-meta"><code>#8e12b7d0</code><span class="ss-sep">·</span>10-21 11:05<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/session-sync</span><span class="ss-sep">·</span>95 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div>
+                    <div class="ss-row-act">
+                      <button type="button" class="ss-btn ghost xs"><svg class="i xs" aria-hidden="true"><use href="#i-verify"/></svg><span data-en="Verify">校验</span></button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="ss-dock">
+                  <span class="ss-spinner" aria-hidden="true"></span>
+                  <div class="ss-dock-main">
+                    <b><span data-en="Pulling">拉取中</span> 2/5</b>
+                    <span class="ss-dock-title">硬件虚拟化与内存隔离</span>
+                    <span class="ss-dock-pct" title="当前会话 43%">43%</span>
+                  </div>
+                  <div class="meter" aria-hidden="true"><i style="width:49%"></i></div>
+                  <button type="button" class="ss-btn ghost xs" data-en="Expand">展开</button>
+                </div>
+              </section>
+            </div>
+
+            <footer class="ss-foot">
+              <code>dsh-session-sync 0.7.1</code>
+              <span class="sep">·</span>
+              <span>MIT</span>
+              <span class="ss-spacer"></span>
+              <a href="#">
+                <svg class="i xs" aria-hidden="true"><use href="#i-external"/></svg>
+                GitHub
+              </a>
+            </footer>
+          </div>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>一屏一个主按钮。</b>「拉取全部」在右栏头部；单条操作留在行内 hover / 聚焦时出现，触屏常显。</li>
+        <li><b>整行都是命中区。</b>点标题、元信息、状态徽章都能选中；只有行内「拉取/校验」、勾选框和菜单按钮自己处理点击。</li>
+        <li><b>设备栏只做选择。</b>改名、复制地址、刷新、移除收进右栏 ⋯，不再每个设备卡挂一个菜单和按钮。</li>
+        <li><b>方向写在标签上。</b>「拉取 / 推送」替代「对端会话 / 本机会话」，切换时标题下的一行说明跟着变。</li>
+        <li><b>传输不遮列表。</b>底部固定一条进度；要看细节再向上展开队列。</li>
+      </ul>
+    </section>
+
+    <!-- 02 ─────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-selection">
+      <header class="scene-hd">
+        <span class="scene-no">02</span>
+        <div>
+          <h2>多选与目标目录</h2>
+          <p>勾选会话后，底部浮出唯一的动作条：目标目录、开始、清除。目标选择器同时是「本机工作区」的唯一入口——不再在页面底部重复一整段目录列表。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-selection">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="app" style="--app-w:1180px;--app-h:760px">
+          <div class="ss-page">
+            <header class="ss-top">
+              <div class="ss-top-l">
+                <h1 class="ss-h1" data-en="Session Sync">会话同步</h1>
+                <div class="ss-sub">
+                  <span class="ss-dot on"></span>
+                  <span><b>2</b> <span data-en="online">台在线</span></span>
+                  <span class="sep">·</span>
+                  <span><b>3</b> <span data-en="discovered">台已发现</span></span>
+                </div>
+              </div>
+              <div class="ss-top-r">
+                <button type="button" class="ss-icon" title="刷新" aria-label="刷新" data-en-title="Refresh" data-en-aria="Refresh">
+                  <svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg>
+                </button>
+                <button type="button" class="ss-btn sm">
+                  <svg class="i sm" aria-hidden="true"><use href="#i-sliders"/></svg>
+                  <span data-en="Settings">设置</span>
+                </button>
+              </div>
+            </header>
+
+            <div class="ss-desk">
+              <aside class="ss-rail">
+                <div class="ss-self">
+                  <div class="ss-self-hd">
+                    <span class="ss-dot on"></span>
+                    <span data-en="This device">本机</span>
+                    <button type="button" class="ss-icon xs" title="编辑设备名称" aria-label="编辑设备名称">
+                      <svg class="i xs" aria-hidden="true"><use href="#i-pencil"/></svg>
+                    </button>
+                  </div>
+                  <div class="ss-self-name">my-macbook</div>
+                  <div class="ss-self-meta">
+                    <code>192.168.1.10:47802</code>
+                    <button type="button" class="ss-icon xs" title="复制地址" aria-label="复制本机地址">
+                      <svg class="i xs" aria-hidden="true"><use href="#i-copy"/></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="ss-rail-scroll">
+                  <div class="ss-glabel"><span data-en="Online">在线</span> <span>2</span></div>
+                  <button type="button" class="ss-dev" aria-selected="true">
+                    <span class="ss-dot on"></span>
+                    <span><span class="ss-dev-name">Studio Mac</span><span class="ss-dev-meta">192.168.1.20:47802</span></span>
+                    <span class="ss-dev-count">42</span>
+                  </button>
+                  <button type="button" class="ss-dev" aria-selected="false">
+                    <span class="ss-dot on"></span>
+                    <span><span class="ss-dev-name">Windows 工作站</span><span class="ss-dev-meta">192.168.1.21:47802</span></span>
+                    <span class="ss-dev-count">9</span>
+                  </button>
+                  <div class="ss-glabel"><span data-en="Offline">离线</span> <span>1</span></div>
+                  <button type="button" class="ss-dev offline" aria-selected="false">
+                    <span class="ss-dot off"></span>
+                    <span><span class="ss-dev-name">离线笔记本</span><span class="ss-dev-meta">192.168.1.22:47803 · 5 小时前</span></span>
+                    <span class="ss-dev-count">3</span>
+                  </button>
+                </div>
+
+                <div class="ss-rail-foot">
+                  <button type="button" class="ss-btn ghost sm"><svg class="i sm" aria-hidden="true"><use href="#i-plus"/></svg><span data-en="Add address">添加地址</span></button>
+                  <button type="button" class="ss-icon sm" title="跨网段扫描" aria-label="跨网段扫描"><svg class="i sm" aria-hidden="true"><use href="#i-radar"/></svg></button>
+                </div>
+              </aside>
+
+              <section class="ss-stage">
+                <header class="ss-stage-hd">
+                  <div class="ss-stage-id">
+                    <span class="ss-dot on"></span>
+                    <div style="min-width:0">
+                      <div class="ss-stage-name">Studio Mac</div>
+                      <div class="ss-stage-meta">
+                        <code>192.168.1.20:47802</code><span class="ss-sep">·</span>
+                        <span><b>42</b> <span data-en="sessions">个会话</span></span><span class="ss-sep">·</span>
+                        <span>macOS · v0.7.1</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ss-stage-actions">
+                    <button type="button" class="ss-btn primary sm"><svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg><span data-en="Pull all">拉取全部</span></button>
+                    <button type="button" class="ss-icon sm" title="设备操作" aria-label="设备操作"><svg class="i sm" aria-hidden="true"><use href="#i-more"/></svg></button>
+                  </div>
+                </header>
+
+                <div class="ss-tabs" role="tablist">
+                  <button type="button" class="ss-tab" role="tab" aria-selected="true"><svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg><span data-en="Pull">拉取</span> <b>42</b></button>
+                  <button type="button" class="ss-tab" role="tab" aria-selected="false"><svg class="i sm" aria-hidden="true"><use href="#i-push"/></svg><span data-en="Push">推送</span> <b>80</b></button>
+                </div>
+
+                <div class="ss-tools">
+                  <div class="ss-search">
+                    <svg class="i sm" aria-hidden="true"><use href="#i-search"/></svg>
+                    <input type="text" placeholder="搜索标题、#id 或路径" aria-label="搜索会话" data-en-ph="Search title, #id or path">
+                    <kbd>/</kbd>
+                  </div>
+                  <div class="ss-filters" role="group" aria-label="筛选">
+                    <button type="button" class="ss-filter" aria-pressed="true"><span data-en="All">全部</span> <b>42</b></button>
+                    <button type="button" class="ss-filter" aria-pressed="false"><span data-en="Not synced">未同步</span> <b>6</b></button>
+                    <button type="button" class="ss-filter" aria-pressed="false"><span data-en="Synced">已同步</span> <b>36</b></button>
+                  </div>
+                  <button type="button" class="ss-btn ghost sm ss-sort"><span data-en="Recently updated">最近更新</span><svg class="i sm" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+                </div>
+
+                <div class="ss-list" role="listbox" aria-label="对端会话" aria-multiselectable="true">
+                  <div class="ss-row" role="option" aria-selected="true" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="true" aria-label="选择：把同步插件做成 1.0"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">把同步插件做成 1.0</div>
+                      <div class="ss-row-meta"><code>#4f2c9b1e</code><span class="ss-sep">·</span>10-22 08:45<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/session-sync</span><span class="ss-sep">·</span>128 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Pull">拉取</button><button type="button" class="ss-btn ghost xs" data-en="Verify">校验</button></div>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="true" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="true" aria-label="选择：硬件虚拟化与内存隔离"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">硬件虚拟化与内存隔离</div>
+                      <div class="ss-row-meta"><code>#9a71d3c8</code><span class="ss-sep">·</span>10-22 07:25<span class="ss-sep">·</span><span class="ss-path">/Users/you/.dsh/profiles/desktop</span><span class="ss-sep">·</span>214 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Pull">拉取</button><button type="button" class="ss-btn ghost xs" data-en="Verify">校验</button></div>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：未命名会话"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title" data-en="Untitled session">未命名会话</div>
+                      <div class="ss-row-meta"><code>#b3e8f0aa</code><span class="ss-sep">·</span>10-22 06:25<span class="ss-sep">·</span><span class="ss-path">/tmp/dsh-ss-home/session-sync/unsorted</span><span class="ss-sep">·</span>36 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs"><svg class="i xs" aria-hidden="true"><use href="#i-verify"/></svg><span data-en="Verify">校验</span></button></div>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="true" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="true" aria-label="选择：会话标题的中文排版与截断"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">会话标题的中文排版与截断</div>
+                      <div class="ss-row-meta"><code>#7c31ab90</code><span class="ss-sep">·</span>10-21 22:14<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/notes</span><span class="ss-sep">·</span>19 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Pull">拉取</button><button type="button" class="ss-btn ghost xs" data-en="Verify">校验</button></div>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：排查广播跨网段丢失"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">排查广播跨网段丢失</div>
+                      <div class="ss-row-meta"><code>#e91f4c02</code><span class="ss-sep">·</span>10-21 20:02<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/session-sync</span><span class="ss-sep">·</span>73 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Pull">拉取</button><button type="button" class="ss-btn ghost xs" data-en="Verify">校验</button></div>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：Windows 下依赖链接失败"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">Windows 下依赖链接失败</div>
+                      <div class="ss-row-meta"><code>#c0a7f315</code><span class="ss-sep">·</span>10-21 18:40<span class="ss-sep">·</span><span class="ss-path">C:\Users\you\work\harness</span><span class="ss-sep">·</span>88 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs"><svg class="i xs" aria-hidden="true"><use href="#i-verify"/></svg><span data-en="Verify">校验</span></button></div>
+                  </div>
+                </div>
+
+                <div class="ss-selbar">
+                  <span class="count"><span data-en="Selected">已选</span> <b>3</b> <span data-en="items">项</span></span>
+                  <div class="ss-target-wrap">
+                    <button type="button" class="ss-target" aria-expanded="true" aria-haspopup="menu">
+                      <span data-en="Pull to">拉取到</span>
+                      <span>未分组（默认）</span>
+                      <svg class="i sm" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+                    </button>
+                    <div class="ss-popover" role="menu">
+                      <div class="ss-pop-hd"><span data-en="Choose destination">选择目标目录</span><span style="flex:1"></span><span>3 <span data-en="locations">个位置</span></span></div>
+                      <button type="button" class="ss-opt" role="menuitemradio" aria-checked="true" title="/tmp/dsh-ss-home/session-sync/unsorted">
+                        <span class="ss-opt-main">
+                          <span class="ss-opt-name">未分组（默认）<span class="ss-chip ok"><span data-en="Current">当前</span></span></span>
+                          <span class="ss-opt-path">/tmp/dsh-ss-home/session-sync/unsorted</span>
+                        </span>
+                        <span class="ss-opt-count">2 <span data-en="sessions">个会话</span></span>
+                        <svg class="i sm check" aria-hidden="true"><use href="#i-check"/></svg>
+                      </button>
+                      <button type="button" class="ss-opt" role="menuitemradio" aria-checked="false" title="/Users/you/project/workspace">
+                        <span class="ss-opt-main">
+                          <span class="ss-opt-name">dsh-harness-workspace</span>
+                          <span class="ss-opt-path">/Users/you/project/workspace</span>
+                        </span>
+                        <span class="ss-opt-count">4 <span data-en="sessions">个会话</span></span>
+                      </button>
+                      <button type="button" class="ss-opt" role="menuitemradio" aria-checked="false" title="/Users/you/project/notes">
+                        <span class="ss-opt-main">
+                          <span class="ss-opt-name">notes</span>
+                          <span class="ss-opt-path">/Users/you/project/notes</span>
+                        </span>
+                        <span class="ss-opt-count">0 <span data-en="sessions">个会话</span></span>
+                      </button>
+                      <div class="ss-pop-foot">
+                        <button type="button" class="ss-btn ghost sm"><svg class="i sm" aria-hidden="true"><use href="#i-plus"/></svg><span data-en="Add path…">添加路径…</span></button>
+                      </div>
+                      <div class="ss-pop-note" data-en="You can also drag sessions onto a host workspace.">也可以直接把会话拖到宿主侧栏的工作区。</div>
+                    </div>
+                  </div>
+                  <span class="ss-spacer"></span>
+                  <button type="button" class="ss-btn ghost xs" data-en="Clear">清除</button>
+                  <button type="button" class="ss-btn primary sm">
+                    <svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg>
+                    <span data-en="Start pull">开始拉取</span>
+                  </button>
+                </div>
+              </section>
+            </div>
+
+            <footer class="ss-foot">
+              <code>dsh-session-sync 0.7.1</code><span class="sep">·</span><span>MIT</span>
+              <span class="ss-spacer"></span>
+              <a href="#"><svg class="i xs" aria-hidden="true"><use href="#i-external"/></svg>GitHub</a>
+            </footer>
+          </div>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>点整行就能选。</b>勾选框只是把状态显性化；Shift 连选、⌘A 全选仍然保留。</li>
+        <li><b>选择条只在有选择时存在。</b>不再常驻「已选 0 个」，也不占列表的固定高度。</li>
+        <li><b>目标只有一个入口。</b>工作区、未分组目录、自定义路径都在这个下拉里；底部「本机工作区」整段删除。</li>
+        <li><b>选择条贴着列表底边。</b>它属于当前列表，不漂在窗口中间；Esc 取消选择。</li>
+        <li><b>目标菜单写明路径和已有会话数。</b>选错目录是拉取最常见的返工，先让人看清落点。</li>
+      </ul>
+    </section>
+
+    <!-- 03 ─────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-verify">
+      <header class="scene-hd">
+        <span class="scene-no">03</span>
+        <div>
+          <h2>校验摘要</h2>
+          <p>校验结果贴在那一行下面：通过时一行收束，失败时才展开两段摘要。摘要证明完整性、不证明身份——所以失败态只提供复制与重试，不诱导「忽略继续」。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-verify">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="app" style="--app-w:1180px;--app-h:620px">
+          <div class="ss-page">
+            <header class="ss-top">
+              <div class="ss-top-l">
+                <h1 class="ss-h1" data-en="Session Sync">会话同步</h1>
+                <div class="ss-sub">
+                  <span class="ss-dot on"></span>
+                  <span><b>2</b> <span data-en="online">台在线</span></span>
+                  <span class="sep">·</span>
+                  <span><b>3</b> <span data-en="discovered">台已发现</span></span>
+                </div>
+              </div>
+              <div class="ss-top-r">
+                <button type="button" class="ss-icon" title="刷新" aria-label="刷新"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+                <button type="button" class="ss-btn sm"><svg class="i sm" aria-hidden="true"><use href="#i-sliders"/></svg><span data-en="Settings">设置</span></button>
+              </div>
+            </header>
+
+            <div class="ss-desk">
+              <aside class="ss-rail">
+                <div class="ss-self">
+                  <div class="ss-self-hd"><span class="ss-dot on"></span><span data-en="This device">本机</span>
+                    <button type="button" class="ss-icon xs" title="编辑设备名称" aria-label="编辑设备名称"><svg class="i xs" aria-hidden="true"><use href="#i-pencil"/></svg></button>
+                  </div>
+                  <div class="ss-self-name">my-macbook</div>
+                  <div class="ss-self-meta"><code>192.168.1.10:47802</code>
+                    <button type="button" class="ss-icon xs" title="复制地址" aria-label="复制本机地址"><svg class="i xs" aria-hidden="true"><use href="#i-copy"/></svg></button>
+                  </div>
+                </div>
+                <div class="ss-rail-scroll">
+                  <div class="ss-glabel"><span data-en="Online">在线</span> <span>2</span></div>
+                  <button type="button" class="ss-dev" aria-selected="true"><span class="ss-dot on"></span><span><span class="ss-dev-name">Studio Mac</span><span class="ss-dev-meta">192.168.1.20:47802</span></span><span class="ss-dev-count">42</span></button>
+                  <button type="button" class="ss-dev" aria-selected="false"><span class="ss-dot on"></span><span><span class="ss-dev-name">Windows 工作站</span><span class="ss-dev-meta">192.168.1.21:47802</span></span><span class="ss-dev-count">9</span></button>
+                  <div class="ss-glabel"><span data-en="Offline">离线</span> <span>1</span></div>
+                  <button type="button" class="ss-dev offline" aria-selected="false"><span class="ss-dot off"></span><span><span class="ss-dev-name">离线笔记本</span><span class="ss-dev-meta">192.168.1.22:47803 · 5 小时前</span></span><span class="ss-dev-count">3</span></button>
+                </div>
+                <div class="ss-rail-foot">
+                  <button type="button" class="ss-btn ghost sm"><svg class="i sm" aria-hidden="true"><use href="#i-plus"/></svg><span data-en="Add address">添加地址</span></button>
+                  <button type="button" class="ss-icon sm" title="跨网段扫描" aria-label="跨网段扫描"><svg class="i sm" aria-hidden="true"><use href="#i-radar"/></svg></button>
+                </div>
+              </aside>
+
+              <section class="ss-stage">
+                <header class="ss-stage-hd">
+                  <div class="ss-stage-id">
+                    <span class="ss-dot on"></span>
+                    <div style="min-width:0">
+                      <div class="ss-stage-name">Studio Mac</div>
+                      <div class="ss-stage-meta"><code>192.168.1.20:47802</code><span class="ss-sep">·</span><span><b>42</b> <span data-en="sessions">个会话</span></span><span class="ss-sep">·</span><span>macOS · v0.7.1</span></div>
+                    </div>
+                  </div>
+                  <div class="ss-stage-actions">
+                    <button type="button" class="ss-btn primary sm"><svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg><span data-en="Pull all">拉取全部</span></button>
+                    <button type="button" class="ss-icon sm" title="设备操作" aria-label="设备操作"><svg class="i sm" aria-hidden="true"><use href="#i-more"/></svg></button>
+                  </div>
+                </header>
+
+                <div class="ss-tabs" role="tablist">
+                  <button type="button" class="ss-tab" role="tab" aria-selected="true"><svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg><span data-en="Pull">拉取</span> <b>42</b></button>
+                  <button type="button" class="ss-tab" role="tab" aria-selected="false"><svg class="i sm" aria-hidden="true"><use href="#i-push"/></svg><span data-en="Push">推送</span> <b>80</b></button>
+                </div>
+
+                <div class="ss-tools">
+                  <div class="ss-search"><svg class="i sm" aria-hidden="true"><use href="#i-search"/></svg><input type="text" placeholder="搜索标题、#id 或路径" aria-label="搜索会话" data-en-ph="Search title, #id or path"><kbd>/</kbd></div>
+                  <div class="ss-filters" role="group" aria-label="筛选">
+                    <button type="button" class="ss-filter" aria-pressed="true"><span data-en="All">全部</span> <b>42</b></button>
+                    <button type="button" class="ss-filter" aria-pressed="false"><span data-en="Not synced">未同步</span> <b>6</b></button>
+                    <button type="button" class="ss-filter" aria-pressed="false"><span data-en="Synced">已同步</span> <b>36</b></button>
+                  </div>
+                  <button type="button" class="ss-btn ghost sm ss-sort"><span data-en="Recently updated">最近更新</span><svg class="i sm" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+                </div>
+
+                <div class="ss-list" role="listbox" aria-label="对端会话">
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：把同步插件做成 1.0"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">把同步插件做成 1.0</div>
+                      <div class="ss-row-meta"><code>#4f2c9b1e</code><span class="ss-sep">·</span>10-22 08:45<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/session-sync</span><span class="ss-sep">·</span>128 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div>
+                    <div class="ss-row-act">
+                      <button type="button" class="ss-btn ghost xs"><svg class="i xs" aria-hidden="true"><use href="#i-verify"/></svg><span data-en="Verify">校验</span></button>
+                      <button type="button" class="ss-icon xs" title="更多" aria-label="更多"><svg class="i xs" aria-hidden="true"><use href="#i-more"/></svg></button>
+                    </div>
+                  </div>
+                  <div class="ss-digest ok">
+                    <svg class="i sm" aria-hidden="true"><use href="#i-check"/></svg>
+                    <div class="grow"><code>sha256 2b12f7854d80…</code> <span class="ss-digest-note" data-en="matches the local copy">与本机副本一致</span></div>
+                    <button type="button" class="ss-btn ghost xs" data-en="Copy full digest">复制完整摘要</button>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：硬件虚拟化与内存隔离"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">硬件虚拟化与内存隔离</div>
+                      <div class="ss-row-meta"><code>#9a71d3c8</code><span class="ss-sep">·</span>10-22 07:25<span class="ss-sep">·</span><span class="ss-path">/Users/you/.dsh/profiles/desktop</span><span class="ss-sep">·</span>214 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip bad"><svg class="i" aria-hidden="true"><use href="#i-alert"/></svg><span data-en="Checksum failed">校验失败</span></span></div>
+                    <div class="ss-row-act">
+                      <button type="button" class="ss-btn ghost xs"><svg class="i xs" aria-hidden="true"><use href="#i-verify"/></svg><span data-en="Retry">重新校验</span></button>
+                    </div>
+                  </div>
+                  <div class="ss-digest bad">
+                    <svg class="i sm" aria-hidden="true"><use href="#i-alert"/></svg>
+                    <div class="grow">
+                      <div><b data-en="sha256 mismatch">sha256 不匹配</b> · <span class="ss-digest-note" data-en="import rejected (409 checksum-mismatch)">已拒绝写入（409 checksum-mismatch）</span></div>
+                      <div class="ss-digest-pair">
+                        <div><span data-en="peer">对端</span><code>a3f1c07e6b2d…9be2</code></div>
+                        <div><span data-en="local">本机</span><code>7c02d41b8e57…41d8</code></div>
+                      </div>
+                    </div>
+                    <button type="button" class="ss-btn ghost xs" data-en="Copy both">复制两段</button>
+                    <button type="button" class="ss-btn ghost xs" data-en="Retry">重新校验</button>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：未命名会话"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title" data-en="Untitled session">未命名会话</div>
+                      <div class="ss-row-meta"><code>#b3e8f0aa</code><span class="ss-sep">·</span>10-22 06:25<span class="ss-sep">·</span><span class="ss-path">/tmp/dsh-ss-home/session-sync/unsorted</span><span class="ss-sep">·</span>36 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Pull">拉取</button><button type="button" class="ss-btn ghost xs" data-en="Verify">校验</button></div>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：一个关于启动链的想法"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">一个关于启动链的想法</div>
+                      <div class="ss-row-meta"><code>#1d5c7e42</code><span class="ss-sep">·</span>10-22 03:05<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/session-sync</span><span class="ss-sep">·</span>57 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs"><svg class="i xs" aria-hidden="true"><use href="#i-verify"/></svg><span data-en="Verify">校验</span></button></div>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：Windows 下依赖链接失败"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">Windows 下依赖链接失败</div>
+                      <div class="ss-row-meta"><code>#c0a7f315</code><span class="ss-sep">·</span>10-21 18:40<span class="ss-sep">·</span><span class="ss-path">C:\Users\you\work\harness</span><span class="ss-sep">·</span>88 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs"><svg class="i xs" aria-hidden="true"><use href="#i-verify"/></svg><span data-en="Verify">校验</span></button></div>
+                  </div>
+
+                  <div class="ss-row" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：传输队列的并发上限"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">传输队列的并发上限</div>
+                      <div class="ss-row-meta"><code>#58b6de11</code><span class="ss-sep">·</span>10-21 16:12<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/session-sync</span><span class="ss-sep">·</span>41 条事件</div>
+                    </div>
+                    <div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Pull">拉取</button><button type="button" class="ss-btn ghost xs" data-en="Verify">校验</button></div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>成功不占两行。</b>只显示 12 位前缀与本机是否一致；完整摘要在「复制完整摘要」里。</li>
+        <li><b>失败才展开。</b>对端与本机两段摘要并排，带 HTTP 409 的原因，不做「忽略继续」这种会诱发误点的按钮。</li>
+        <li><b>校验永远可以重来。</b>失败态的主操作是「重新校验」，避免一次网络抖动就让人去手改文件。</li>
+      </ul>
+    </section>
+
+    <!-- 04 ─────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-push">
+      <header class="scene-hd">
+        <span class="scene-no">04</span>
+        <div>
+          <h2>推送方向</h2>
+          <p>同一个会话台，切换方向后列表变成「本机会话」。标签写的是动作（拉取 / 推送），标题下一行说明流向，避免「对端会话 / 本机会话」这种要读两遍的命名。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-push">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="app" style="--app-w:1180px;--app-h:700px">
+          <div class="ss-page">
+            <header class="ss-top">
+              <div class="ss-top-l">
+                <h1 class="ss-h1" data-en="Session Sync">会话同步</h1>
+                <div class="ss-sub">
+                  <span class="ss-dot on"></span>
+                  <span><b>2</b> <span data-en="online">台在线</span></span><span class="sep">·</span>
+                  <span><b>3</b> <span data-en="discovered">台已发现</span></span>
+                </div>
+              </div>
+              <div class="ss-top-r">
+                <button type="button" class="ss-icon" title="刷新" aria-label="刷新"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+                <button type="button" class="ss-btn sm"><svg class="i sm" aria-hidden="true"><use href="#i-sliders"/></svg><span data-en="Settings">设置</span></button>
+              </div>
+            </header>
+
+            <div class="ss-desk">
+              <aside class="ss-rail">
+                <div class="ss-self">
+                  <div class="ss-self-hd"><span class="ss-dot on"></span><span data-en="This device">本机</span>
+                    <button type="button" class="ss-icon xs" title="编辑设备名称" aria-label="编辑设备名称"><svg class="i xs" aria-hidden="true"><use href="#i-pencil"/></svg></button>
+                  </div>
+                  <div class="ss-self-name">my-macbook</div>
+                  <div class="ss-self-meta"><code>192.168.1.10:47802</code>
+                    <button type="button" class="ss-icon xs" title="复制地址" aria-label="复制本机地址"><svg class="i xs" aria-hidden="true"><use href="#i-copy"/></svg></button>
+                  </div>
+                </div>
+                <div class="ss-rail-scroll">
+                  <div class="ss-glabel"><span data-en="Online">在线</span> <span>2</span></div>
+                  <button type="button" class="ss-dev" aria-selected="true"><span class="ss-dot on"></span><span><span class="ss-dev-name">Studio Mac</span><span class="ss-dev-meta">192.168.1.20:47802</span></span><span class="ss-dev-count">42</span></button>
+                  <button type="button" class="ss-dev" aria-selected="false"><span class="ss-dot on"></span><span><span class="ss-dev-name">Windows 工作站</span><span class="ss-dev-meta">192.168.1.21:47802</span></span><span class="ss-dev-count">9</span></button>
+                  <div class="ss-glabel"><span data-en="Offline">离线</span> <span>1</span></div>
+                  <button type="button" class="ss-dev offline" aria-selected="false"><span class="ss-dot off"></span><span><span class="ss-dev-name">离线笔记本</span><span class="ss-dev-meta">192.168.1.22:47803 · 5 小时前</span></span><span class="ss-dev-count">3</span></button>
+                </div>
+                <div class="ss-rail-foot">
+                  <button type="button" class="ss-btn ghost sm"><svg class="i sm" aria-hidden="true"><use href="#i-plus"/></svg><span data-en="Add address">添加地址</span></button>
+                  <button type="button" class="ss-icon sm" title="跨网段扫描" aria-label="跨网段扫描"><svg class="i sm" aria-hidden="true"><use href="#i-radar"/></svg></button>
+                </div>
+              </aside>
+
+              <section class="ss-stage">
+                <header class="ss-stage-hd">
+                  <div class="ss-stage-id">
+                    <span class="ss-dot on"></span>
+                    <div style="min-width:0">
+                      <div class="ss-stage-name">Studio Mac</div>
+                      <div class="ss-stage-meta"><code>192.168.1.20:47802</code><span class="ss-sep">·</span><span><b>42</b> <span data-en="sessions">个会话</span></span><span class="ss-sep">·</span><span>macOS · v0.7.1</span></div>
+                    </div>
+                  </div>
+                  <div class="ss-stage-actions">
+                    <button type="button" class="ss-icon sm" title="设备操作" aria-label="设备操作"><svg class="i sm" aria-hidden="true"><use href="#i-more"/></svg></button>
+                  </div>
+                </header>
+
+                <div class="ss-tabs" role="tablist">
+                  <button type="button" class="ss-tab" role="tab" aria-selected="false"><svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg><span data-en="Pull">拉取</span> <b>42</b></button>
+                  <button type="button" class="ss-tab" role="tab" aria-selected="true"><svg class="i sm" aria-hidden="true"><use href="#i-push"/></svg><span data-en="Push">推送</span> <b>80</b></button>
+                </div>
+
+                <div class="ss-note-row">
+                  <svg class="i xs" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+                  <span data-en="Send sessions from this machine to Studio Mac — you confirm once before anything leaves.">把本机会话发送到「Studio Mac」，开始前确认一次。</span>
+                </div>
+
+                <div class="ss-tools">
+                  <div class="ss-search"><svg class="i sm" aria-hidden="true"><use href="#i-search"/></svg><input type="text" placeholder="搜索标题、#id 或路径" aria-label="搜索会话" data-en-ph="Search title, #id or path"><kbd>/</kbd></div>
+                  <button type="button" class="ss-btn ghost sm ss-sort"><span data-en="Recently updated">最近更新</span><svg class="i sm" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+                </div>
+
+                <div class="ss-list" role="listbox" aria-label="本机会话" aria-multiselectable="true">
+                  <div class="ss-row push" role="option" aria-selected="true" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="true" aria-label="选择：重构会话同步的界面"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">重构会话同步的界面</div>
+                      <div class="ss-row-meta"><code>#9f2e41ac</code><span class="ss-sep">·</span>10-22 09:10<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/session-sync</span><span class="ss-sep">·</span>44 条事件</div>
+                    </div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Push">推送</button></div>
+                  </div>
+
+                  <div class="ss-row push" role="option" aria-selected="true" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="true" aria-label="选择：本机 ~/.dsh 的 profile 结构"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">本机 ~/.dsh 的 profile 结构</div>
+                      <div class="ss-row-meta"><code>#1c7de552</code><span class="ss-sep">·</span>10-22 08:02<span class="ss-sep">·</span><span class="ss-path">/Users/you/.dsh/profiles/desktop</span><span class="ss-sep">·</span>31 条事件</div>
+                    </div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Push">推送</button></div>
+                  </div>
+
+                  <div class="ss-row push" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：未命名会话"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title" data-en="Untitled session">未命名会话</div>
+                      <div class="ss-row-meta"><code>#5b0ac9d7</code><span class="ss-sep">·</span>10-21 23:40<span class="ss-sep">·</span><span class="ss-path">/tmp/dsh-ss-home/session-sync/unsorted</span><span class="ss-sep">·</span>12 条事件</div>
+                    </div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Push">推送</button></div>
+                  </div>
+
+                  <div class="ss-row push" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：dsh 插件槽位的注册顺序"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">dsh 插件槽位的注册顺序</div>
+                      <div class="ss-row-meta"><code>#e4b1782f</code><span class="ss-sep">·</span>10-21 21:18<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/session-sync</span><span class="ss-sep">·</span>66 条事件</div>
+                    </div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Push">推送</button></div>
+                  </div>
+
+                  <div class="ss-row push" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：校对 README 的截图"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">校对 README 的截图</div>
+                      <div class="ss-row-meta"><code>#73c9a0b6</code><span class="ss-sep">·</span>10-21 19:02<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/session-sync</span><span class="ss-sep">·</span>25 条事件</div>
+                    </div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Push">推送</button></div>
+                  </div>
+
+                  <div class="ss-row push" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：Windows 上 UDP 绑定的权限"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">Windows 上 UDP 绑定的权限</div>
+                      <div class="ss-row-meta"><code>#a0f3c81d</code><span class="ss-sep">·</span>10-21 17:33<span class="ss-sep">·</span><span class="ss-path">C:\Users\you\work\harness</span><span class="ss-sep">·</span>52 条事件</div>
+                    </div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Push">推送</button></div>
+                  </div>
+
+                  <div class="ss-row push" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：会话标题的斜杠与数字"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">会话标题的斜杠与数字</div>
+                      <div class="ss-row-meta"><code>#3e91c2aa</code><span class="ss-sep">·</span>10-21 15:44<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/notes</span><span class="ss-sep">·</span>20 条事件</div>
+                    </div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Push">推送</button></div>
+                  </div>
+
+                  <div class="ss-row push" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：插件加载失败的兜底"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">插件加载失败的兜底</div>
+                      <div class="ss-row-meta"><code>#6d2b8f01</code><span class="ss-sep">·</span>10-21 13:12<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/session-sync</span><span class="ss-sep">·</span>38 条事件</div>
+                    </div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Push">推送</button></div>
+                  </div>
+
+                  <div class="ss-row push" role="option" aria-selected="false" tabindex="0">
+                    <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：本机 Mac 的休眠策略"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+                    <div class="ss-row-main">
+                      <div class="ss-row-title">本机 Mac 的休眠策略</div>
+                      <div class="ss-row-meta"><code>#b7e04c93</code><span class="ss-sep">·</span>10-21 10:26<span class="ss-sep">·</span><span class="ss-path">/Users/you/.dsh/profiles/desktop</span><span class="ss-sep">·</span>14 条事件</div>
+                    </div>
+                    <div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Push">推送</button></div>
+                  </div>
+                </div>
+
+                <div class="ss-selbar">
+                  <span class="count"><span data-en="Selected">已选</span> <b>2</b> <span data-en="items">项</span></span>
+                  <span class="ss-chip brand"><svg class="i" aria-hidden="true"><use href="#i-push"/></svg>Studio Mac</span>
+                  <span class="ss-spacer"></span>
+                  <button type="button" class="ss-btn ghost xs" data-en="Clear">清除</button>
+                  <button type="button" class="ss-btn primary sm">
+                    <svg class="i sm" aria-hidden="true"><use href="#i-push"/></svg>
+                    <span data-en="Start push">开始推送</span>
+                  </button>
+                </div>
+              </section>
+            </div>
+
+            <footer class="ss-foot">
+              <code>dsh-session-sync 0.7.1</code><span class="sep">·</span><span>MIT</span>
+              <span class="ss-spacer"></span>
+              <a href="#"><svg class="i xs" aria-hidden="true"><use href="#i-external"/></svg>GitHub</a>
+            </footer>
+          </div>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>方向是一条明确的路。</b>标题下一行写「把本机会话发送到 Studio Mac」，不依赖用户从标签反推。</li>
+        <li><b>推送列表不伪装筛选。</b>本机没有「已推送」的持久记录，所以只留搜索与排序，不做假的统计。</li>
+        <li><b>每条都能单独推。</b>行内「推送」始终可见；批量走选择条，目标由左侧选中的设备决定。</li>
+      </ul>
+    </section>
+
+    <!-- 05 ─────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-plan">
+      <header class="scene-hd">
+        <span class="scene-no">05</span>
+        <div>
+          <h2>传输确认</h2>
+          <p>离开本机或写入本机之前的最后一道确认。重复项逐个决定，其余条目照常排队；目标目录写在标题里，避免确认完才发现落错地方。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-plan">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="app" style="--app-w:1180px;--app-h:700px">
+          <div class="ss-page">
+            <header class="ss-top">
+              <div class="ss-top-l">
+                <h1 class="ss-h1" data-en="Session Sync">会话同步</h1>
+                <div class="ss-sub"><span class="ss-dot on"></span><span><b>2</b> <span data-en="online">台在线</span></span><span class="sep">·</span><span><b>3</b> <span data-en="discovered">台已发现</span></span></div>
+              </div>
+              <div class="ss-top-r">
+                <button type="button" class="ss-icon" title="刷新" aria-label="刷新"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+                <button type="button" class="ss-btn sm"><svg class="i sm" aria-hidden="true"><use href="#i-sliders"/></svg><span data-en="Settings">设置</span></button>
+              </div>
+            </header>
+
+            <div class="ss-desk">
+              <aside class="ss-rail">
+                <div class="ss-self">
+                  <div class="ss-self-hd"><span class="ss-dot on"></span><span data-en="This device">本机</span></div>
+                  <div class="ss-self-name">my-macbook</div>
+                  <div class="ss-self-meta"><code>192.168.1.10:47802</code></div>
+                </div>
+                <div class="ss-rail-scroll">
+                  <div class="ss-glabel"><span data-en="Online">在线</span> <span>2</span></div>
+                  <button type="button" class="ss-dev" aria-selected="true"><span class="ss-dot on"></span><span><span class="ss-dev-name">Studio Mac</span><span class="ss-dev-meta">192.168.1.20:47802</span></span><span class="ss-dev-count">42</span></button>
+                  <button type="button" class="ss-dev" aria-selected="false"><span class="ss-dot on"></span><span><span class="ss-dev-name">Windows 工作站</span><span class="ss-dev-meta">192.168.1.21:47802</span></span><span class="ss-dev-count">9</span></button>
+                  <div class="ss-glabel"><span data-en="Offline">离线</span> <span>1</span></div>
+                  <button type="button" class="ss-dev offline" aria-selected="false"><span class="ss-dot off"></span><span><span class="ss-dev-name">离线笔记本</span><span class="ss-dev-meta">192.168.1.22:47803</span></span><span class="ss-dev-count">3</span></button>
+                </div>
+                <div class="ss-rail-foot"><button type="button" class="ss-btn ghost sm"><svg class="i sm" aria-hidden="true"><use href="#i-plus"/></svg><span data-en="Add address">添加地址</span></button></div>
+              </aside>
+
+              <section class="ss-stage">
+                <header class="ss-stage-hd">
+                  <div class="ss-stage-id">
+                    <span class="ss-dot on"></span>
+                    <div style="min-width:0">
+                      <div class="ss-stage-name">Studio Mac</div>
+                      <div class="ss-stage-meta"><code>192.168.1.20:47802</code><span class="ss-sep">·</span><span><b>42</b> <span data-en="sessions">个会话</span></span></div>
+                    </div>
+                  </div>
+                  <div class="ss-stage-actions">
+                    <button type="button" class="ss-btn primary sm"><svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg><span data-en="Pull all">拉取全部</span></button>
+                  </div>
+                </header>
+                <div class="ss-tabs" role="tablist">
+                  <button type="button" class="ss-tab" role="tab" aria-selected="true"><svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg><span data-en="Pull">拉取</span> <b>42</b></button>
+                  <button type="button" class="ss-tab" role="tab" aria-selected="false"><svg class="i sm" aria-hidden="true"><use href="#i-push"/></svg><span data-en="Push">推送</span> <b>80</b></button>
+                </div>
+                <div class="ss-tools">
+                  <div class="ss-search"><svg class="i sm" aria-hidden="true"><use href="#i-search"/></svg><input type="text" placeholder="搜索标题、#id 或路径" aria-label="搜索会话"><kbd>/</kbd></div>
+                  <div class="ss-filters" role="group"><button type="button" class="ss-filter" aria-pressed="true"><span data-en="All">全部</span> <b>42</b></button><button type="button" class="ss-filter" aria-pressed="false"><span data-en="Not synced">未同步</span> <b>6</b></button><button type="button" class="ss-filter" aria-pressed="false"><span data-en="Synced">已同步</span> <b>36</b></button></div>
+                  <button type="button" class="ss-btn ghost sm ss-sort"><span data-en="Recently updated">最近更新</span><svg class="i sm" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+                </div>
+                <div class="ss-list" role="listbox" aria-label="对端会话">
+                  <div class="ss-row" role="option" aria-selected="true"><button type="button" class="ss-cb" role="checkbox" aria-checked="true" aria-label="选择：把同步插件做成 1.0"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">把同步插件做成 1.0</div><div class="ss-row-meta"><code>#4f2c9b1e</code><span class="ss-sep">·</span>10-22 08:45<span class="ss-sep">·</span>128 条事件</div></div><div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div><div class="ss-row-act"></div></div>
+                  <div class="ss-row" role="option" aria-selected="true"><button type="button" class="ss-cb" role="checkbox" aria-checked="true" aria-label="选择：硬件虚拟化与内存隔离"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">硬件虚拟化与内存隔离</div><div class="ss-row-meta"><code>#9a71d3c8</code><span class="ss-sep">·</span>10-22 07:25<span class="ss-sep">·</span>214 条事件</div></div><div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div><div class="ss-row-act"></div></div>
+                  <div class="ss-row" role="option" aria-selected="true"><button type="button" class="ss-cb" role="checkbox" aria-checked="true" aria-label="选择：未命名会话"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title" data-en="Untitled session">未命名会话</div><div class="ss-row-meta"><code>#b3e8f0aa</code><span class="ss-sep">·</span>10-22 06:25<span class="ss-sep">·</span>36 条事件</div></div><div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div><div class="ss-row-act"></div></div>
+                  <div class="ss-row" role="option" aria-selected="true"><button type="button" class="ss-cb" role="checkbox" aria-checked="true" aria-label="选择：会话标题的中文排版与截断"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">会话标题的中文排版与截断</div><div class="ss-row-meta"><code>#7c31ab90</code><span class="ss-sep">·</span>10-21 22:14<span class="ss-sep">·</span>19 条事件</div></div><div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div><div class="ss-row-act"></div></div>
+                  <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：排查广播跨网段丢失"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">排查广播跨网段丢失</div><div class="ss-row-meta"><code>#e91f4c02</code><span class="ss-sep">·</span>10-21 20:02<span class="ss-sep">·</span>73 条事件</div></div><div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div><div class="ss-row-act"></div></div>
+                  <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：Windows 下依赖链接失败"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">Windows 下依赖链接失败</div><div class="ss-row-meta"><code>#c0a7f315</code><span class="ss-sep">·</span>10-21 18:40<span class="ss-sep">·</span>88 条事件</div></div><div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div><div class="ss-row-act"></div></div>
+                </div>
+                <div class="ss-selbar">
+                  <span class="count"><span data-en="Selected">已选</span> <b>4</b> <span data-en="items">项</span></span>
+                  <span class="ss-target"><span data-en="Pull to">拉取到</span><span>未分组（默认）</span><svg class="i sm" aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+                  <span class="ss-spacer"></span>
+                  <button type="button" class="ss-btn primary sm"><span data-en="Start pull">开始拉取</span></button>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div class="ss-scrim">
+            <div class="ss-dialog" role="dialog" aria-modal="true" aria-label="确认拉取">
+              <div class="ss-dialog-hd">
+                <h3 data-en="Pull 4 sessions to “Unsorted”">拉取 4 个会话到「未分组」</h3>
+                <p><span data-en="3 new · 1 already exists">3 个新会话 · 1 个已存在</span></p>
+                <div class="ss-dialog-note">
+                  <svg class="i xs" aria-hidden="true"><use href="#i-verify"/></svg>
+                  <span data-en="Existing sessions are decided one by one; everything else is queued.">已存在的会话逐个决定，其余条目照常排队。</span>
+                </div>
+              </div>
+              <div class="ss-dialog-body">
+                <div class="ss-plan-row">
+                  <div><div class="ss-plan-title">把同步插件做成 1.0</div><div class="ss-plan-meta"><code>#4f2c9b1e</code> · 128 条事件</div></div>
+                  <span class="ss-plan-fresh" data-en="New">新会话</span>
+                </div>
+                <div class="ss-plan-row">
+                  <div><div class="ss-plan-title">硬件虚拟化与内存隔离</div><div class="ss-plan-meta"><code>#9a71d3c8</code> · 214 条事件</div></div>
+                  <span class="ss-plan-fresh" data-en="New">新会话</span>
+                </div>
+                <div class="ss-plan-row">
+                  <div><div class="ss-plan-title" data-en="Untitled session">未命名会话</div><div class="ss-plan-meta"><code>#b3e8f0aa</code> · <span data-en="local copy exists">本机已有副本</span></div></div>
+                  <select class="ss-select" aria-label="未命名会话的处理方式">
+                    <option data-en="Keep local">保留本机</option>
+                    <option data-en="Overwrite local">覆盖本机</option>
+                    <option data-en="Skip this one">跳过这次</option>
+                  </select>
+                </div>
+                <div class="ss-plan-row">
+                  <div><div class="ss-plan-title">会话标题的中文排版与截断</div><div class="ss-plan-meta"><code>#7c31ab90</code> · 19 条事件</div></div>
+                  <span class="ss-plan-fresh" data-en="New">新会话</span>
+                </div>
+              </div>
+              <div class="ss-dialog-foot">
+                <button type="button" class="ss-btn ghost sm" data-en="Keep local for all">全部保留本机</button>
+                <span class="ss-spacer"></span>
+                <button type="button" class="ss-btn sm" data-en="Cancel">取消</button>
+                <button type="button" class="ss-btn primary sm"><svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg><span data-en="Start pull">开始拉取</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>目标在标题里。</b>「到『未分组』」写在第一行；换目录不必关掉弹窗重来。</li>
+        <li><b>重复项才出现下拉。</b>新会话只给一个「新会话」标记，不制造多余选择。</li>
+        <li><b>确认只说事实。</b>条目数、已存在数、每个条目的处理方式，三行内讲完。</li>
+      </ul>
+    </section>
+
+    <!-- 06 ─────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-queue">
+      <header class="scene-hd">
+        <span class="scene-no">06</span>
+        <div>
+          <h2>传输队列</h2>
+          <p>底部一条总进度，向上展开是逐条队列。每条传输自己带方向、耗时、失败原因和重试；列表始终留在原位，不需要关掉遮罩才能继续找会话。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-queue">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="app" style="--app-w:1180px;--app-h:760px">
+          <div class="ss-page">
+            <header class="ss-top">
+              <div class="ss-top-l">
+                <h1 class="ss-h1" data-en="Session Sync">会话同步</h1>
+                <div class="ss-sub"><span class="ss-dot on"></span><span><b>2</b> <span data-en="online">台在线</span></span><span class="sep">·</span><span><b>3</b> <span data-en="discovered">台已发现</span></span></div>
+              </div>
+              <div class="ss-top-r">
+                <button type="button" class="ss-icon" title="刷新" aria-label="刷新"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+                <button type="button" class="ss-btn sm"><svg class="i sm" aria-hidden="true"><use href="#i-sliders"/></svg><span data-en="Settings">设置</span></button>
+              </div>
+            </header>
+
+            <div class="ss-desk">
+              <aside class="ss-rail">
+                <div class="ss-self">
+                  <div class="ss-self-hd"><span class="ss-dot on"></span><span data-en="This device">本机</span></div>
+                  <div class="ss-self-name">my-macbook</div>
+                  <div class="ss-self-meta"><code>192.168.1.10:47802</code></div>
+                </div>
+                <div class="ss-rail-scroll">
+                  <div class="ss-glabel"><span data-en="Online">在线</span> <span>2</span></div>
+                  <button type="button" class="ss-dev" aria-selected="true"><span class="ss-dot on"></span><span><span class="ss-dev-name">Studio Mac</span><span class="ss-dev-meta">192.168.1.20:47802</span></span><span class="ss-dev-count">42</span></button>
+                  <button type="button" class="ss-dev" aria-selected="false"><span class="ss-dot on"></span><span><span class="ss-dev-name">Windows 工作站</span><span class="ss-dev-meta">192.168.1.21:47802</span></span><span class="ss-dev-count">9</span></button>
+                  <div class="ss-glabel"><span data-en="Offline">离线</span> <span>1</span></div>
+                  <button type="button" class="ss-dev offline" aria-selected="false"><span class="ss-dot off"></span><span><span class="ss-dev-name">离线笔记本</span><span class="ss-dev-meta">192.168.1.22:47803 · 5 小时前</span></span><span class="ss-dev-count">3</span></button>
+                </div>
+                <div class="ss-rail-foot"><button type="button" class="ss-btn ghost sm"><svg class="i sm" aria-hidden="true"><use href="#i-plus"/></svg><span data-en="Add address">添加地址</span></button></div>
+              </aside>
+
+              <section class="ss-stage">
+                <header class="ss-stage-hd">
+                  <div class="ss-stage-id">
+                    <span class="ss-dot on"></span>
+                    <div style="min-width:0">
+                      <div class="ss-stage-name">Studio Mac</div>
+                      <div class="ss-stage-meta"><code>192.168.1.20:47802</code><span class="ss-sep">·</span><span><b>42</b> <span data-en="sessions">个会话</span></span><span class="ss-sep">·</span><span>macOS · v0.7.1</span></div>
+                    </div>
+                  </div>
+                  <div class="ss-stage-actions">
+                    <button type="button" class="ss-btn primary sm"><svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg><span data-en="Pull all">拉取全部</span></button>
+                    <button type="button" class="ss-icon sm" title="设备操作" aria-label="设备操作"><svg class="i sm" aria-hidden="true"><use href="#i-more"/></svg></button>
+                  </div>
+                </header>
+
+                <div class="ss-tabs" role="tablist">
+                  <button type="button" class="ss-tab" role="tab" aria-selected="true"><svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg><span data-en="Pull">拉取</span> <b>42</b></button>
+                  <button type="button" class="ss-tab" role="tab" aria-selected="false"><svg class="i sm" aria-hidden="true"><use href="#i-push"/></svg><span data-en="Push">推送</span> <b>80</b></button>
+                </div>
+
+                <div class="ss-tools">
+                  <div class="ss-search"><svg class="i sm" aria-hidden="true"><use href="#i-search"/></svg><input type="text" placeholder="搜索标题、#id 或路径" aria-label="搜索会话"><kbd>/</kbd></div>
+                  <div class="ss-filters" role="group"><button type="button" class="ss-filter" aria-pressed="true"><span data-en="All">全部</span> <b>42</b></button><button type="button" class="ss-filter" aria-pressed="false"><span data-en="Not synced">未同步</span> <b>6</b></button><button type="button" class="ss-filter" aria-pressed="false"><span data-en="Synced">已同步</span> <b>36</b></button></div>
+                  <button type="button" class="ss-btn ghost sm ss-sort"><span data-en="Recently updated">最近更新</span><svg class="i sm" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+                </div>
+
+                <div class="ss-list" role="listbox" aria-label="对端会话">
+                  <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：把同步插件做成 1.0"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">把同步插件做成 1.0</div><div class="ss-row-meta"><code>#4f2c9b1e</code><span class="ss-sep">·</span>10-22 08:45<span class="ss-sep">·</span>128 条事件</div></div><div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div><div class="ss-row-act"></div></div>
+                  <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：硬件虚拟化与内存隔离"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">硬件虚拟化与内存隔离</div><div class="ss-row-meta"><code>#9a71d3c8</code><span class="ss-sep">·</span>10-22 07:25<span class="ss-sep">·</span>214 条事件</div></div><div class="ss-row-trail"><span class="ss-chip brand"><span data-en="Pulling">拉取中</span></span></div><div class="ss-row-act"></div></div>
+                  <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：未命名会话"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title" data-en="Untitled session">未命名会话</div><div class="ss-row-meta"><code>#b3e8f0aa</code><span class="ss-sep">·</span>10-22 06:25<span class="ss-sep">·</span>36 条事件</div></div><div class="ss-row-trail"><span class="ss-chip"><span data-en="Queued">排队中</span></span></div><div class="ss-row-act"></div></div>
+                  <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：一个关于启动链的想法"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">一个关于启动链的想法</div><div class="ss-row-meta"><code>#1d5c7e42</code><span class="ss-sep">·</span>10-22 03:05<span class="ss-sep">·</span>57 条事件</div></div><div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div><div class="ss-row-act"></div></div>
+                  <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：会话标题的中文排版与截断"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">会话标题的中文排版与截断</div><div class="ss-row-meta"><code>#7c31ab90</code><span class="ss-sep">·</span>10-21 22:14<span class="ss-sep">·</span>19 条事件</div></div><div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div><div class="ss-row-act"></div></div>
+                </div>
+
+                <div class="ss-queue">
+                  <div class="ss-queue-hd">
+                    <h4 data-en="Transfer queue">传输队列</h4>
+                    <div class="ss-queue-stats">
+                      <span><span data-en="Done">完成</span> <b>1</b></span>
+                      <span class="ss-sep">·</span>
+                      <span><span data-en="Running">进行</span> <b>1</b></span>
+                      <span class="ss-sep">·</span>
+                      <span><span data-en="Queued">排队</span> <b>1</b></span>
+                      <span class="ss-sep">·</span>
+                      <span><span data-en="Skipped">跳过</span> <b>1</b></span>
+                      <span class="ss-sep">·</span>
+                      <span><span data-en="Failed">失败</span> <b>1</b></span>
+                    </div>
+                    <span class="ss-spacer" style="flex:1"></span>
+                    <button type="button" class="ss-btn ghost xs" data-en="Clear finished">清除已完成</button>
+                  </div>
+                  <div class="ss-queue-body">
+                    <div class="ss-qrow">
+                      <span class="ss-qico done"><svg class="i sm" aria-hidden="true"><use href="#i-check"/></svg></span>
+                      <div class="ss-qmain">
+                        <div class="ss-qname">把同步插件做成 1.0</div>
+                        <div class="ss-qmeta"><span>← Studio Mac</span><code>/tmp/dsh-ss-home/session-sync/unsorted</code></div>
+                      </div>
+                      <div class="ss-qright"><span class="dur">1.2s</span></div>
+                    </div>
+
+                    <div class="ss-qrow">
+                      <span class="ss-qico running"><span class="ss-spinner" style="width:14px;height:14px"></span></span>
+                      <div class="ss-qmain">
+                        <div class="ss-qname">硬件虚拟化与内存隔离</div>
+                        <div class="ss-qmeta"><span>← Studio Mac</span><code>/Users/you/.dsh/profiles/desktop</code></div>
+                      </div>
+                      <div class="ss-qright"><span class="pct">43%</span></div>
+                    </div>
+
+                    <div class="ss-qrow">
+                      <span class="ss-qico"><span style="color:var(--t3);font:11px var(--rv-mono)">…</span></span>
+                      <div class="ss-qmain">
+                        <div class="ss-qname" data-en="Untitled session">未命名会话</div>
+                        <div class="ss-qmeta"><span>← Studio Mac</span><span data-en="waiting for a worker">等待空闲 worker</span></div>
+                      </div>
+                      <div class="ss-qright"><span class="dur" data-en="Queued">排队</span></div>
+                    </div>
+
+                    <div class="ss-qrow">
+                      <span class="ss-qico"><svg class="i sm" aria-hidden="true"><use href="#i-check"/></svg></span>
+                      <div class="ss-qmain">
+                        <div class="ss-qname">会话标题的中文排版与截断</div>
+                        <div class="ss-qmeta"><span data-en="Skipped — local copy kept">已存在，保留本机副本</span></div>
+                      </div>
+                      <div class="ss-qright"><span class="dur" data-en="Skipped">跳过</span></div>
+                    </div>
+
+                    <div class="ss-qrow">
+                      <span class="ss-qico failed"><svg class="i sm" aria-hidden="true"><use href="#i-alert"/></svg></span>
+                      <div class="ss-qmain">
+                        <div class="ss-qname">排查广播跨网段丢失</div>
+                        <div class="ss-qmsg">409 checksum-mismatch · sha256 与对端不一致</div>
+                      </div>
+                      <div class="ss-qright"><button type="button" class="ss-btn ghost xs" data-en="Retry">重试</button></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="ss-dock">
+                  <span class="ss-spinner" aria-hidden="true"></span>
+                  <div class="ss-dock-main">
+                    <b><span data-en="Pulling">拉取中</span> 2/5</b>
+                    <span class="ss-dock-title">硬件虚拟化与内存隔离</span>
+                    <span class="ss-dock-pct" title="当前会话 43%">43%</span>
+                  </div>
+                  <div class="meter" aria-hidden="true"><i style="width:49%"></i></div>
+                  <button type="button" class="ss-btn ghost xs" data-en="Collapse">收起</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>队列在会话列表下方展开。</b>不是遮住半屏的抽屉；找会话、改选择、看进度同时成立。</li>
+        <li><b>统计是一行，不是四张卡。</b>完成 / 进行 / 排队 / 跳过 / 失败，一眼扫完。</li>
+        <li><b>失败给原因和重试。</b>409 校验不匹配直接写在卡片里；「清除已完成」只清已结束的条目。</li>
+        <li><b>实时百分比。</b>传输中每 700ms 取一次字节计数；空闲时回到 4s 轮询。</li>
+      </ul>
+    </section>
+
+    <!-- 06a ────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-migrate">
+      <header class="scene-hd">
+        <span class="scene-no">06a</span>
+        <div>
+          <h2>迁移预检</h2>
+          <p>整包迁移不是「点一下就开始」：先扫描、给体量、给排除项、给目标路径和冲突策略。几十 GB 的工程，开始之前必须知道会传什么、传到哪、断点怎么续。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-migrate">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="app" style="--app-w:1180px;--app-h:760px">
+          <div class="ss-page">
+            <header class="ss-top">
+              <div class="ss-top-l">
+                <h1 class="ss-h1" data-en="Session Sync">会话同步</h1>
+                <div class="ss-sub"><span class="ss-dot on"></span><span><b>2</b> <span data-en="online">台在线</span></span><span class="sep">·</span><span><b>3</b> <span data-en="discovered">台已发现</span></span></div>
+              </div>
+              <div class="ss-top-r">
+                <button type="button" class="ss-icon" title="刷新" aria-label="刷新"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+                <button type="button" class="ss-btn sm"><svg class="i sm" aria-hidden="true"><use href="#i-sliders"/></svg><span data-en="Settings">设置</span></button>
+              </div>
+            </header>
+
+            <div class="ss-desk">
+              <aside class="ss-rail">
+                <div class="ss-self">
+                  <div class="ss-self-hd"><span class="ss-dot on"></span><span data-en="This device">本机</span></div>
+                  <div class="ss-self-name">my-macbook</div>
+                  <div class="ss-self-meta"><code>192.168.1.10:47802</code></div>
+                </div>
+                <div class="ss-rail-scroll">
+                  <div class="ss-glabel"><span data-en="Online">在线</span> <span>2</span></div>
+                  <button type="button" class="ss-dev" aria-selected="true"><span class="ss-dot on"></span><span><span class="ss-dev-name">Studio Mac</span><span class="ss-dev-meta">192.168.1.20:47802</span></span><span class="ss-dev-count">42</span></button>
+                  <button type="button" class="ss-dev" aria-selected="false"><span class="ss-dot on"></span><span><span class="ss-dev-name">Windows 工作站</span><span class="ss-dev-meta">192.168.1.21:47802</span></span><span class="ss-dev-count">9</span></button>
+                </div>
+              </aside>
+
+              <section class="ss-stage">
+                <header class="ss-stage-hd">
+                  <div class="ss-stage-id">
+                    <span class="ss-dot on"></span>
+                    <div style="min-width:0">
+                      <div class="ss-stage-name">Studio Mac</div>
+                      <div class="ss-stage-meta"><code>192.168.1.20:47802</code><span class="ss-sep">·</span><span><b>42</b> <span data-en="sessions">个会话</span></span></div>
+                    </div>
+                  </div>
+                  <div class="ss-stage-actions"><button type="button" class="ss-btn primary sm"><svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg><span data-en="Pull all">拉取全部</span></button></div>
+                </header>
+                <div class="ss-tabs" role="tablist">
+                  <button type="button" class="ss-tab" role="tab" aria-selected="true"><svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg><span data-en="Pull">拉取</span> <b>42</b></button>
+                  <button type="button" class="ss-tab" role="tab" aria-selected="false"><svg class="i sm" aria-hidden="true"><use href="#i-push"/></svg><span data-en="Push">推送</span> <b>80</b></button>
+                </div>
+                <div class="ss-list" role="listbox" aria-label="对端会话">
+                  <div class="ss-row" role="option" aria-selected="true"><button type="button" class="ss-cb" role="checkbox" aria-checked="true"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">把同步插件做成 1.0</div><div class="ss-row-meta"><code>#4f2c9b1e</code><span class="ss-sep">·</span>10-22 08:45<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/session-sync</span></div></div><div class="ss-row-trail"><span class="ss-chip brand">12.8 GB</span></div><div class="ss-row-act"></div></div>
+                  <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">硬件虚拟化与内存隔离</div><div class="ss-row-meta"><code>#9a71d3c8</code><span class="ss-sep">·</span>10-22 07:25<span class="ss-sep">·</span><span class="ss-path">/Users/you/.dsh/profiles/desktop</span></div></div><div class="ss-row-trail"><span class="ss-chip">84 MB</span></div><div class="ss-row-act"></div></div>
+                  <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title" data-en="Untitled session">未命名会话</div><div class="ss-row-meta"><code>#b3e8f0aa</code><span class="ss-sep">·</span>10-22 06:25<span class="ss-sep">·</span><span class="ss-path">/tmp/dsh-ss-home/session-sync/unsorted</span></div></div><div class="ss-row-trail"><span class="ss-chip">12 MB</span></div><div class="ss-row-act"></div></div>
+                  <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">一个关于启动链的想法</div><div class="ss-row-meta"><code>#1d5c7e42</code><span class="ss-sep">·</span>10-22 03:05<span class="ss-sep">·</span><span class="ss-path">/Users/you/project/session-sync</span></div></div><div class="ss-row-trail"><span class="ss-chip">7.4 GB</span></div><div class="ss-row-act"></div></div>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div class="ss-scrim">
+            <div class="ss-dialog wide" role="dialog" aria-modal="true" aria-label="迁移会话">
+              <div class="ss-dialog-hd">
+                <h3>迁移「把同步插件做成 1.0」到 Studio Mac</h3>
+                <p><b>8,421</b> 个文件 · <b>12.8 GB</b> · 预计 3 分 20 秒 <span style="color:var(--t3)">@ 84 MB/s</span></p>
+              </div>
+              <div class="ss-dialog-body">
+                <div class="ss-dialog-section">
+                  <h4>迁移范围</h4>
+                  <div class="ss-scope" role="tablist" aria-label="迁移范围">
+                    <button type="button" role="tab" aria-selected="false"><span data-en="Session only">仅会话</span> <b>12 MB</b></button>
+                    <button type="button" role="tab" aria-selected="false"><span data-en="Changes">变更文件</span> <b>1.4 GB</b></button>
+                    <button type="button" role="tab" aria-selected="true"><span data-en="Full workspace">完整工作区</span> <b>12.8 GB</b></button>
+                  </div>
+                  <div class="ss-presets">
+                    <button type="button" class="ss-preset" aria-pressed="true" data-en="Code">代码</button>
+                    <button type="button" class="ss-preset" aria-pressed="false" data-en="Full mirror">完整镜像</button>
+                    <button type="button" class="ss-preset" aria-pressed="false" data-en="Custom">自定义</button>
+                  </div>
+                  <div class="ss-tree">
+                    <div class="ss-tree-row"><svg class="i sm" aria-hidden="true"><use href="#i-folder"/></svg><div><div class="ss-tree-name">src/</div><div class="ss-tree-meta">96 文件 · 384 MB</div></div><div class="ss-tree-bar"><i style="width:3%"></i></div></div>
+                    <div class="ss-tree-row"><svg class="i sm" aria-hidden="true"><use href="#i-folder"/></svg><div><div class="ss-tree-name">assets/</div><div class="ss-tree-meta">212 文件 · 9.8 GB</div></div><div class="ss-tree-bar"><i style="width:77%"></i></div></div>
+                    <div class="ss-tree-row excluded"><svg class="i sm" aria-hidden="true"><use href="#i-folder"/></svg><div><div class="ss-tree-name">node_modules/</div><div class="ss-tree-meta">1.8 GB · 已在“代码”预设中排除</div></div><div class="ss-tree-bar"><span data-en="excluded">已排除</span></div></div>
+                    <div class="ss-tree-row excluded"><svg class="i sm" aria-hidden="true"><use href="#i-folder"/></svg><div><div class="ss-tree-name">.git/</div><div class="ss-tree-meta">2.1 GB · 已在“代码”预设中排除</div></div><div class="ss-tree-bar"><span data-en="excluded">已排除</span></div></div>
+                  </div>
+                  <div class="ss-field-note" style="margin-top:6px" data-en="Symlinks are skipped; excluded entries never leave the source.">符号链接默认跳过；排除项不会上传。需要完整镜像时切换上面的预设。</div>
+                </div>
+
+                <div class="ss-dialog-section">
+                  <h4>目标位置</h4>
+                  <div class="ss-field" style="padding:0">
+                    <div class="ss-field-text"><div class="ss-field-label">Studio Mac · 同步目录</div><div class="ss-field-note">~/Project/py_project/dsh-session-sync-4f2c · 新目录</div></div>
+                    <div class="ss-field-body"><button type="button" class="ss-btn sm" data-en="Change">更改</button></div>
+                  </div>
+                  <div class="ss-pathmap">
+                    <span data-en="source">源</span> <code>/Users/you/project/session-sync</code>
+                    <svg class="i xs" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+                    <span data-en="target">目标</span> <code>~/Project/py_project/dsh-session-sync-4f2c</code>
+                  </div>
+                </div>
+
+                <div class="ss-dialog-section">
+                  <h4>传输选项</h4>
+                  <div class="ss-options">
+                    <span class="ss-option-chip"><span data-en="Conflict">重名</span> <b data-en="Rename">重命名</b><svg class="i xs" aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+                    <span class="ss-option-chip"><svg class="i xs" aria-hidden="true"><use href="#i-check"/></svg><b data-en="Resume">断点续传</b> <span data-en="on">开</span></span>
+                    <span class="ss-option-chip"><svg class="i xs" aria-hidden="true"><use href="#i-verify"/></svg><b>SHA-256</b></span>
+                    <span class="ss-option-chip"><b data-en="Compress">压缩</b> <span data-en="auto">自动</span></span>
+                  </div>
+                  <div class="ss-field-note" style="margin-top:8px" data-en="Runs in the background: closing the panel does not stop the transfer. Reopen to resume from the last verified chunk.">后台运行：关闭面板不会停止传输；下次打开从最后一个已校验分片继续。</div>
+                </div>
+              </div>
+              <div class="ss-dialog-foot">
+                <button type="button" class="ss-btn ghost sm" data-en="Rescan">先扫描</button>
+                <span class="ss-spacer"></span>
+                <button type="button" class="ss-btn sm" data-en="Cancel">取消</button>
+                <button type="button" class="ss-btn primary sm"><svg class="i sm" aria-hidden="true"><use href="#i-push"/></svg><span data-en="Start migration · 12.8 GB">开始迁移 · 12.8 GB</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>先给体量，再给按钮。</b>文件数、总字节、预计时间、排除项省下的空间，全在开始之前。</li>
+        <li><b>范围是显式选择。</b>「仅会话 / 变更文件 / 完整工作区」对应三种真实语义；`变更文件` 是启发式，界面必须说实话。</li>
+        <li><b>目标可见。</b>新目录、源→目标映射、重名策略、断点续传、校验，一样都不藏在二级页里。</li>
+        <li><b>后台运行。</b>迁移引擎在宿主，不在这个弹窗里；关掉面板不会杀掉几十 GB 的任务。</li>
+      </ul>
+    </section>
+
+    <!-- 06b ────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-transfer-detail">
+      <header class="scene-hd">
+        <span class="scene-no">06b</span>
+        <div>
+          <h2>传输详情</h2>
+          <p>单任务也要能并行：整体进度、阶段、速度、剩余时间、并行度、逐文件分片网格、断点恢复提示。暂停/取消不会丢已完成的分片。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-transfer-detail">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="app" style="--app-w:1180px;--app-h:760px">
+          <div class="ss-page">
+            <header class="ss-top">
+              <div class="ss-top-l">
+                <h1 class="ss-h1" data-en="Session Sync">会话同步</h1>
+                <div class="ss-sub"><span class="ss-dot on"></span><span><b>2</b> <span data-en="online">台在线</span></span><span class="sep">·</span><span><b>3</b> <span data-en="discovered">台已发现</span></span></div>
+              </div>
+              <div class="ss-top-r">
+                <button type="button" class="ss-icon" title="刷新" aria-label="刷新"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+                <button type="button" class="ss-btn sm"><svg class="i sm" aria-hidden="true"><use href="#i-sliders"/></svg><span data-en="Settings">设置</span></button>
+              </div>
+            </header>
+
+            <div class="ss-transfer">
+              <div class="ss-transfer-hd">
+                <button type="button" class="ss-icon" title="返回会话台" aria-label="返回会话台"><svg class="i" aria-hidden="true"><use href="#i-arrow-left"/></svg></button>
+                <div class="grow">
+                  <div class="ss-transfer-title">把同步插件做成 1.0</div>
+                  <div class="ss-transfer-sub">
+                    <span class="ss-chip brand">传输中</span>
+                    <svg class="i xs" aria-hidden="true"><use href="#i-push"/></svg>
+                    <span>Studio Mac</span>
+                    <span class="sep">·</span>
+                    <code>#4f2c9b1e</code>
+                    <span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Resume on">断点续传</span></span>
+                  </div>
+                </div>
+                <div class="ss-transfer-actions">
+                  <button type="button" class="ss-btn ghost sm"><svg class="i sm" aria-hidden="true"><use href="#i-pause"/></svg><span data-en="Pause">暂停</span></button>
+                  <button type="button" class="ss-btn danger sm" data-en="Cancel">取消</button>
+                </div>
+              </div>
+
+              <div class="ss-transfer-stats">
+                <div class="ss-stat accent"><b>39%</b><span data-en="overall">总进度</span></div>
+                <div class="ss-stat"><b>5.0 GB</b><span data-en="of 12.8 GB">/ 12.8 GB</span></div>
+                <div class="ss-stat"><b>84 MB/s</b><span data-en="current speed">当前速度</span></div>
+                <div class="ss-stat"><b>1:33</b><span data-en="remaining">预计剩余</span></div>
+              </div>
+              <div class="ss-bigbar" aria-hidden="true"><i style="width:39%"></i></div>
+
+              <div class="ss-phases">
+                <div class="ss-phase done"><span class="pdot"><svg class="i xs" aria-hidden="true"><use href="#i-check"/></svg></span><span data-en="Scan">扫描</span></div>
+                <div class="ss-phase done"><span class="pdot"><svg class="i xs" aria-hidden="true"><use href="#i-check"/></svg></span><span data-en="Hash">哈希</span></div>
+                <div class="ss-phase active"><span class="pdot"><span class="ss-spinner" style="width:11px;height:11px"></span></span><span data-en="Transfer">传输中</span><b>41%</b></div>
+                <div class="ss-phase"><span class="pdot"><svg class="i xs" aria-hidden="true"><use href="#i-verify"/></svg></span><span data-en="Verify">校验</span></div>
+                <div class="ss-phase"><span class="pdot"><svg class="i xs" aria-hidden="true"><use href="#i-folder"/></svg></span><span data-en="Finalize">落盘</span></div>
+              </div>
+
+              <div class="ss-banner">
+                <svg class="i sm" aria-hidden="true"><use href="#i-clock"/></svg>
+                <span data-en="Interrupted 3 minutes ago · resumed from 41% · 2,318 verified chunks reused">3 分钟前中断 · 已从 41% 继续 · 复用 2,318 个已校验分片</span>
+              </div>
+
+              <div class="ss-parallel">
+                <span class="ss-chip mono">2 <span data-en="sessions">会话</span></span>
+                <span class="ss-chip mono">4 <span data-en="files/session">文件/会话</span></span>
+                <span class="ss-chip mono">4 <span data-en="chunks/file">分片/文件</span></span>
+                <span class="ss-chip mono">4 MiB/<span data-en="chunk">片</span></span>
+                <span class="ss-spacer"></span>
+                <button type="button" class="ss-btn ghost xs" data-en="Adjust">调整</button>
+              </div>
+
+              <div class="ss-file-list">
+                <div class="ss-file-hd"><span data-en="File">文件</span><span data-en="Chunks">分片</span><span style="text-align:right" data-en="Done">进度</span></div>
+                <div class="ss-file-row">
+                  <div><div class="ss-file-name">src/renderer/panel.js</div><div class="ss-file-meta">2.4 MB / 2.4 MB · <span data-en="1 chunk">1 片</span></div></div>
+                  <div class="ss-file-meta"><span data-en="complete">已完成</span></div>
+                  <div class="ss-file-right">100%</div>
+                </div>
+                <div class="ss-file-row">
+                  <div><div class="ss-file-name">assets/hero.psd</div><div class="ss-file-meta">2.4 GB / 2.4 GB · 614 <span data-en="chunks">片</span></div></div>
+                  <div class="ss-chunks" aria-hidden="true"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i></div>
+                  <div class="ss-file-right">100%</div>
+                </div>
+                <div class="ss-file-row">
+                  <div><div class="ss-file-name">data/model.bin</div><div class="ss-file-meta">840 MB / 2.4 GB · 614 <span data-en="chunks">片</span></div></div>
+                  <div class="ss-chunks" aria-hidden="true"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="active"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                  <div class="ss-file-right">35%</div>
+                </div>
+                <div class="ss-file-row">
+                  <div><div class="ss-file-name">assets/intro.mp4</div><div class="ss-file-meta">12 MB / 48 MB · 12 <span data-en="chunks">片</span></div></div>
+                  <div class="ss-chunks" aria-hidden="true"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="active"></i><i class="bad"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i><i class="skip"></i></div>
+                  <div class="ss-file-right">25%</div>
+                </div>
+                <div class="ss-chunk-legend">
+                  <span><i class="done"></i><span data-en="verified">已校验</span></span>
+                  <span><i class="active"></i><span data-en="in flight">在传</span></span>
+                  <span><i class="bad"></i><span data-en="failed">失败</span></span>
+                  <span><i class="skip"></i><span data-en="not started">未开始</span></span>
+                  <span data-en="Grid samples 32 ranges per file.">网格按 32 格采样，不是分片总数</span>
+                </div>
+              </div>
+
+              <footer class="ss-foot" style="padding-top:12px">
+                <button type="button" class="ss-btn ghost sm"><svg class="i sm" aria-hidden="true"><use href="#i-folder"/></svg><span data-en="Show in Finder">在 Finder 中显示</span></button>
+                <span class="ss-spacer"></span>
+                <button type="button" class="ss-btn ghost sm" data-en="Copy transfer report">复制传输报告</button>
+              </footer>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>阶段可见。</b>扫描 → 哈希 → 传输 → 校验 → 落盘；知道时间花在哪一步，才知道该不该等。</li>
+        <li><b>分片网格。</b>每个文件的分片状态一眼扫完：已校验、在传、失败、未开始，颜色之外还有百分比。</li>
+        <li><b>断点不是口号。</b>「复用 2,318 个已校验分片」是实际数字；暂停、断网、重启都从 journal 继续。</li>
+        <li><b>并行度可调。</b>2 会话 × 4 文件 × 4 分片是默认；全局闸门在宿主，不在这里堆 socket。</li>
+      </ul>
+    </section>
+
+    <!-- 07 ─────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-empty">
+      <header class="scene-hd">
+        <span class="scene-no">07</span>
+        <div>
+          <h2>还没有发现其他设备</h2>
+          <p>空态要做的事只有三件：把本机地址交出去、收下一个手动地址、告诉人为什么可能发现不了。不摆插画，不放三步以上的教程。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-empty">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="app" style="--app-w:1180px;--app-h:640px">
+          <div class="ss-page">
+            <header class="ss-top">
+              <div class="ss-top-l">
+                <h1 class="ss-h1" data-en="Session Sync">会话同步</h1>
+                <div class="ss-sub"><span class="ss-dot off"></span><span><b>0</b> <span data-en="online">台在线</span></span><span class="sep">·</span><span><b>0</b> <span data-en="discovered">台已发现</span></span></div>
+              </div>
+              <div class="ss-top-r">
+                <button type="button" class="ss-icon" title="刷新" aria-label="刷新"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+                <button type="button" class="ss-btn sm"><svg class="i sm" aria-hidden="true"><use href="#i-sliders"/></svg><span data-en="Settings">设置</span></button>
+              </div>
+            </header>
+
+            <div class="ss-desk">
+              <aside class="ss-rail">
+                <div class="ss-self">
+                  <div class="ss-self-hd"><span class="ss-dot on"></span><span data-en="This device">本机</span>
+                    <button type="button" class="ss-icon xs" title="编辑设备名称" aria-label="编辑设备名称"><svg class="i xs" aria-hidden="true"><use href="#i-pencil"/></svg></button>
+                  </div>
+                  <div class="ss-self-name">my-macbook</div>
+                  <div class="ss-self-meta"><code>192.168.1.10:47802</code>
+                    <button type="button" class="ss-icon xs" title="复制地址" aria-label="复制本机地址"><svg class="i xs" aria-hidden="true"><use href="#i-copy"/></svg></button>
+                  </div>
+                </div>
+                <div class="ss-rail-scroll">
+                  <div class="ss-glabel"><span data-en="Online">在线</span> <span>0</span></div>
+                  <div class="ss-rail-empty">
+                    <svg class="i" aria-hidden="true"><use href="#i-devices"/></svg>
+                    <span data-en="No other device yet">还没有其他设备</span>
+                  </div>
+                </div>
+                <div class="ss-rail-foot">
+                  <button type="button" class="ss-btn ghost sm"><svg class="i sm" aria-hidden="true"><use href="#i-plus"/></svg><span data-en="Add address">添加地址</span></button>
+                  <button type="button" class="ss-icon sm" title="跨网段扫描" aria-label="跨网段扫描"><svg class="i sm" aria-hidden="true"><use href="#i-radar"/></svg></button>
+                </div>
+              </aside>
+
+              <section class="ss-stage">
+                <div class="ss-empty">
+                  <span class="glyph"><svg class="i lg" aria-hidden="true"><use href="#i-devices"/></svg></span>
+                  <h3 data-en="No other device yet">还没有发现其他设备</h3>
+                  <p data-en="Install “Session Sync” on another machine on the same LAN and it will appear here. If broadcast is blocked, add its address below.">在同一局域网的机器上装好「会话同步」，它会自己出现。广播被防火墙挡住时，用下面的地址手动连。</p>
+                  <div class="ss-addr-box">
+                    <code>192.168.1.10:47801</code>
+                    <button type="button" class="ss-icon xs" title="复制地址" aria-label="复制本机发现地址"><svg class="i xs" aria-hidden="true"><use href="#i-copy"/></svg></button>
+                  </div>
+                  <div class="ss-empty-actions">
+                    <input class="ss-input" type="text" placeholder="手动地址，如 10.0.0.8:47801" aria-label="手动地址" data-en-ph="Manual address, e.g. 10.0.0.8:47801">
+                    <button type="button" class="ss-btn primary sm" data-en="Add">添加</button>
+                    <button type="button" class="ss-btn ghost sm"><span data-en="Scan subnets">跨网段扫描</span><svg class="i sm" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
+                  </div>
+                  <div class="ss-steps">
+                    <div class="ss-step"><b>1</b><span data-en="Install and enable the plugin on the other machine.">在另一台机器上安装并启用这个插件。</span></div>
+                    <div class="ss-step"><b>2</b><span data-en="Make sure both machines are on the same subnet or VPN.">确认两台机器在同一个网段，或者已经在同一个 VPN 里。</span></div>
+                    <div class="ss-step"><b>3</b><span data-en="Still nothing? Enter its IP:port, or scan a subnet.">还是没有？填它的 IP:端口，或者做一次跨网段扫描。</span></div>
+                  </div>
+                  <div class="ss-foot" style="padding:6px 0 0">
+                    <span data-en="Sync port 47802 · discovery port 47801">同步端口 47802 · 发现端口 47801</span>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <footer class="ss-foot">
+              <code>dsh-session-sync 0.7.1</code><span class="sep">·</span><span>MIT</span>
+              <span class="ss-spacer"></span>
+              <a href="#"><svg class="i xs" aria-hidden="true"><use href="#i-external"/></svg>GitHub</a>
+            </footer>
+          </div>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>地址先给出去。</b>本机发现地址配一个复制按钮，比三段教程更快让对方连上。</li>
+        <li><b>手动地址就在空态里。</b>不用先去设置里找入口再回来。</li>
+        <li><b>端口只在脚注出现。</b>需要排查的人会往下看，不需要的人不必先读端口号。</li>
+      </ul>
+    </section>
+
+    <!-- 08 ─────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-states">
+      <header class="scene-hd">
+        <span class="scene-no">08</span>
+        <div>
+          <h2>加载 · 无结果 · 离线 · 读取失败</h2>
+          <p>四种容易做“空白”的状态各自有话说：加载给骨架、无结果给清除入口、离线给来源与后果、失败给原因和重试。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-states">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="mini-grid">
+          <div class="mini">
+            <div class="mini-hd"><b>加载中</b><span>骨架保持行高，不跳动</span></div>
+            <div class="mini-body" style="padding:0">
+              <div class="app frag" style="--app-h:246px">
+                <section class="ss-stage">
+                  <header class="ss-stage-hd">
+                    <div class="ss-stage-id"><span class="ss-dot on"></span><div><div class="ss-stage-name">Studio Mac</div><div class="ss-stage-meta"><code>192.168.1.20:47802</code><span class="ss-sep">·</span><span data-en="reading session list…">正在读取会话列表…</span></div></div></div>
+                    <div class="ss-stage-actions"><button type="button" class="ss-btn primary sm" disabled><span data-en="Pull all">拉取全部</span></button></div>
+                  </header>
+                  <div class="ss-list" style="padding-top:8px">
+                    <div class="ss-sk-row"><span class="ss-sk" style="width:16px;height:16px;border-radius:5px"></span><div class="ss-sk-lines"><div class="ss-sk" style="width:52%"></div><div class="ss-sk" style="width:34%;height:6px"></div></div><div class="ss-sk" style="width:52px"></div></div>
+                    <div class="ss-sk-row"><span class="ss-sk" style="width:16px;height:16px;border-radius:5px"></span><div class="ss-sk-lines"><div class="ss-sk" style="width:64%"></div><div class="ss-sk" style="width:42%;height:6px"></div></div><div class="ss-sk" style="width:52px"></div></div>
+                    <div class="ss-sk-row"><span class="ss-sk" style="width:16px;height:16px;border-radius:5px"></span><div class="ss-sk-lines"><div class="ss-sk" style="width:46%"></div><div class="ss-sk" style="width:30%;height:6px"></div></div><div class="ss-sk" style="width:52px"></div></div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+
+          <div class="mini">
+            <div class="mini-hd"><b>无结果</b><span>保留查询，给清除</span></div>
+            <div class="mini-body" style="padding:0">
+              <div class="app frag" style="--app-h:246px">
+                <section class="ss-stage">
+                  <header class="ss-stage-hd">
+                    <div class="ss-stage-id"><span class="ss-dot on"></span><div><div class="ss-stage-name">Studio Mac</div><div class="ss-stage-meta"><code>192.168.1.20:47802</code><span class="ss-sep">·</span><span><b>42</b> <span data-en="sessions">个会话</span></span></div></div></div>
+                  </header>
+                  <div class="ss-tools">
+                    <div class="ss-search"><svg class="i sm" aria-hidden="true"><use href="#i-search"/></svg><input type="text" value="udp" aria-label="搜索会话"><kbd>/</kbd></div>
+                    <div class="ss-filters"><button type="button" class="ss-filter" aria-pressed="true"><span data-en="All">全部</span> <b>42</b></button></div>
+                  </div>
+                  <div class="ss-empty-inline">
+                    <b data-en="No session matches “udp”">没有匹配「udp」的会话</b>
+                    <span data-en="Search covers title, #id and path.">搜索覆盖标题、#id 和路径。</span>
+                    <button type="button" class="ss-btn ghost sm" data-en="Clear search">清除筛选</button>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+
+          <div class="mini">
+            <div class="mini-hd"><b>设备离线</b><span>说清数据来源与后果</span></div>
+            <div class="mini-body" style="padding:0">
+              <div class="app frag" style="--app-h:260px">
+                <section class="ss-stage">
+                  <header class="ss-stage-hd">
+                    <div class="ss-stage-id"><span class="ss-dot off"></span><div><div class="ss-stage-name">离线笔记本</div><div class="ss-stage-meta"><code>192.168.1.22:47803</code><span class="ss-sep">·</span><span data-en="last seen 5 hours ago">最近 5 小时前</span></div></div></div>
+                    <div class="ss-stage-actions"><button type="button" class="ss-btn primary sm" disabled><svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg><span data-en="Pull all">拉取全部</span></button></div>
+                  </header>
+                  <div class="ss-banner">
+                    <svg class="i sm" aria-hidden="true"><use href="#i-clock"/></svg>
+                    <span data-en="Offline — showing the last list read from this device.">设备离线 · 下面是上次读取到的列表；重新上线后可以继续拉取。</span>
+                  </div>
+                  <div class="ss-list" style="padding-top:4px">
+                    <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：旧笔记本的电池"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">旧笔记本的电池</div><div class="ss-row-meta"><code>#77c01e9a</code><span class="ss-sep">·</span>10-21 12:04<span class="ss-sep">·</span>18 条事件</div></div><div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div><div class="ss-row-act"></div></div>
+                    <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：迁移到新 Mac"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">迁移到新 Mac</div><div class="ss-row-meta"><code>#2ab7d6f1</code><span class="ss-sep">·</span>10-20 22:47<span class="ss-sep">·</span>27 条事件</div></div><div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div><div class="ss-row-act"></div></div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+
+          <div class="mini">
+            <div class="mini-hd"><b>读取失败</b><span>原因、重试，不甩锅</span></div>
+            <div class="mini-body" style="padding:0">
+              <div class="app frag" style="--app-h:246px">
+                <section class="ss-stage">
+                  <header class="ss-stage-hd">
+                    <div class="ss-stage-id"><span class="ss-dot on"></span><div><div class="ss-stage-name">Studio Mac</div><div class="ss-stage-meta"><code>192.168.1.20:47802</code></div></div></div>
+                  </header>
+                  <div class="ss-error">
+                    <svg class="i sm" aria-hidden="true"><use href="#i-alert"/></svg>
+                    <div class="grow">
+                      <div data-en="Could not read the session list.">读取会话列表失败</div>
+                      <code>ECONNREFUSED 192.168.1.20:47802</code>
+                    </div>
+                    <button type="button" class="ss-btn ghost xs" data-en="Retry">重试</button>
+                  </div>
+                  <div class="ss-empty-inline">
+                    <span data-en="The device may have gone offline, or the sync port is blocked.">设备可能已经离线，或者同步端口被防火墙挡住了。</span>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>骨架与真实行同高。</b>47px 行、16px 勾选框，加载完不跳。</li>
+        <li><b>无结果保留查询词。</b>告诉人搜了哪些字段，并给一键清除，而不是让人回到空列表猜。</li>
+        <li><b>离线不隐藏列表。</b>说明“这是上次读到的”，按钮禁用而不是消失。</li>
+      </ul>
+    </section>
+
+    <!-- 09 ─────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-drag">
+      <header class="scene-hd">
+        <span class="scene-no">09</span>
+        <div>
+          <h2>拖拽</h2>
+          <p>拖到设备卡 = 推送；拖到宿主侧栏的工作区 = 拉取到那个目录；拖到工作区里的会话行 = 按指针位置插入。三种命中都先给可见的回执，松手仍走确认。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-drag">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="mini-grid" style="grid-template-columns:1fr">
+          <div class="mini">
+            <div class="mini-hd"><b>拖到设备卡：推送</b><span>整行命中 · 松手后进入确认</span></div>
+            <div class="mini-body app demo-app" style="padding:20px 22px;display:flex;flex-direction:row;justify-content:center;gap:48px;align-items:flex-start">
+              <div class="ss-rail" style="width:320px;height:336px">
+                <div class="ss-self">
+                  <div class="ss-self-hd"><span class="ss-dot on"></span><span data-en="This device">本机</span></div>
+                  <div class="ss-self-name">my-macbook</div>
+                  <div class="ss-self-meta"><code>192.168.1.10:47802</code></div>
+                </div>
+                <div class="ss-rail-scroll">
+                  <div class="ss-glabel"><span data-en="Online">在线</span> <span>2</span></div>
+                  <button type="button" class="ss-dev" aria-selected="true"><span class="ss-dot on"></span><span><span class="ss-dev-name">Studio Mac</span><span class="ss-dev-meta">192.168.1.20:47802</span></span><span class="ss-dev-count">42</span></button>
+                  <button type="button" class="ss-dev over" aria-selected="false"><span class="ss-dot on"></span><span><span class="ss-dev-name">Windows 工作站</span><span class="ss-dev-meta">192.168.1.21:47802</span></span><span class="ss-dev-count">9</span></button>
+                  <div class="ss-glabel"><span data-en="Offline">离线</span> <span>1</span></div>
+                  <button type="button" class="ss-dev offline" aria-selected="false"><span class="ss-dot off"></span><span><span class="ss-dev-name">离线笔记本</span><span class="ss-dev-meta">192.168.1.22:47803</span></span><span class="ss-dev-count">3</span></button>
+                </div>
+              </div>
+              <div style="width:380px;padding-top:126px">
+                <div class="ss-tip">
+                  <svg class="i sm" aria-hidden="true"><use href="#i-push"/></svg>
+                  <span data-en="Drop to push · you confirm next">松手推送 · 下一步确认</span>
+                </div>
+                <div class="ss-ghost" style="margin-top:10px">
+                  <span class="glyph"><svg class="i sm" aria-hidden="true"><use href="#i-push"/></svg></span>
+                  <div><b>2 个会话</b><span>推送到 Windows 工作站</span></div>
+                </div>
+                <div class="ss-field-note" style="margin-top:14px" data-en="The row highlights as a whole. Releasing opens the plan dialog; nothing is written yet.">整行高亮；松手打开确认弹窗，此时还没有写入。</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mini">
+            <div class="mini-hd"><b>拖到宿主工作区：拉取并定位</b><span>行间插入线表示落点</span></div>
+            <div class="mini-body app demo-app" style="padding:20px 22px;display:flex;flex-direction:row;justify-content:center;gap:48px;align-items:flex-start">
+              <div style="width:340px">
+                <p class="demo-label" style="margin:0 0 8px;color:var(--rv-text-3)">宿主侧栏（示意）</p>
+                <div class="ss-host-side" style="width:340px;height:366px;border:.5px solid var(--line-1);border-radius:12px;background:var(--s1);position:relative">
+                  <div class="ss-host-label" data-en="Workspaces">工作区</div>
+                  <div class="ss-host-group" style="background:var(--brand-weak);border-radius:6px;color:var(--t1)">Alpha</div>
+                  <div class="ss-host-row"><span>新会话</span><span class="time">15 小时</span></div>
+                  <div class="ss-host-row over" style="position:relative">
+                    <div class="ss-insert" style="top:-1px;left:12px;right:8px"></div>
+                    <span>未命名</span><span class="time">17 小时</span>
+                  </div>
+                  <div class="ss-host-group" style="margin-top:6px">未分组</div>
+                </div>
+              </div>
+              <div style="width:380px;padding-top:4px">
+                <div class="ss-tip">
+                  <svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg>
+                  <span data-en="Drop into Alpha · choose position on release">放入「Alpha」· 松手后确认位置</span>
+                </div>
+                <div class="ss-ghost" style="margin-top:10px">
+                  <span class="glyph"><svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg></span>
+                  <div><b>把同步插件做成 1.0</b><span>放入 Alpha · 未命名 之前</span></div>
+                </div>
+                <div class="ss-field-note" style="margin-top:14px" data-en="Hovering a session row picks the insertion point; hovering the workspace header lands at the end.">悬停会话行决定插入点；悬停工作区标题则落到末尾。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>命中区是整行或整个工作区。</b>不要求对准文字；拖拽时高亮的是“会接收它的东西”。</li>
+        <li><b>幽灵卡只写两件事。</b>多少个会话、要去哪里；不重复标题列表。</li>
+        <li><b>松手不等于写入。</b>拖拽只负责“选目标 + 选位置”，确认弹窗仍然出现。</li>
+      </ul>
+    </section>
+
+    <!-- 10 ─────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-settings">
+      <header class="scene-hd">
+        <span class="scene-no">10</span>
+        <div>
+          <h2>设置（面板内）</h2>
+          <p>设置是面板里的一个视图，不是另一套页面。身份、传输、高级、关于四块并排；高级里的端口、种子、网段用列表编辑器，不再塞两个 textarea。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-settings">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="app" style="--app-w:1180px;--app-h:760px">
+          <div class="ss-page">
+            <header class="ss-top">
+              <div class="ss-top-l">
+                <h1 class="ss-h1" data-en="Session Sync">会话同步</h1>
+                <div class="ss-sub"><span class="ss-dot on"></span><span><b>2</b> <span data-en="online">台在线</span></span><span class="sep">·</span><span><b>3</b> <span data-en="discovered">台已发现</span></span></div>
+              </div>
+              <div class="ss-top-r">
+                <button type="button" class="ss-btn sm"><svg class="i sm" aria-hidden="true"><use href="#i-arrow-left"/></svg><span data-en="Back to desk">返回会话台</span></button>
+              </div>
+            </header>
+
+            <div class="ss-settings cols">
+              <div class="ss-set-view-hd"><h2 data-en="Settings">设置</h2><span data-en="Changes apply immediately">所有改动立即生效</span></div>
+              <div class="ss-settings-in">
+                <div class="ss-set-col">
+                  <section class="ss-set-sec">
+                    <h3 data-en="IDENTITY">身份</h3>
+                    <div class="ss-set-card">
+                      <div class="ss-field">
+                        <div class="ss-field-text"><div class="ss-field-label" data-en="Device name">设备名称</div><div class="ss-field-note" data-en="What other devices see. Saved changes broadcast immediately.">别的设备看到的你的名字；改完立刻广播。</div></div>
+                        <div class="ss-field-body"><input class="ss-input" style="width:214px" value="my-macbook" aria-label="设备名称" data-en-aria="Device name"><button type="button" class="ss-btn primary sm" data-en="Save">保存</button></div>
+                      </div>
+                      <div class="ss-field">
+                        <div class="ss-field-text"><div class="ss-field-label" data-en="LAN address">局域网地址</div><div class="ss-field-note" data-en="Give this to another machine if discovery is blocked.">广播被挡时，把这行给对方就能手动连。</div></div>
+                        <div class="ss-field-body"><code style="font:11.5px/18px var(--rv-mono);color:var(--t2)">192.168.1.10:47802</code><button type="button" class="ss-icon sm" title="复制地址" aria-label="复制地址"><svg class="i sm" aria-hidden="true"><use href="#i-copy"/></svg></button></div>
+                      </div>
+                      <div class="ss-field">
+                        <div class="ss-field-text"><div class="ss-field-label" data-en="Platform">平台</div></div>
+                        <div class="ss-field-body"><span class="ss-chip mono">macOS · darwin</span><span class="ss-chip mono">v0.7.1</span></div>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section class="ss-set-sec">
+                    <h3 data-en="TRANSFER">传输</h3>
+                    <div class="ss-set-card">
+                      <div class="ss-field">
+                        <div class="ss-field-text"><div class="ss-field-label" data-en="Pull destination">同步目录</div><div class="ss-field-note" data-en="Where pulled sessions land. Drag-and-drop can override per transfer.">拉取落点；拖到工作区时以拖拽目标为准。</div></div>
+                        <div class="ss-field-body">
+                          <select class="ss-select" aria-label="同步目录">
+                            <option data-en="Unsorted (default)">未分组（默认）</option>
+                            <option>dsh-harness-workspace</option>
+                            <option>notes</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="ss-field">
+                        <div class="ss-field-text"><div class="ss-field-label" data-en="Custom path">自定义目录</div><div class="ss-field-note" data-en="Absolute path; created on save.">绝对路径；保存时创建。</div></div>
+                        <div class="ss-field-body"><input class="ss-input" style="width:214px" placeholder="/Users/you/project" aria-label="自定义目录" data-en-ph="/Users/you/project"><button type="button" class="ss-btn sm" data-en="Save">保存</button></div>
+                      </div>
+                      <div class="ss-field">
+                        <div class="ss-field-text"><div class="ss-field-label" data-en="Auto-pull">自动拉取</div><div class="ss-field-note" data-en="Every 20s, pull sessions not yet here. Deduplicated by content.">每 20 秒扫一次在线设备，按内容指纹去重。</div></div>
+                        <div class="ss-field-body"><button type="button" class="ss-switch" role="switch" aria-checked="true" aria-label="自动拉取"></button></div>
+                      </div>
+                      <div class="ss-field">
+                        <div class="ss-field-text"><div class="ss-field-label" data-en="Concurrent transfers">同时传输</div><div class="ss-field-note" data-en="Sessions transferred at once. Auto estimates from CPU cores (4 here, cap 5); a manual 1–16 overrides it.">一次同时传输多少会话。自动按 CPU 核数估算（本机 4 个，封顶 5）；手动 1–16 覆盖自动值。</div></div>
+                        <div class="ss-field-body"><select class="ss-select" aria-label="同时传输"><option>自动（本机 4 个，封顶 5）</option><option>2</option><option>4</option><option>8</option></select></div>
+                      </div>
+                      <div class="ss-field">
+                        <div class="ss-field-text"><div class="ss-field-label" data-en="Interface language">界面语言</div><div class="ss-field-note" data-en="Defaults to the DSH locale; the sidebar row follows.">默认跟随 DSH；侧栏入口会一起切换。</div></div>
+                        <div class="ss-field-body"><select class="ss-select" aria-label="界面语言"><option data-en="Follow DSH">跟随 DSH</option><option>中文</option><option>English</option></select></div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+
+                <div class="ss-set-col">
+                  <section class="ss-set-sec">
+                    <h3 data-en="ADVANCED">高级</h3>
+                    <div class="ss-set-card">
+                      <div class="ss-field">
+                        <div class="ss-field-text"><div class="ss-field-label" data-en="Ports">端口</div><div class="ss-field-note" data-en="Sync is HTTP; discovery is UDP broadcast.">同步走 HTTP，发现走 UDP 广播。</div></div>
+                        <div class="ss-field-body"><span class="ss-chip mono">47802 / 47801</span></div>
+                      </div>
+                      <div class="ss-field stack">
+                        <div class="ss-field-text"><div class="ss-field-label" data-en="Manual addresses">手动地址</div><div class="ss-field-note" data-en="ip or ip:udpPort, one per entry.">ip 或 ip:udpPort，一条一个。</div></div>
+                        <div class="ss-field-body">
+                          <div class="ss-token-list" style="margin-bottom:6px">
+                            <span class="ss-token">192.168.1.20:47801<button type="button" class="ss-icon xs" aria-label="移除"><svg class="i xs" aria-hidden="true"><use href="#i-x"/></svg></button></span>
+                            <span class="ss-token">10.0.0.7:47802<button type="button" class="ss-icon xs" aria-label="移除"><svg class="i xs" aria-hidden="true"><use href="#i-x"/></svg></button></span>
+                          </div>
+                          <input class="ss-input" placeholder="ip 或 ip:udpPort" aria-label="添加手动地址" data-en-ph="ip or ip:udpPort" style="flex:1">
+                          <button type="button" class="ss-btn sm" data-en="Add">添加</button>
+                        </div>
+                      </div>
+                      <div class="ss-field stack">
+                        <div class="ss-field-text"><div class="ss-field-label" data-en="Subnet scan">跨网段扫描</div><div class="ss-field-note" data-en="CIDR or ip:port; silent UDP sweep, then HTTP probe 47802–47817.">CIDR 或 ip:port；先静默 UDP，再探 47802–47817。</div></div>
+                        <div class="ss-field-body">
+                          <div class="ss-token-list" style="margin-bottom:6px">
+                            <span class="ss-token">192.168.5.0/24<button type="button" class="ss-icon xs" aria-label="移除"><svg class="i xs" aria-hidden="true"><use href="#i-x"/></svg></button></span>
+                          </div>
+                          <input class="ss-input" placeholder="192.168.5.0/24" aria-label="添加扫描网段" style="flex:1">
+                          <button type="button" class="ss-btn sm" data-en="Add">添加</button>
+                        </div>
+                        <div class="ss-field-note" style="margin-top:8px">
+                          <span data-en="Last scanned">上次扫描</span> 10:41 · 3 <span data-en="targets">个目标</span> · 1 <span data-en="found">台找到</span>
+                        </div>
+                      </div>
+                      <div class="ss-field">
+                        <div class="ss-field-text"><div class="ss-field-label" data-en="Legacy logs">修复旧日志</div><div class="ss-field-note" data-en="Rebuild missing session indexes from old log files.">扫描旧的日志文件，补回缺失的会话索引。</div></div>
+                        <div class="ss-field-body"><button type="button" class="ss-btn sm" data-en="Repair">修复</button></div>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section class="ss-set-sec">
+                    <h3 data-en="ABOUT">关于</h3>
+                    <div class="ss-set-card">
+                      <div class="ss-field">
+                        <div class="ss-field-text"><div class="ss-field-label" data-en="Version">版本</div></div>
+                        <div class="ss-field-body"><span class="ss-chip mono">0.7.1</span><span class="ss-chip mono">host 0.7.1</span></div>
+                      </div>
+                      <div class="ss-field">
+                        <div class="ss-field-text"><div class="ss-field-label" data-en="Repository">仓库</div><div class="ss-field-note">github.com/XXGxiaoyu/dsh-session-sync</div></div>
+                        <div class="ss-field-body"><a class="ss-btn ghost sm" href="#" style="text-decoration:none"><span data-en="Open">打开</span><svg class="i sm" aria-hidden="true"><use href="#i-external"/></svg></a></div>
+                      </div>
+                      <div class="ss-field">
+                        <div class="ss-field-text"><div class="ss-field-label" data-en="License">许可证</div></div>
+                        <div class="ss-field-body"><span class="ss-chip mono">MIT</span></div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
+
+            <footer class="ss-foot">
+              <code>dsh-session-sync 0.7.1</code><span class="sep">·</span><span>MIT</span>
+              <span class="ss-spacer"></span>
+              <a href="#"><svg class="i xs" aria-hidden="true"><use href="#i-external"/></svg>GitHub</a>
+            </footer>
+          </div>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>设置留在面板里。</b>顶部「设置」进入，返回按钮回会话台；侧栏入口不变。</li>
+        <li><b>两栏只为了少滚动。</b>1180 宽时并排，窄窗口自动落成一栏。</li>
+        <li><b>列表编辑器替代 textarea。</b>手动地址、扫描网段都按条显示、可单独删。</li>
+        <li><b>开关与保存即时生效。</b>名称、目录、开关、并发都是改完即调接口；文本输入才需要「保存」。</li>
+      </ul>
+    </section>
+
+    <!-- 11 ─────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-host">
+      <header class="scene-hd">
+        <span class="scene-no">11</span>
+        <div>
+          <h2>设置（宿主设置页）</h2>
+          <p>同一个组件注册进「设置 → 会话同步」时，走宿主设置页的单栏排版：标题、灰说明、行间 0.5px 分隔线、右侧控件。功能与面板内一致。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-host">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="app" style="--app-w:880px;--app-h:760px">
+          <div class="ss-page" style="padding:24px 28px 0">
+            <div class="ss-settings" style="padding:0 0 24px">
+              <div class="ss-settings-in" style="max-width:720px">
+                <div class="ss-set-hd"><h2 style="font-size:20px;line-height:28px;font-weight:600" data-en="Session Sync">会话同步</h2></div>
+                <p class="ss-set-sub" data-en="Devices discovered on this LAN, and the sessions you can pull or push.">局域网内发现的设备，以及可以拉取或推送的会话。</p>
+
+                <section class="ss-set-sec">
+                  <h3 data-en="IDENTITY">身份</h3>
+                  <div class="ss-set-card">
+                    <div class="ss-field">
+                      <div class="ss-field-text"><div class="ss-field-label" data-en="Device name">设备名称</div><div class="ss-field-note" data-en="What other devices see. Saved changes broadcast immediately.">别的设备看到的你的名字；改完立刻广播。</div></div>
+                      <div class="ss-field-body"><input class="ss-input" style="width:200px" value="my-macbook" aria-label="设备名称"><button type="button" class="ss-btn primary sm" data-en="Save">保存</button></div>
+                    </div>
+                    <div class="ss-field">
+                      <div class="ss-field-text"><div class="ss-field-label" data-en="LAN address">局域网地址</div><div class="ss-field-note">192.168.1.10:47802</div></div>
+                      <div class="ss-field-body"><button type="button" class="ss-btn sm" data-en="Copy">复制</button></div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="ss-set-sec">
+                  <h3 data-en="TRANSFER">传输</h3>
+                  <div class="ss-set-card">
+                    <div class="ss-field">
+                      <div class="ss-field-text"><div class="ss-field-label" data-en="Pull destination">同步目录</div><div class="ss-field-note" data-en="Where pulled sessions land.">拉取的会话落在哪里。</div></div>
+                      <div class="ss-field-body"><select class="ss-select" aria-label="同步目录"><option data-en="Unsorted (default)">未分组（默认）</option><option>dsh-harness-workspace</option></select></div>
+                    </div>
+                    <div class="ss-field">
+                      <div class="ss-field-text"><div class="ss-field-label" data-en="Auto-pull">自动拉取</div><div class="ss-field-note" data-en="Every 20s, deduplicated by content.">每 20 秒一次，按内容指纹去重。</div></div>
+                      <div class="ss-field-body"><button type="button" class="ss-switch" role="switch" aria-checked="false" aria-label="自动拉取"></button></div>
+                    </div>
+                    <div class="ss-field">
+                      <div class="ss-field-text"><div class="ss-field-label" data-en="Concurrency">并发数</div><div class="ss-field-note" data-en="Auto uses CPU cores, max 5.">自动按 CPU 核数，最多 5。</div></div>
+                      <div class="ss-field-body"><select class="ss-select" aria-label="同时传输"><option>自动（本机 4 个，封顶 5）</option><option>2</option><option>4</option></select></div>
+                    </div>
+                    <div class="ss-field">
+                      <div class="ss-field-text"><div class="ss-field-label" data-en="Interface language">界面语言</div><div class="ss-field-note" data-en="Defaults to the DSH locale.">默认跟随 DSH。</div></div>
+                      <div class="ss-field-body"><select class="ss-select" aria-label="界面语言"><option data-en="Follow DSH">跟随 DSH</option><option>中文</option><option>English</option></select></div>
+                    </div>
+                    <button type="button" class="ss-adv-toggle" aria-expanded="false">
+                      <svg class="i sm" aria-hidden="true"><use href="#i-chevron-right"/></svg>
+                      <span data-en="Advanced · ports, manual addresses, subnet scan">高级 · 端口、手动地址、跨网段扫描</span>
+                    </button>
+                  </div>
+                </section>
+
+                <section class="ss-set-sec">
+                  <h3 data-en="ABOUT">关于</h3>
+                  <div class="ss-set-card">
+                    <div class="ss-field"><div class="ss-field-text"><div class="ss-field-label" data-en="Version">版本</div></div><div class="ss-field-body"><span class="ss-chip mono">0.7.1</span></div></div>
+                    <div class="ss-field"><div class="ss-field-text"><div class="ss-field-label" data-en="License">许可证</div></div><div class="ss-field-body"><span class="ss-chip mono">MIT</span></div></div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>同一套行组件。</b>标签在左、控件在右、说明在标签下，和 DSH 其他设置页一致。</li>
+        <li><b>高级默认折叠。</b>设置页是低频入口，端口和网段不该先占满屏。</li>
+        <li><b>没有第二个实现。</b>只有容器布局（单栏 / 双栏）不同，接口与状态完全复用。</li>
+      </ul>
+    </section>
+
+    <!-- 12 ─────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-diag">
+      <header class="scene-hd">
+        <span class="scene-no">12</span>
+        <div>
+          <h2>诊断</h2>
+          <p>渲染异常不能让面板变白。错误边界接住之后，给可复制的诊断块和两个明确动作：重新加载、复制诊断。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-diag">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="app" style="--app-w:880px;--app-h:560px">
+          <div class="ss-page" style="padding:24px 28px 0">
+            <div class="ss-settings" style="padding:0">
+              <div class="ss-settings-in" style="max-width:720px">
+                <div class="ss-set-hd">
+                  <span class="glyph" style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--bad-weak);color:var(--bad)">
+                    <svg class="i sm" aria-hidden="true"><use href="#i-alert"/></svg>
+                  </span>
+                  <h2 style="font-size:16px;line-height:24px" data-en="The page hit an error">界面出错了</h2>
+                </div>
+                <p class="ss-set-sub" data-en="Rendering threw. Details are shown here instead of a blank panel.">页面渲染时抛了异常，已在此展示诊断信息，而不是留一个空白面板。</p>
+                <div class="ss-set-card">
+                  <div class="ss-field">
+                    <div class="ss-field-text"><div class="ss-field-label" data-en="Diagnostics">诊断信息</div><div class="ss-field-note" data-en="Paste this into a GitHub issue.">把下面的内容贴到 GitHub issue 即可。</div></div>
+                  </div>
+                  <pre class="ss-diag">dsh-session-sync 0.7.1
+error: Cannot read properties of undefined (reading 'map')
+stack: at SessionList (client.js:1712) | at renderWithHooks | at mountIndeterminateComponent
+ua: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+diag: darwin/arm64 node v22.18.0 host 0.2.1-rc.2 lan 47802 udp 47801</pre>
+                  <div class="ss-field">
+                    <div class="ss-field-text"><div class="ss-field-note" data-en="Reload usually restores the UI; the diagnostics explain what broke.">重新加载通常能先恢复界面；诊断块用于定位问题。</div></div>
+                    <div class="ss-field-body"><button type="button" class="ss-btn primary sm" data-en="Reload">重新加载</button><button type="button" class="ss-btn ghost sm" data-en="Copy diagnostics">复制诊断</button></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>不白屏。</b>任何渲染异常都由边界接住，页面其余部分继续可用。</li>
+        <li><b>诊断可复制。</b>平台、Node、宿主版本、端口、UA、栈摘要一次给全。</li>
+        <li><b>动作只有两个。</b>重新加载与复制；不提供“发送报告”这种没有实现的按钮。</li>
+      </ul>
+    </section>
+
+    <!-- 13 ─────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-narrow">
+      <header class="scene-hd">
+        <span class="scene-no">13</span>
+        <div>
+          <h2>窄窗口</h2>
+          <p>面板被压到 720 以下时，设备栏收成一条设备条：当前设备、地址、切换。列表与工具栏保持同样的行高和键盘操作，不横向滚动。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-narrow">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="app" style="--app-w:720px;--app-h:760px">
+          <div class="ss-page" style="padding:18px 18px 0">
+            <header class="ss-top">
+              <div class="ss-top-l">
+                <h1 class="ss-h1" data-en="Session Sync">会话同步</h1>
+                <div class="ss-sub"><span class="ss-dot on"></span><span><b>2</b> <span data-en="online">台在线</span></span><span class="sep">·</span><span><b>3</b> <span data-en="discovered">台已发现</span></span></div>
+              </div>
+              <div class="ss-top-r">
+                <button type="button" class="ss-icon" title="刷新" aria-label="刷新"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+                <button type="button" class="ss-icon" title="设置" aria-label="设置"><svg class="i" aria-hidden="true"><use href="#i-sliders"/></svg></button>
+              </div>
+            </header>
+
+            <div class="ss-devbar">
+              <span class="ss-dot on"></span>
+              <div class="grow">
+                <div class="ss-devbar-name">Studio Mac</div>
+                <div class="ss-devbar-meta">192.168.1.20:47802 · 42 个会话 · macOS</div>
+              </div>
+              <button type="button" class="ss-btn sm"><span data-en="Switch">切换</span><svg class="i sm" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+              <button type="button" class="ss-icon sm" title="设备操作" aria-label="设备操作"><svg class="i sm" aria-hidden="true"><use href="#i-more"/></svg></button>
+            </div>
+
+            <section class="ss-stage" style="border-radius:12px">
+              <div class="ss-tabs" style="margin:10px 12px 8px" role="tablist">
+                <button type="button" class="ss-tab" role="tab" aria-selected="true"><svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg><span data-en="Pull">拉取</span> <b>42</b></button>
+                <button type="button" class="ss-tab" role="tab" aria-selected="false"><svg class="i sm" aria-hidden="true"><use href="#i-push"/></svg><span data-en="Push">推送</span> <b>80</b></button>
+              </div>
+              <div class="ss-tools" style="padding:0 12px 10px">
+                <div class="ss-search" style="max-width:none;flex:1"><svg class="i sm" aria-hidden="true"><use href="#i-search"/></svg><input type="text" placeholder="搜索标题、#id 或路径" aria-label="搜索会话"><kbd>/</kbd></div>
+                <div class="ss-filters"><button type="button" class="ss-filter" aria-pressed="true"><span data-en="All">全部</span> <b>42</b></button><button type="button" class="ss-filter" aria-pressed="false"><span data-en="New">未同步</span> <b>6</b></button></div>
+                <button type="button" class="ss-icon sm" title="排序" aria-label="排序"><svg class="i sm" aria-hidden="true"><use href="#i-sort"/></svg></button>
+              </div>
+              <div class="ss-list" style="padding:2px 6px 8px" role="listbox" aria-label="对端会话">
+                <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：把同步插件做成 1.0"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">把同步插件做成 1.0</div><div class="ss-row-meta"><code>#4f2c9b1e</code><span class="ss-sep">·</span>08:45<span class="ss-sep">·</span>128 条事件</div></div><div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div><div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Pull">拉取</button></div></div>
+                <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：硬件虚拟化与内存隔离"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">硬件虚拟化与内存隔离</div><div class="ss-row-meta"><code>#9a71d3c8</code><span class="ss-sep">·</span>07:25<span class="ss-sep">·</span>214 条事件</div></div><div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div><div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Pull">拉取</button></div></div>
+                <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：未命名会话"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title" data-en="Untitled session">未命名会话</div><div class="ss-row-meta"><code>#b3e8f0aa</code><span class="ss-sep">·</span>06:25<span class="ss-sep">·</span>36 条事件</div></div><div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div><div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Verify">校验</button></div></div>
+                <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：一个关于启动链的想法"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">一个关于启动链的想法</div><div class="ss-row-meta"><code>#1d5c7e42</code><span class="ss-sep">·</span>03:05<span class="ss-sep">·</span>57 条事件</div></div><div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div><div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Verify">校验</button></div></div>
+                <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：会话标题的中文排版与截断"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">会话标题的中文排版与截断</div><div class="ss-row-meta"><code>#7c31ab90</code><span class="ss-sep">·</span>22:14<span class="ss-sep">·</span>19 条事件</div></div><div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div><div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Pull">拉取</button></div></div>
+                <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：排查广播跨网段丢失"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">排查广播跨网段丢失</div><div class="ss-row-meta"><code>#e91f4c02</code><span class="ss-sep">·</span>20:02<span class="ss-sep">·</span>73 条事件</div></div><div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div><div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Pull">拉取</button></div></div>
+                <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：Windows 下依赖链接失败"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">Windows 下依赖链接失败</div><div class="ss-row-meta"><code>#c0a7f315</code><span class="ss-sep">·</span>18:40<span class="ss-sep">·</span>88 条事件</div></div><div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span data-en="Synced">已同步</span></span></div><div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Verify">校验</button></div></div>
+                <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="选择：传输队列的并发上限"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">传输队列的并发上限</div><div class="ss-row-meta"><code>#58b6de11</code><span class="ss-sep">·</span>16:12<span class="ss-sep">·</span>41 条事件</div></div><div class="ss-row-trail"><span class="ss-chip"><span data-en="Not synced">未同步</span></span></div><div class="ss-row-act"><button type="button" class="ss-btn ghost xs" data-en="Pull">拉取</button></div></div>
+              </div>
+            </section>
+
+            <footer class="ss-foot">
+              <code>dsh-session-sync 0.7.1</code><span class="sep">·</span><span>MIT</span>
+              <span class="ss-spacer"></span>
+              <a href="#"><svg class="i xs" aria-hidden="true"><use href="#i-external"/></svg>GitHub</a>
+            </footer>
+          </div>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>断点。</b>≥980 双栏；720–980 设备栏收窄到 232；&lt;720 设备栏变设备条。</li>
+        <li><b>不横向滚动。</b>路径在 meta 里截断，完整值走 title / 校验面板。</li>
+        <li><b>键盘不缩水。</b>/ 搜索、↑↓ 游标、空格选择、回车拉取、Esc 取消仍然成立。</li>
+      </ul>
+    </section>
+
+    <!-- 14 ─────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-visual">
+      <header class="scene-hd">
+        <span class="scene-no">14</span>
+        <div>
+          <h2>视觉令牌</h2>
+          <p>颜色全部落在语义层：画布、三层表面、三级文字、四类状态。落地时不写 hex，换成 DSH 的 <code>--dsw-alias-*</code> 即可。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-visual">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="board">
+          <div class="board-hd"><h3>颜色</h3><span>左半深色 / 右半浅色</span></div>
+          <div class="swatches">
+            <div class="sw"><i style="background:linear-gradient(90deg,#0d0d0f 50%,#f5f5f6 50%)"></i><div><b>画布</b><span>#0D0D0F / #F5F5F6</span></div></div>
+            <div class="sw"><i style="background:linear-gradient(90deg,#17171a 50%,#ffffff 50%)"></i><div><b>表面 1 · 卡片</b><span>#17171A / #FFFFFF</span></div></div>
+            <div class="sw"><i style="background:linear-gradient(90deg,#1e1e22 50%,#f1f1f3 50%)"></i><div><b>表面 2 · 次级</b><span>#1E1E22 / #F1F1F3</span></div></div>
+            <div class="sw"><i style="background:linear-gradient(90deg,#26262b 50%,#ffffff 50%)"></i><div><b>表面 3 · 浮层</b><span>#26262B / #FFFFFF</span></div></div>
+            <div class="sw"><i style="background:linear-gradient(90deg,#f4f4f5 50%,#1a1a1f 50%)"></i><div><b>主文本</b><span>#F4F4F5 / #1A1A1F</span></div></div>
+            <div class="sw"><i style="background:linear-gradient(90deg,#adadb6 50%,#5b5b66 50%)"></i><div><b>次文本</b><span>#ADADB6 / #5B5B66</span></div></div>
+            <div class="sw"><i style="background:linear-gradient(90deg,#8b8b96 50%,#6a6a74 50%)"></i><div><b>三级文本</b><span>#8B8B96 / #6A6A74</span></div></div>
+            <div class="sw"><i style="background:linear-gradient(90deg,#7c93ff 50%,#4056d6 50%)"></i><div><b>品牌 / 选中</b><span>#7C93FF / #4056D6</span></div></div>
+            <div class="sw"><i style="background:linear-gradient(90deg,#4ade80 50%,#15803d 50%)"></i><div><b>成功 / 已同步</b><span>#4ADE80 / #15803D</span></div></div>
+            <div class="sw"><i style="background:linear-gradient(90deg,#f87171 50%,#b91c1c 50%)"></i><div><b>危险 / 失败</b><span>#F87171 / #B91C1C</span></div></div>
+            <div class="sw"><i style="background:linear-gradient(90deg,#fbbf24 50%,#b45309 50%)"></i><div><b>警告 / 离线</b><span>#FBBF24 / #B45309</span></div></div>
+            <div class="sw"><i style="background:linear-gradient(90deg,#ededf0 50%,#1a1a1f 50%)"></i><div><b>主按钮填充</b><span>#EDEDF0 / #1A1A1F</span></div></div>
+          </div>
+        </div>
+
+        <div class="board">
+          <div class="board-hd"><h3>字体阶梯</h3><span>系统字体 · 机器数据用等宽</span></div>
+          <div class="ramp">
+            <div class="ramp-row"><div class="sample" style="font-size:20px;line-height:28px;font-weight:600;letter-spacing:-.015em">会话同步</div><div class="spec">20 / 28 · 600</div></div>
+            <div class="ramp-row"><div class="sample" style="font-size:15px;line-height:22px;font-weight:600">Studio Mac</div><div class="spec">15 / 22 · 600</div></div>
+            <div class="ramp-row"><div class="sample" style="font-size:14px;line-height:22px;font-weight:550">把同步插件做成 1.0</div><div class="spec">14 / 22 · 550</div></div>
+            <div class="ramp-row"><div class="sample" style="font-size:13px;line-height:20px">别的设备看到的你的名字；改完立刻广播。</div><div class="spec">13 / 20 · 400</div></div>
+            <div class="ramp-row"><div class="sample" style="font-size:11.5px;line-height:16px;color:var(--rv-text-2)">#4F2C9B1E · 10-22 08:45 · 128 条事件</div><div class="spec">11.5 / 16 · mono</div></div>
+          </div>
+        </div>
+
+        <div class="board">
+        <div class="spec-grid">
+          <div class="spec-col">
+            <h4>间距与尺寸</h4>
+            <table class="tbl">
+              <tr><th>类别</th><th>值</th><th>用途</th></tr>
+              <tr><td><b>间距</b></td><td>4 / 8 / 12 / 16 / 20 / 24 / 32</td><td>4 的倍数，禁止奇数值</td></tr>
+              <tr><td><b>圆角</b></td><td>6 / 8 / 10 / 12 / 16 / 999</td><td>徽章 → 输入 → 按钮 → 浮层 → 卡片 → 开关</td></tr>
+              <tr><td><b>控件高</b></td><td>24 / 28 / 30 / 32 / 36</td><td>xs / sm / 输入 / 默认 / 顶栏</td></tr>
+              <tr><td><b>行高</b></td><td>47</td><td>会话行；设备行 50</td></tr>
+              <tr><td><b>描边</b></td><td>.5px</td><td>所有分隔与卡片边界</td></tr>
+            </table>
+          </div>
+          <div class="spec-col">
+            <h4>语义变量 → DSH</h4>
+            <table class="tbl">
+              <tr><th>本稿</th><th>落地</th></tr>
+              <tr><td><code>--canvas</code></td><td><code>--dsw-alias-bg-base</code></td></tr>
+              <tr><td><code>--s1 / --s2 / --s3</code></td><td><code>--dsw-alias-bg-layer-1/2/3</code></td></tr>
+              <tr><td><code>--line-1/2/3</code></td><td><code>--dsw-alias-border-l1/l2/l3</code></td></tr>
+              <tr><td><code>--t1 / --t2 / --t3</code></td><td><code>--dsw-alias-label-primary/secondary/tertiary</code></td></tr>
+              <tr><td><code>--brand</code></td><td><code>--dsw-alias-brand-primary</code></td></tr>
+              <tr><td><code>--ok / --bad / --warn</code></td><td><code>--dsw-alias-state-success/error/warning-primary</code></td></tr>
+              <tr><td><code>--btn-bg / --btn-fg</code></td><td><code>--dsw-alias-button-primary-fill / label-primary-foreground</code></td></tr>
+              <tr><td><code>--ease / --dur</code></td><td><code>--ds-ease-in-out / --ds-transition-duration</code></td></tr>
+            </table>
+          </div>
+        </div>
+        </div>
+
+        <div class="board" style="margin-top:18px">
+          <div class="board-hd"><h3>对比度（实测）</h3><span>WCAG 2.2 · 正文 ≥ 4.5:1</span></div>
+          <table class="tbl">
+            <tr><th>组合</th><th>深色</th><th>浅色</th><th>结论</th></tr>
+            <tr><td>次文本 / 表面 1</td><td>8.03:1</td><td>6.70:1</td><td>AA / AAA</td></tr>
+            <tr><td>三级文本 / 表面 1</td><td>5.31:1</td><td>5.35:1</td><td>AA</td></tr>
+            <tr><td>三级文本 / 表面 2</td><td>4.93:1</td><td>4.74:1</td><td>AA（最紧的一对）</td></tr>
+            <tr><td>主按钮文字 / 填充</td><td>15.87:1</td><td>17.33:1</td><td>AAA</td></tr>
+            <tr><td>成功 / 表面 1</td><td>10.27:1</td><td>5.02:1</td><td>AA / AAA</td></tr>
+            <tr><td>危险 / 表面 1</td><td>6.47:1</td><td>6.47:1</td><td>AA</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>不引入新色相。</b>品牌、成功、危险、警告都取自宿主；界面里没有装饰性颜色。</li>
+        <li><b>三级文本 4.74:1。</b>浅色主题最紧的一对仍过 AA，这是 #6A6A74 而不是更浅的灰的原因。</li>
+        <li><b>描边统一 .5px。</b>与 DSH 设置页一致；hover 只改底色，不加深描边。</li>
+      </ul>
+    </section>
+
+    <!-- 15 ─────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-components">
+      <header class="scene-hd">
+        <span class="scene-no">15</span>
+        <div>
+          <h2>组件与状态</h2>
+          <p>按钮、行、勾选、徽章、表单、浮层的全状态。状态不是“多画几个样子”，而是每个交互都必须能回答：现在是什么、能不能点、点了会怎样。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-components">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="app demo-app">
+          <div class="board">
+            <div class="board-hd"><h3>按钮</h3><span>高度 32 / 28 / 24</span></div>
+            <div class="demo">
+              <button type="button" class="ss-btn">默认</button>
+              <button type="button" class="ss-btn primary">主操作</button>
+              <button type="button" class="ss-btn ghost">幽灵</button>
+              <button type="button" class="ss-btn danger">移除</button>
+              <button type="button" class="ss-btn" disabled>禁用</button>
+              <button type="button" class="ss-btn primary" style="outline:2px solid var(--brand);outline-offset:1px">聚焦</button>
+              <button type="button" class="ss-btn sm">小号</button>
+              <button type="button" class="ss-btn ghost xs">极小</button>
+              <button type="button" class="ss-icon" aria-label="更多"><svg class="i" aria-hidden="true"><use href="#i-more"/></svg></button>
+            </div>
+            <div class="demo">
+              <button type="button" class="ss-btn primary sm"><svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg>拉取全部</button>
+              <button type="button" class="ss-btn sm"><svg class="i sm" aria-hidden="true"><use href="#i-copy"/></svg>复制地址</button>
+              <button type="button" class="ss-btn ghost sm"><svg class="i sm" aria-hidden="true"><use href="#i-verify"/></svg>校验</button>
+              <button type="button" class="ss-btn ghost sm"><span data-en="Clear selection">清除选择</span></button>
+            </div>
+          </div>
+
+          <div class="board">
+            <div class="board-hd"><h3>行与勾选</h3><span>默认 / hover / 选中 / 离线 / 拖拽命中</span></div>
+            <div class="demo" style="display:block">
+              <p class="demo-label">设备行 · 300px</p>
+              <div style="width:300px">
+                <button type="button" class="ss-dev" aria-selected="true"><span class="ss-dot on"></span><span><span class="ss-dev-name">Studio Mac · 选中</span><span class="ss-dev-meta">192.168.1.20:47802</span></span><span class="ss-dev-count">42</span></button>
+                <button type="button" class="ss-dev"><span class="ss-dot on"></span><span><span class="ss-dev-name">Windows 工作站</span><span class="ss-dev-meta">192.168.1.21:47802</span></span><span class="ss-dev-count">9</span></button>
+                <button type="button" class="ss-dev over"><span class="ss-dot on"></span><span><span class="ss-dev-name">拖拽命中</span><span class="ss-dev-meta">松手后进入确认</span></span><span class="ss-dev-count">2</span></button>
+                <button type="button" class="ss-dev offline"><span class="ss-dot off"></span><span><span class="ss-dev-name">离线笔记本 · 离线</span><span class="ss-dev-meta">192.168.1.22:47803 · 5 小时前</span></span><span class="ss-dev-count">3</span></button>
+              </div>
+            </div>
+
+            <div class="demo" style="display:block;margin-top:18px">
+              <p class="demo-label">会话行 · 680px</p>
+              <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="默认"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">默认行：标题 + 元信息 + 状态</div><div class="ss-row-meta"><code>#4f2c9b1e</code><span class="ss-sep">·</span>10-22 08:45<span class="ss-sep">·</span>128 条事件</div></div><div class="ss-row-trail"><span class="ss-chip">未同步</span></div><div class="ss-row-act"><button type="button" class="ss-btn ghost xs">拉取</button><button type="button" class="ss-btn ghost xs">校验</button></div></div>
+              <div class="ss-row is-hover" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="hover"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">hover / 聚焦：行内动作出现</div><div class="ss-row-meta"><code>#9a71d3c8</code><span class="ss-sep">·</span>10-22 07:25<span class="ss-sep">·</span>214 条事件</div></div><div class="ss-row-trail"><span class="ss-chip">未同步</span></div><div class="ss-row-act"><button type="button" class="ss-btn ghost xs">拉取</button><button type="button" class="ss-btn ghost xs">校验</button></div></div>
+              <div class="ss-row" role="option" aria-selected="true"><button type="button" class="ss-cb" role="checkbox" aria-checked="true" aria-label="选中"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">选中：8% 品牌底 + 勾选</div><div class="ss-row-meta"><code>#7c31ab90</code><span class="ss-sep">·</span>10-21 22:14<span class="ss-sep">·</span>19 条事件</div></div><div class="ss-row-trail"><span class="ss-chip">未同步</span></div><div class="ss-row-act"><button type="button" class="ss-btn ghost xs">拉取</button></div></div>
+              <div class="ss-row" role="option" aria-selected="false"><button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="已同步"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button><div class="ss-row-main"><div class="ss-row-title">已同步：状态常显，校验留在行内</div><div class="ss-row-meta"><code>#1d5c7e42</code><span class="ss-sep">·</span>10-22 03:05<span class="ss-sep">·</span>57 条事件</div></div><div class="ss-row-trail"><span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>已同步</span></div><div class="ss-row-act"><button type="button" class="ss-btn ghost xs">校验</button></div></div>
+            </div>
+
+            <div class="demo" style="margin-top:16px">
+              <p class="demo-label" style="width:100%">勾选框</p>
+              <button type="button" class="ss-cb" role="checkbox" aria-checked="false" aria-label="未选"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+              <button type="button" class="ss-cb" role="checkbox" aria-checked="true" aria-label="已选"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></button>
+              <button type="button" class="ss-cb" role="checkbox" aria-checked="mixed" aria-label="部分选择" style="border-color:var(--brand);background:var(--brand)"></button>
+              <span class="ss-chip plain">Shift 连选</span>
+              <span class="ss-chip plain">⌘A 全选</span>
+            </div>
+          </div>
+
+          <div class="board">
+            <div class="board-hd"><h3>状态徽章</h3><span>颜色只表示状态，不表示可点</span></div>
+            <div class="demo">
+              <span class="ss-chip">未同步</span>
+              <span class="ss-chip ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>已同步</span>
+              <span class="ss-chip bad"><svg class="i" aria-hidden="true"><use href="#i-alert"/></svg>校验失败</span>
+              <span class="ss-chip brand">拉取中</span>
+              <span class="ss-chip">排队中</span>
+              <span class="ss-chip warn">离线</span>
+              <span class="ss-chip mono">47802</span>
+              <span class="ss-chip plain">草稿</span>
+            </div>
+          </div>
+
+          <div class="board">
+            <div class="board-hd"><h3>表单与浮层</h3><span>30px 输入 · 36×22 开关 · 12px 浮层</span></div>
+            <div class="demo">
+              <input class="ss-input" placeholder="搜索标题、#id 或路径" style="width:240px">
+              <select class="ss-select"><option>未分组（默认）</option><option>Alpha</option></select>
+              <button type="button" class="ss-switch" role="switch" aria-checked="true" aria-label="开"></button>
+              <button type="button" class="ss-switch" role="switch" aria-checked="false" aria-label="关"></button>
+              <span class="ss-tip"><svg class="i sm" aria-hidden="true"><use href="#i-pull"/></svg>松手拉取 · 下一步确认</span>
+            </div>
+            <div class="demo" style="align-items:flex-start;margin-top:16px">
+              <div class="ss-popover" style="position:static;width:320px">
+                <div class="ss-pop-hd">选择目标目录<span style="flex:1"></span><span>3 个位置</span></div>
+                <button type="button" class="ss-opt"><span class="ss-opt-main"><span class="ss-opt-name">未分组（默认）<span class="ss-chip ok">当前</span></span><span class="ss-opt-path">/tmp/dsh-ss-home/session-sync/unsorted</span></span><span class="ss-opt-count">2</span><svg class="i sm check" aria-hidden="true"><use href="#i-check"/></svg></button>
+                <button type="button" class="ss-opt"><span class="ss-opt-main"><span class="ss-opt-name">dsh-harness-workspace</span><span class="ss-opt-path">/Users/you/project/workspace</span></span><span class="ss-opt-count">4</span></button>
+                <div class="ss-pop-foot"><button type="button" class="ss-btn ghost sm"><svg class="i sm" aria-hidden="true"><use href="#i-plus"/></svg>添加路径…</button></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div class="ss-ghost"><span class="glyph"><svg class="i sm" aria-hidden="true"><use href="#i-push"/></svg></span><div><b>2 个会话</b><span>推送到 Windows 工作站</span></div></div>
+                <div class="ss-toast" style="position:static;transform:none;left:auto;bottom:auto"><svg class="i sm" aria-hidden="true"><use href="#i-check"/></svg>已复制局域网地址</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>主按钮只有一个像素级差异。</b>白底黑字，圆角 10，不加大阴影；它靠对比而不是装饰抢注意力。</li>
+        <li><b>状态与动作分开。</b>徽章只读，动作是按钮；不把“未同步”做成一个能点的奇怪东西。</li>
+        <li><b>hover 才出动作，但触屏常显。</b><code>@media (hover:none)</code> 下动作不隐藏，避免手机/触控板点不到。</li>
+      </ul>
+    </section>
+
+    <!-- 16 ─────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-behaviour">
+      <header class="scene-hd">
+        <span class="scene-no">16</span>
+        <div>
+          <h2>交互与无障碍</h2>
+          <p>键盘优先，动效只解释空间关系。所有焦点可见、所有弹层可 Esc 关闭、所有进度有文本替代。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-behaviour">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="board">
+        <div class="spec-grid">
+          <div class="spec-col">
+            <h4>键盘</h4>
+            <table class="tbl">
+              <tr><th>键</th><th>行为</th></tr>
+              <tr><td><span class="kbd">/</span></td><td>聚焦会话搜索；再按 Esc 退出</td></tr>
+              <tr><td><span class="kbd">↑</span> <span class="kbd">↓</span></td><td>移动焦点行（不改变选择）</td></tr>
+              <tr><td><span class="kbd">Space</span></td><td>选中 / 取消焦点行</td></tr>
+              <tr><td><span class="kbd">Enter</span></td><td>拉取（或推送）焦点行</td></tr>
+              <tr><td><span class="kbd">⌘A</span></td><td>全选当前方向的列表</td></tr>
+              <tr><td><span class="kbd">Shift</span>+点击</td><td>从锚点连选</td></tr>
+              <tr><td><span class="kbd">Esc</span></td><td>清空选择 / 关闭浮层 / 关弹窗</td></tr>
+              <tr><td><span class="kbd">Tab</span></td><td>只在可交互元素间移动；弹窗内循环</td></tr>
+            </table>
+          </div>
+          <div class="spec-col">
+            <h4>动效</h4>
+            <table class="tbl">
+              <tr><th>场景</th><th>动作</th><th>时长</th></tr>
+              <tr><td>行 hover</td><td>底色 0 → 4.5%</td><td>120ms</td></tr>
+              <tr><td>选择条出现</td><td>上移 4px + 淡入</td><td>160ms</td></tr>
+              <tr><td>目标浮层</td><td>上移 3px + 缩放 .99</td><td>140ms</td></tr>
+              <tr><td>确认弹窗</td><td>上移 6px + 缩放 .99</td><td>180ms</td></tr>
+              <tr><td>抽屉 / 队列</td><td>高度展开，不遮罩</td><td>220ms</td></tr>
+              <tr><td>进度条</td><td>宽度过渡</td><td>320ms</td></tr>
+              <tr><td>旋转</td><td>仅 running 图标</td><td>750ms 线性</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="spec-grid" style="margin-top:24px">
+          <div class="spec-col">
+            <h4>焦点与读屏</h4>
+            <ul>
+              <li>焦点环 2px 品牌色 + 1px offset，任何主题下都可见。</li>
+              <li>设备行 <code>role="option" aria-selected</code>；勾选框 <code>role="checkbox" aria-checked</code>。</li>
+              <li>方向切换 <code>role="tablist"</code> + <code>aria-selected</code>。</li>
+              <li>弹窗 <code>aria-modal="true"</code>，打开后焦点进入，关闭后回到触发按钮。</li>
+              <li>传输进度放在 <code>aria-live="polite"</code> 区域，只在阶段变化时播报，不逐字节播报。</li>
+              <li>颜色不是唯一信息：状态徽章同时带图标与文字。</li>
+            </ul>
+          </div>
+          <div class="spec-col">
+            <h4>触控与响应</h4>
+            <ul>
+              <li>桌面图标按钮视觉 30px，命中区 32px；触屏通过 <code>@media (hover:none)</code> 提到 44px。</li>
+              <li>行高 47px，整行可点；勾选框本身 16px，但点击热区覆盖整行，不要求对准框。</li>
+              <li>断点：≥980 双栏 / 720–980 收窄设备栏 / &lt;720 设备条。</li>
+              <li>不依赖 hover 完成任何任务：拉取全部、选择条、行内动作都可用键盘到达。</li>
+              <li><code>prefers-reduced-motion</code> 下取消所有非必要动画，进度改为瞬时更新。</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout" style="margin-top:20px">
+          <svg class="i" aria-hidden="true"><use href="#i-verify"/></svg>
+          <div><b>取舍：</b>不做“整页虚拟滚动”。会话数量在几十到几百，47px 行 + 浏览器滚动足够；虚拟化会把焦点管理与读屏复杂度提高一个量级，换不来可感知的收益。</div>
+        </div>
+        </div>
+      </div>
+
+      <ul class="scene-notes">
+        <li><b>动效只回答“从哪来”。</b>选择条从列表底部升起；浮层从锚点上方出现；不做无意义的位移。</li>
+        <li><b>Esc 永远能退出。</b>浮层、弹窗、选择态都有明确的退出路径。</li>
+        <li><b>减少动态。</b>系统开启 reduced motion 时，所有过渡降到 0.01ms，进度直接跳变。</li>
+      </ul>
+    </section>
+
+    <!-- 17 ─────────────────────────────────────────────────────────────── -->
+    <section class="scene" id="s-handoff">
+      <header class="scene-hd">
+        <span class="scene-no">17</span>
+        <div>
+          <h2>实现映射与验收</h2>
+          <p>这份稿子要能直接落到 <code>lib/client.js</code>：信息架构、组件拆分、数据来源、验收项都列在下面。宿主半边（发现、HTTP、校验、状态文件）不动。</p>
+        </div>
+        <div class="scene-tools"><a href="?focus=s-handoff">单独查看 ↗</a></div>
+      </header>
+
+      <div class="stage">
+        <div class="board">
+          <div class="board-hd"><h3>信息架构</h3><span>一个页面，两个方向，三个浮层</span></div>
+          <pre class="ia">会话同步（sidebar.panellist → main）
+├─ 顶栏：标题 · 在线/已发现 · 刷新 · 设置
+├─ 设备栏
+│  ├─ 本机卡：名称（就地改名）· 地址（复制）
+│  ├─ 在线 / 离线 分组：设备行（状态点 · 名称 · 地址 · 会话数）
+│  └─ 底部：添加地址 · 跨网段扫描
+└─ 会话台（选中设备）
+   ├─ 头部：设备 · 地址 · 会话数 · 平台/版本 · 拉取全部 · ⋯
+   ├─ 方向：拉取 N / 推送 N + 一行流向说明
+   ├─ 工具：搜索（/）· 全部/未同步/已同步 · 排序
+   ├─ 列表：会话行（勾选 · 标题 · #id/时间/路径/事件数 · 状态 · 拉取/校验）
+   │  └─ 校验摘要（就地展开：通过一行，失败两段）
+   ├─ 选择条（仅选中时）：已选 N · 目标目录 ▾ · 开始 · 清除
+   └─ 传输坞：总进度 → 向上展开队列（逐条状态/耗时/重试）
+
+设置视图（同一个组件）：身份 / 传输 / 高级 / 关于
+宿主设置页（settings.section）：同一组行，单栏容器</pre>
+        </div>
+
+        <div class="board">
+          <div class="board-hd"><h3>组件映射</h3><span>新组件 → 现有状态 / 接口</span></div>
+          <table class="tbl">
+            <tr><th>区域</th><th>新组件</th><th>数据 / 接口</th><th>相对现状</th></tr>
+            <tr><td><b>设备栏</b></td><td><code>DeviceRail</code></td><td><code>snapshot.peers / self / imports</code></td><td>去掉每行 ⋯ 与按钮；维护动作移到会话台头部</td></tr>
+            <tr><td><b>会话台</b></td><td><code>SessionStage</code></td><td><code>peerSessions / localSessions / verify</code></td><td>方向 tab 决定数据源；标题栏合二为一</td></tr>
+            <tr><td><b>选择条</b></td><td><code>SelectionBar</code></td><td><code>selected</code></td><td>仅 <code>selected.length &gt; 0</code> 渲染</td></tr>
+            <tr><td><b>目标菜单</b></td><td><code>TargetMenu</code></td><td><code>workspaces / unsortedDir / extraPaths</code></td><td>取代页面底部「本机工作区」整段</td></tr>
+            <tr><td><b>确认弹窗</b></td><td><code>PlanDialog</code></td><td><code>plan.items[].dup</code></td><td>保留三选一；标题带目标目录</td></tr>
+            <tr><td><b>传输坞</b></td><td><code>TransferDock + QueuePanel</code></td><td><code>queue / snapshot.progress</code></td><td>抽屉改为坞内展开，不再遮住列表</td></tr>
+            <tr><td><b>迁移预检</b></td><td><code>TransferPreflight</code></td><td><code>transfer.scan</code></td><td>新增：范围、预设、排除、目标、空间检查</td></tr>
+            <tr><td><b>传输详情</b></td><td><code>TransferDetail</code></td><td><code>transfer.detail / pause / resume</code></td><td>新增：阶段、分片网格、断点、速度/ETA</td></tr>
+            <tr><td><b>设置</b></td><td><code>SettingsView</code></td><td><code>settings.*</code></td><td>面板内双栏 / 宿主设置页单栏，共用行组件</td></tr>
+            <tr><td><b>拖拽</b></td><td><code>drop layer</code></td><td><code>DND_MIME</code></td><td>视觉重画，落点与插入线逻辑不变</td></tr>
+            <tr><td><b>诊断</b></td><td><code>Diagnostics</code></td><td><code>api('diag')</code></td><td>样式重画，内容不变</td></tr>
+          </table>
+        </div>
+
+        <div class="board">
+        <div class="spec-grid">
+          <div class="spec-col">
+            <h4>文件与改动范围</h4>
+            <ul>
+              <li><code>lib/client.js</code>：替换 41–345 行的 CSS；把 <code>SettingsPage</code> 拆成上述组件，保留 hooks、API 调用与 i18n 字典结构。</li>
+              <li>新增字典键：<code>target.*</code>、<code>state.*</code>、<code>queue.*</code> 的少量补充；删除不再使用的 <code>devices.tabPeer/tabLocal</code>（同步更新测试）。</li>
+              <li><code>test/mount.test.mjs</code>：更新类名与 role 断言；新增“选择条仅在选中时渲染”“方向切换改变列表来源”“目标菜单含工作区与未分组”三条。</li>
+              <li>界面重构阶段宿主代码（<code>lib/index.js</code>、<code>lan.js</code>、<code>discovery.js</code>、<code>sessions.js</code>）不动。</li>
+              <li>整包迁移另立阶段：新增 <code>lib/transfer/</code>（engine / chunks / manifest / workers）与 <code>/v1/transfers/*</code> 路由；协议与状态机见 <code>docs/architecture/session-bundle-transfer.md</code>。</li>
+              <li>README 两张预览图在实现完成后重拍；本稿的 19 个场景留在 <code>docs/redesign/</code> 作为设计档案。</li>
+            </ul>
+          </div>
+          <div class="spec-col">
+            <h4>验收清单</h4>
+            <ul class="checklist">
+              <li><b>功能对等</b>：发现/在线离线、本机改名、同 IP 合并、浏览/搜索/筛选/排序、单选多选全选连选、拉取单个/批量/全部、推送单个/批量/全部、重复项三选一、队列并发/进度/失败重试、校验与摘要复制、三种拖拽、设置全部项、空态/加载/错误/诊断。</li>
+              <li><b>视觉</b>：深/浅主题、中/EN、1180/880/720 三个宽度均无横向滚动；最长标题与最长路径不撑破行。</li>
+              <li><b>无障碍</b>：仅键盘可完成一次“选择 → 选址 → 拉取 → 看队列”；焦点环可见；状态不只靠颜色。</li>
+              <li><b>整包迁移（v2）</b>：预检扫描、三种范围、分片校验、断点续传、三层并发、路径映射、暂停/取消；10GB 基准与故障注入见架构文档。</li>
+            </ul>
+          </div>
+        </div>
+        </div>
+
+        <div class="board" style="margin-top:18px">
+          <div class="board-hd"><h3>待你决定的三件事</h3><span>不影响稿子成立，但影响实现取舍</span></div>
+          <table class="tbl">
+            <tr><th>#</th><th>问题</th><th>我的建议</th></tr>
+            <tr><td><b>1</b></td><td>面板底部原本常驻的「本机工作区」整段，是否同意删除，只保留选择条里的目标菜单 + 拖拽？</td><td>同意删除。它和选择条、拖拽是同一个概念，保留会造成两个“落点”入口。</td></tr>
+            <tr><td><b>2</b></td><td>设备维护动作（改名、复制地址、刷新、移除）全部收进会话台头部的 ⋯，设备行不再挂菜单，是否接受？</td><td>接受。设备栏越干净，“点它就是选它”越成立；维护是低频动作。</td></tr>
+            <tr><td><b>3</b></td><td>720px 以下设备栏收成设备条（当前设备 + 切换 + ⋯），是否接受？</td><td>接受。双栏在 720 以下会把会话标题压到 10 个字以内，得不偿失。</td></tr>
+          </table>
+        </div>
+
+        <div class="callout" style="margin-top:18px">
+          <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+          <div><b>下一步：</b>你点头后，我按这份稿子改 <code>lib/client.js</code>（结构、类名、状态映射已对齐），补测试、重拍 README 预览，并给你一份前后对照截图。稿子里任何一处想再改，直接指出场景编号即可。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENES -->
+  </div>
+</main>
+
+<footer class="rv-foot">
+  会话同步 · UI 重构稿 v1 · 2026-10-22 · 稿子内的数据为示意，不代表真实会话。
+</footer>
+
+<script src="ui.js"></script>
+</body>
+</html>

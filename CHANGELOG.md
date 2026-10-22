@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.8.3 — 2026-10-22
+
+- **Privacy fix: removed every screenshot containing real device names, IPs, paths or session titles.** This covers the README images (`docs/preview*.png`, `docs/queue.png`) and the older `docs/mockups/*.png`. The repository no longer contains them, and the npm package no longer bundles them.
+- Sample data in the design draft now uses placeholders (device names, IPs, paths, session titles); the HTML/CSS draft stays, the preview images do not.
+- Code unchanged; **60** tests passing.
+
+## 0.8.2 — 2026-10-22
+
+- **npm package renamed to `@xxgxiaoyu/dsh-session-sync`.** The unscoped `dsh-session-sync` belongs to another project (`perrylink`, 0.2.30), so the current account cannot publish it. The bundle patch mount name is updated too; plugin/slot ids and the client namespace are unchanged.
+- Code identical to 0.8.1; **60** tests passing.
+
+## 0.8.1 — 2026-10-22
+
+- **Fixed: row actions overlapped the status chip.** “Pull here / Push a session…” was too long for the action column; rows now use short Pull / Push labels, the action column is 104px, and the push view uses a three-column grid.
+- **Clarified “Concurrent transfers”.** Auto estimates from the CPU count and caps at 5 (4 on this machine); manual 1–16 overrides auto and is grouped separately, so the 16 options no longer read as “5 max”.
+- Tests: **60** passing.
+
+## 0.8.0 — 2026-10-22
+
+- **UI rebuilt around a session desk.** Devices live in a left rail that only selects; maintenance moved into the stage header ⋯. Direction is now two explicit tabs, Pull / Push, with a one-line flow hint.
+- **Whole-row selection.** Clicking the title, meta line or status badge selects the row; the checkbox is just the visible state. Shift-range, ⌘/Ctrl toggle, Space/Enter, Esc and row-action isolation are preserved.
+- **Selection bar appears only when needed.** It carries the count, target menu, start and clear. The target menu lists ungrouped, workspaces and custom paths, so the old bottom workspace list is gone.
+- **Transfer dock replaces the drawer.** A persistent bottom summary expands upward into the queue; the session list stays readable.
+- **Settings reorganised** into Identity / Transfer / Advanced / About, two columns in the panel and one in the host settings page; manual addresses and subnet scans are list editors now.
+- **Complete state coverage**: empty, loading, offline, no results, read failure and diagnostics; all icons inline, all colours/radii/motion from DSH tokens.
+- Tests: **60** passing, including whole-row selection, target scoping and the new main panel.
+
 ## 0.7.1 — 2026-10-22
 
 - **Device column overflow fixed**: `box-sizing` on the shell/column/rows, so the row's ⋯ button no longer spills across the column gap and over the session pane.
