@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.1 — 2026-10-22
+
+- **Fixed: every session looked "Untitled".** `readTitleSnapshots` returns settled results (`{status, value}`), but the old code read them as bare snapshots, so titles were always null; and most sessions never write a `session/title` event — DSH keeps their names in its projection cache. Both sources are now folded together.
+- **Concurrent transfers.** The queue runs N workers in parallel. Default is derived from the CPU count (capped at 5); pick 1/2/3/4/5/6/8/10/12/16 under Settings → Concurrent transfers.
+- **Live transfer progress.** Pulls stream the response and count bytes (`content-length` gives a real percentage); the host exposes `received/total` per transfer in `state.progress`, the client polls every 700 ms while the queue runs, and both the item badge/bar and the bottom bar show real progress instead of a spinner.
+- 58 tests (new: title regression, concurrency validation).
+
 ## 0.6.0 — 2026-10-22
 
 - **The transfer queue got a real design.** Every transfer is its own card: status icon (spinner / check / warning), session title, direction and peer, target directory, measured duration and the failure reason. Cards slide in with a short stagger, pop their check when they land, and keep a steady shimmer while running.

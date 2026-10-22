@@ -113,7 +113,16 @@ function fakeStore() {
       }
     },
     async readTitleSnapshots(ids) {
-      return ids.map((id) => ({ session: structuredClone(map.get(id)?.header), title: undefined }))
+      // DSH returns *settled results*, not bare snapshots — mirror that shape so
+      // a regression that forgets to unwrap it fails here instead of at runtime.
+      return ids.map((id) => {
+        const record = map.get(id)
+        if (record === undefined) return { status: 'rejected', reason: new Error(`no session ${id}`) }
+        return {
+          status: 'fulfilled',
+          value: { session: structuredClone(record.header), ...(record.title === undefined ? {} : { title: record.title }) },
+        }
+      })
     },
   }
   return { map, persistence, query }
@@ -202,6 +211,7 @@ async function waitFor(predicate, { timeout = 12000, interval = 100, label = 'co
 
 function seedSession(store, id, title, cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-sync-cwd-'))) {
   store.map.set(id, {
+    title,
     header: {
       type: 'session',
       version: 4,
@@ -589,6 +599,43 @@ test('peers on this machine never reach the device list', async () => {
   } finally {
     await a.stop()
     await b.stop()
+  }
+})
+
+test('session titles from the settled readTitleSnapshots shape reach the GUI', async () => {
+  const a = await bootInstance({ tag: 'titles', discoveryPort: 0 })
+  try {
+    seedSession(a.store, 'session-titled-1', '开发 DSH 局域网同步插件')
+    const listed = (await a.api('localSessions')).body
+    const row = listed.sessions.find((session) => session.id === 'session-titled-1')
+    assert.ok(row !== undefined, 'the seeded session must be listed')
+    assert.equal(row.title, '开发 DSH 局域网同步插件', 'every row looked untitled while the settled envelope was not unwrapped')
+  } finally {
+    a.handle.discovery.close()
+    a.handle.lan.close()
+  }
+})
+
+test('concurrent transfers default to auto and accept an explicit 1..16', async () => {
+  const a = await bootInstance({ tag: 'concurrency', discoveryPort: 0 })
+  try {
+    const initial = (await a.api('state')).body
+    assert.equal(initial.settings.concurrency, 0, '0 means "pick from this machine"')
+    assert.ok(initial.concurrency >= 1 && initial.concurrency <= 5, `auto resolves to a sane cap, got ${initial.concurrency}`)
+
+    const saved = (await a.api('settings', { patch: { concurrency: 8 } })).body
+    assert.equal(saved.settings.concurrency, 8)
+    const resolved = (await a.api('state')).body
+    assert.equal(resolved.settings.concurrency, 8)
+    assert.equal(resolved.concurrency, 8, 'an explicit cap wins over the machine default')
+
+    const ignored = (await a.api('settings', { patch: { concurrency: 99 } })).body
+    assert.equal(ignored.settings.concurrency, 8, 'out-of-range values are ignored, not clamped silently')
+    const persisted = JSON.parse(fs.readFileSync(path.join(a.home, 'session-sync', 'state.json'), 'utf8'))
+    assert.equal(persisted.settings.concurrency, 8)
+  } finally {
+    a.handle.discovery.close()
+    a.handle.lan.close()
   }
 })
 
