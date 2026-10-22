@@ -247,7 +247,7 @@ test('the main panel lists a peer\'s sessions and verifies one by sha256', async
   const peerRow = host.querySelector('[data-peer="peer-1"]')
   // DeviceRow owns the rename controls; the session buttons are siblings inside
   // the per-device wrapper, so both live under `box`.
-  const box = peerRow.parentElement
+  const box = host.querySelector('.ss-pane')
   const show = peerRow.querySelector('.ss-device-name')
   await act(async () => {
     show.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
