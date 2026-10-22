@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.6 — 2026-10-23
+
+- **Fixed the DSH plugin registration name.** A DSH bundle `name` cannot start with `@`. The npm package stays `@xxgxiaoyu/dsh-session-sync`, but `cordis.patch.yml` registers the plugin as `dsh-session-sync`. The scoped name in 0.8.2–0.8.5 failed or double-registered; those versions are deprecated.
+- Code identical to 0.8.5; **60** tests passing.
+
 ## 0.8.5 — 2026-10-22
 
 - **Fixed the `cordis.patch.yml` YAML parse failure.** A scoped package name starts with `@`, which YAML treats as a reserved indicator unless quoted; 0.8.2–0.8.4 shipped `name: @xxgxiaoyu/...` and DSH failed with `bad indentation of a mapping entry`. It is now `name: '@xxgxiaoyu/dsh-session-sync'`.

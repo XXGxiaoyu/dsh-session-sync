@@ -1,5 +1,10 @@
 # 更新日志
 
+## 0.8.6 — 2026-10-23
+
+- **修复 DSH 插件注册名。** DSH 的 bundle `name` 不能以 `@` 开头；npm 包名仍为 `@xxgxiaoyu/dsh-session-sync`，但 `cordis.patch.yml` 里注册的插件名改回 `dsh-session-sync`。0.8.2–0.8.5 的 scoped 注册名会在加载/注册阶段失败或重复注册，已 deprecated。
+- 代码与 0.8.5 一致；测试 **60 项**通过。
+
 ## 0.8.5 — 2026-10-22
 
 - **修复 `cordis.patch.yml` 的 YAML 解析失败。** scoped 包名以 `@` 开头，在 YAML 里必须加引号；0.8.2–0.8.4 的 `name: @xxgxiaoyu/...` 会被解析器当成非法 mapping，导致 DSH 启动时报 `bad indentation of a mapping entry`。现在写成 `name: '@xxgxiaoyu/dsh-session-sync'`。
