@@ -12,4 +12,4 @@
 #           verbose: false
 - insert:
     - id: session-sync
-      name: '@xxgxiaoyu/dsh-session-sync'
+      name: dsh-session-sync-xxg

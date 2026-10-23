@@ -1,5 +1,11 @@
 # 更新日志
 
+## 0.9.0 — 2026-10-23
+
+- **改成全同名 unscoped 包 `dsh-session-sync-xxg`。** 包名、`cordis.patch.yml` 的 bundle specifier、host 导出的插件名、client factory id 现在是同一个 unscoped 名字，DSH 不会再把同一个 client bundle 当成两个来源加载。本地已验证这套身份能正常加载。
+- 旧的 scoped `@xxgxiaoyu/dsh-session-sync`（0.8.2–0.8.7）全部下架，不再维护。
+- 插件 id、槽位 id、设置命名空间（`sessionSync`）保持不变；测试 **60 项**通过。
+
 ## 0.8.7 — 2026-10-23
 
 - **修正 bundle specifier 与注册名的区别。** `cordis.patch.yml` 的 `name` 是模块 specifier，必须写 scoped 包名 `'@xxgxiaoyu/dsh-session-sync'`；DSH 里注册的插件名仍是 host 导出的 `dsh-session-sync`（不带 `@`），client factory id 也不变。0.8.6 把模块 specifier 写成 unscoped，导致 `ERR_MODULE_NOT_FOUND`。

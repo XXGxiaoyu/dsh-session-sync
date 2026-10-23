@@ -87,7 +87,7 @@ function makeContext(registration, { active = 'zh' } = {}) {
 
 test('bundle registers under its package id and declares slots + locale', () => {
   const { registration, appended } = loadBundle()
-  assert.equal(registration.id, 'dsh-session-sync')
+  assert.equal(registration.id, 'dsh-session-sync-xxg')
   assert.equal(typeof registration.factory, 'function')
   assert.equal(appended.length, 0, 'nothing may touch the DOM before the factory runs')
 
@@ -96,7 +96,7 @@ test('bundle registers under its package id and declares slots + locale', () => 
   assert.equal(appended[0].dataset.plugin, 'dsh-session-sync')
   assert.equal(appended[0].dataset.pluginCss, 'dsh-session-sync/client.css')
   assert.match(appended[0].textContent, /\.ss-page/)
-  assert.equal(exports.name, 'dsh-session-sync')
+  assert.equal(exports.name, 'dsh-session-sync-xxg')
   assert.deepEqual(exports.inject, ['slots', 'locale'])
   assert.deepEqual(injected, ['settings.section', 'sidebar.panellist', 'main'])
   assert.deepEqual(

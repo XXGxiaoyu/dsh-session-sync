@@ -6,7 +6,7 @@
 <div align="center">
 
 [![CI](https://github.com/XXGxiaoyu/dsh-session-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/XXGxiaoyu/dsh-session-sync/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/@xxgxiaoyu/dsh-session-sync)](https://www.npmjs.com/package/@xxgxiaoyu/dsh-session-sync)
+[![npm](https://img.shields.io/npm/v/dsh-session-sync-xxg)](https://www.npmjs.com/package/dsh-session-sync-xxg)
 [![GitHub stars](https://img.shields.io/github/stars/XXGxiaoyu/dsh-session-sync)](https://github.com/XXGxiaoyu/dsh-session-sync/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DSH](https://img.shields.io/badge/DSH-0.2.1--rc.2-4d6bfe)](https://www.npmjs.com/package/@deepseek-ai/dsh)
@@ -43,7 +43,7 @@
 From npm (scoped name; the unscoped `dsh-session-sync` belongs to another project):
 
 ```sh
-dsh plugin --profile web add @xxgxiaoyu/dsh-session-sync
+dsh plugin --profile web add dsh-session-sync-xxg
 ```
 
 Or from GitHub to track the latest commit:
@@ -65,11 +65,11 @@ Releases: <https://github.com/XXGxiaoyu/dsh-session-sync/releases>
 // ~/.dsh/profiles/<profile>/package.json
 {
   "dependencies": {
-    "@xxgxiaoyu/dsh-session-sync": "link:/absolute/path/to/dsh-session-sync"
+    "dsh-session-sync-xxg": "link:/absolute/path/to/dsh-session-sync"
   },
   "dsh": {
     "profile": {
-      "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "@xxgxiaoyu/dsh-session-sync"]
+      "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-session-sync-xxg"]
     }
   }
 }

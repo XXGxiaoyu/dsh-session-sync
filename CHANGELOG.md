@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.0 — 2026-10-23
+
+- **New fully unscoped package identity `dsh-session-sync-xxg`.** The package name, the `cordis.patch.yml` bundle specifier, the host plugin name and the client factory id are now the same unscoped string, so DSH cannot treat one client bundle as two sources. This exact identity was verified loading locally.
+- The old scoped `@xxgxiaoyu/dsh-session-sync` (0.8.2–0.8.7) is unpublished.
+- Plugin/slot ids and the `sessionSync` settings namespace are unchanged; **60** tests passing.
+
 ## 0.8.7 — 2026-10-23
 
 - **Separated the bundle specifier from the registered plugin name.** In `cordis.patch.yml`, `name` is the module specifier and must be the scoped package `'@xxgxiaoyu/dsh-session-sync'`; the registered plugin name (the host export and client factory id) stays unscoped `dsh-session-sync`. 0.8.6 used the unscoped specifier and hit `ERR_MODULE_NOT_FOUND`.
