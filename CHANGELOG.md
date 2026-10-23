@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.5 — 2026-10-23
+
+- **Pushes no longer land in the receiver's “Ungrouped”.** The receiver used the sender's cwd; a Mac path does not exist on Windows (and vice versa), so the copy fell back to the process cwd. Incoming pushes now import into the receiver's `syncDir` and attach to a real workspace when that path matches; the title travels with the push. The receiver returns `placed`.
+- **The dock switches to a parallel state for multiple workers.** There is no single honest row percentage when several transfers run; it shows “N transferring” with an indeterminate meter instead of pretending the first worker's percentage is the batch's. A single transfer still mirrors its row.
+- **63** tests passing (the push test now covers title and receiver `syncDir`).
+
 ## 0.9.4 — 2026-10-23
 
 - **An imported title is visible immediately.** Even after writing the title event, DSH's projection cache can lag and cache `null` for 60 seconds; the bridge title cache is now seeded on import so the next list render has the name.

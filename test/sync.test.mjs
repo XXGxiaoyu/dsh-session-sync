@@ -366,7 +366,10 @@ test('LAN discovery, custom naming cache, pull and push', async () => {
     assert.equal(pushed.status, 200)
     const pushedLocal = b2.store.map.get(pushed.body.remoteId)
     assert.ok(pushedLocal, '推送的会话必须写入对端会话库')
-    assert.equal(pushedLocal.events.length, 2)
+    assert.equal(pushedLocal.events.length, 3, 'two conversation events plus the title')
+    assert.equal(pushedLocal.events.at(-1).type, 'session/title')
+    const peerState = (await b2.api('state')).body
+    assert.equal(pushedLocal.header.cwd, peerState.syncDir, 'a push lands in the receiver sync directory, not the sender path')
 
     // ── the raw LAN API is fenced ───────────────────────────────────────
     const unfenced = await fetch(`http://127.0.0.1:${b2.handle.lan.port}/v1/sessions`)
