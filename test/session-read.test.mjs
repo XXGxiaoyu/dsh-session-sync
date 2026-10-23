@@ -5,7 +5,7 @@ import path from 'node:path'
 import test from 'node:test'
 
 import { encodeStoredLog } from '../lib/logfile.js'
-import { SessionBridge } from '../lib/sessions.js'
+import { SessionBridge, sessionDigest, sessionSignature } from '../lib/sessions.js'
 
 const header = {
   type: 'session',
@@ -65,4 +65,36 @@ test('a non-inherited read failure is still surfaced', async () => {
     { home },
   )
   await assert.rejects(() => bridge.read(header.id), /disk is on fire/)
+})
+
+test('importing a named session writes a title event that does not change the fingerprint', async () => {
+  const appended = []
+  const persistence = {
+    async create() {
+      return {
+        async append(events) { appended.push(...events) },
+        async flush() {},
+        async close() {},
+      }
+    },
+  }
+  const bridge = new SessionBridge(
+    { get: (name) => (name === 'sessionPersistence' ? persistence : undefined) },
+    { home: fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-session-title-')) },
+  )
+  const events = [{ type: 'message', seq: 0, time: 1, data: { role: 'user', content: 'hi' } }]
+  const payload = { session: header, events, sha256: sessionDigest(header, events) }
+
+  await bridge.importSession(payload, { cwd: '/tmp', title: 'Named session' })
+
+  const title = appended.find((event) => event.type === 'session/title')
+  assert.ok(title, 'the remote title must be persisted as a title event')
+  assert.equal(title.data.title, 'Named session')
+  assert.deepEqual(title.data.messageSeqs, [], 'a user title has no message sources')
+  assert.equal(title.data.source.kind, 'user')
+  assert.equal(
+    sessionSignature(header, events),
+    sessionSignature(header, [...events, title]),
+    'title metadata must not change the conversation fingerprint',
+  )
 })

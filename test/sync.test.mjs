@@ -332,9 +332,11 @@ test('LAN discovery, custom naming cache, pull and push', async () => {
     assert.match(localId, /^session-/)
     const imported = a.store.map.get(localId)
     assert.ok(imported, '拉取的会话必须写入本地会话库')
-    assert.equal(imported.events.length, 2)
-    assert.deepEqual(imported.events.map((event) => event.seq), [0, 1])
+    assert.equal(imported.events.length, 3, 'two conversation events plus the transferred title')
+    assert.deepEqual(imported.events.slice(0, 2).map((event) => event.seq), [0, 1])
     assert.equal(imported.events[0].data.content, 'B 上的会话')
+    assert.equal(imported.events[2].type, 'session/title')
+    assert.equal(imported.events[2].data.title, 'B 上的会话')
     assert.equal(imported.header.cwd, b2.store.map.get('session-from-b').header.cwd, '本机存在的源目录原样保留')
 
     // A directory that does not exist here falls back to this instance's cwd so

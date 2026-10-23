@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.3 — 2026-10-23
+
+- **Keep the session name across sync.** Remote titles normally live only in DSH's projection cache, not in the exported header/events, so imported copies appeared as “Untitled”. Exports now carry `title`; for older peers the client sends the title from the session list with the pull, and the importer writes it as a log-backed `session/title` event. Titles do not change the conversation fingerprint, so auto-pull cannot bounce on them.
+- **A path-only target still attaches.** When a target has a path but no workspace id (older client or path drop), match it against real workspaces before importing, instead of silently landing in “Ungrouped”.
+- **The bottom dock shows the current item's progress.** It used to show “2 done + 57% of the third = 86%” while the row showed 57%; both now show the active item, with batch statistics still in the queue panel.
+- Re-tested live: after the Windows peer updated to 0.9.2, the previously 502 legacy 2.2 MB session pulls successfully (0.44s, sha256 verified). Title loss and the progress mismatch were found in that run and are fixed here.
+- **63** tests passing.
+
 ## 0.9.2 — 2026-10-23
 
 - **Fixed pull/verify failures for sessions imported by older builds.** If the peer has a log that DSH rejects with `released v2 unseeded Session contains an inherited end-seed marker`, `readSession` failed and the export returned 502. `SessionBridge.read` now catches exactly that validation error, decodes the stored log, strips the inherited prefix **in memory**, and exports it; no file rewrite, no event loss. Every other read error still surfaces.
