@@ -8,3 +8,6 @@ coverage/
 
 # release assets are attached to GitHub Releases, not committed
 *.tgz
+
+# npm artifact; this repo locks with pnpm
+package-lock.json
