@@ -85,7 +85,8 @@ test('importing a named session writes a title event that does not change the fi
   const events = [{ type: 'message', seq: 0, time: 1, data: { role: 'user', content: 'hi' } }]
   const payload = { session: header, events, sha256: sessionDigest(header, events) }
 
-  await bridge.importSession(payload, { cwd: '/tmp', title: 'Named session' })
+  const imported = await bridge.importSession(payload, { cwd: '/tmp', title: 'Named session' })
+  assert.equal(await bridge.titleOf(imported.id), 'Named session', 'the list should see the title immediately')
 
   const title = appended.find((event) => event.type === 'session/title')
   assert.ok(title, 'the remote title must be persisted as a title event')

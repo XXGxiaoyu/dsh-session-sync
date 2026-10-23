@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.4 — 2026-10-23
+
+- **An imported title is visible immediately.** Even after writing the title event, DSH's projection cache can lag and cache `null` for 60 seconds; the bridge title cache is now seeded on import so the next list render has the name.
+- **An open peer list refreshes when the peer's session count changes.** It used to load once per device selection, so a newly created session on the other machine stayed invisible until the user switched devices. The beacon's `sessionCount` now triggers a reload of the current device.
+- **Progress** keeps 0.9.3's active-item percentage; the Windows side must update to see it.
+- **63** tests passing.
+
 ## 0.9.3 — 2026-10-23
 
 - **Keep the session name across sync.** Remote titles normally live only in DSH's projection cache, not in the exported header/events, so imported copies appeared as “Untitled”. Exports now carry `title`; for older peers the client sends the title from the session list with the pull, and the importer writes it as a log-backed `session/title` event. Titles do not change the conversation fingerprint, so auto-pull cannot bounce on them.
