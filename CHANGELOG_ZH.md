@@ -1,5 +1,11 @@
 # 更新日志
 
+## 0.8.7 — 2026-10-23
+
+- **修正 bundle specifier 与注册名的区别。** `cordis.patch.yml` 的 `name` 是模块 specifier，必须写 scoped 包名 `'@xxgxiaoyu/dsh-session-sync'`；DSH 里注册的插件名仍是 host 导出的 `dsh-session-sync`（不带 `@`），client factory id 也不变。0.8.6 把模块 specifier 写成 unscoped，导致 `ERR_MODULE_NOT_FOUND`。
+- 0.8.6 及更早的 scoped 版本已 deprecated；升级 0.8.7。
+- 测试 **60 项**通过。
+
 ## 0.8.6 — 2026-10-23
 
 - **修复 DSH 插件注册名。** DSH 的 bundle `name` 不能以 `@` 开头；npm 包名仍为 `@xxgxiaoyu/dsh-session-sync`，但 `cordis.patch.yml` 里注册的插件名改回 `dsh-session-sync`。0.8.2–0.8.5 的 scoped 注册名会在加载/注册阶段失败或重复注册，已 deprecated。

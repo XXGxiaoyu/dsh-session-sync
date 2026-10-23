@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.7 — 2026-10-23
+
+- **Separated the bundle specifier from the registered plugin name.** In `cordis.patch.yml`, `name` is the module specifier and must be the scoped package `'@xxgxiaoyu/dsh-session-sync'`; the registered plugin name (the host export and client factory id) stays unscoped `dsh-session-sync`. 0.8.6 used the unscoped specifier and hit `ERR_MODULE_NOT_FOUND`.
+- 0.8.6 and earlier are deprecated; upgrade to 0.8.7.
+- **60** tests passing.
+
 ## 0.8.6 — 2026-10-23
 
 - **Fixed the DSH plugin registration name.** A DSH bundle `name` cannot start with `@`. The npm package stays `@xxgxiaoyu/dsh-session-sync`, but `cordis.patch.yml` registers the plugin as `dsh-session-sync`. The scoped name in 0.8.2–0.8.5 failed or double-registered; those versions are deprecated.
