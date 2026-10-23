@@ -16,7 +16,7 @@ import fs from 'node:fs'
 import http from 'node:http'
 import os from 'node:os'
 import path from 'node:path'
-import { test } from 'node:test'
+import { after, test } from 'node:test'
 import { apply as applyPlugin } from '../lib/index.js'
 import { expandTarget } from '../lib/discovery.js'
 
@@ -128,6 +128,17 @@ function fakeStore() {
   return { map, persistence, query }
 }
 
+/**
+ * Every instance this suite booted. Tests that assert their own cleanup keep
+ * calling `stop()`; this list is the safety net, because one instance left
+ * running pins an HTTP server, a LAN listener and a UDP socket, and
+ * `node --test` then hangs after the last assertion instead of exiting.
+ */
+const bootedInstances = []
+after(async () => {
+  for (const instance of bootedInstances) await instance.stop()
+})
+
 async function bootInstance({ tag, discoveryPort, seeds, home: reuseHome, config = {} }) {
   const home = reuseHome ?? tempHome(tag)
   const store = fakeStore()
@@ -178,7 +189,7 @@ async function bootInstance({ tag, discoveryPort, seeds, home: reuseHome, config
     ...config,
   })
   await handle.ready
-  return {
+  const instance = {
     home,
     store,
     handle,
@@ -192,12 +203,15 @@ async function bootInstance({ tag, discoveryPort, seeds, home: reuseHome, config
       })
       return { status: response.status, body: await response.json() }
     },
+    /** Idempotent: a test may stop its instance and the safety net runs anyway. */
     async stop() {
-      web.close()
-      handle.discovery.close()
-      handle.lan.close()
+      try { web.close() } catch { /* already stopped */ }
+      try { handle.discovery.close() } catch { /* already stopped */ }
+      try { handle.lan.close() } catch { /* already stopped */ }
     },
   }
+  bootedInstances.push(instance)
+  return instance
 }
 
 async function waitFor(predicate, { timeout = 12000, interval = 100, label = 'condition' } = {}) {

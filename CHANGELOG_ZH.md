@@ -1,5 +1,31 @@
 # 更新日志
 
+## 0.9.1 — 2026-10-23
+
+`0.9.0` 的统一身份方向是对的，这一版把它补成真正自洽，并修掉一轮全量检查里查实的行为缺陷。
+
+### 加载与身份
+
+- **client bundle 的模块 id 收敛成一个常量 `MODULE_ID`。** `__ModuleLoader__.load({id})`、注入的 `style[data-plugin]`、`data-plugin-css` 和导出的插件名现在都由它派生，测试额外断言它等于 `package.json` 的 `name`。此前 `data-plugin` 还是旧串，宿主的 `claimStyles`/`removeOwnedStyles` 认领不到这个标签：插件重载后旧样式不会被移除，而插入前的 `querySelector` 又会命中旧标签跳过插入，于是新 CSS 一直到整页刷新才生效。
+- **删掉 `dsh.client.inject` 里的 `@deepseek-ai/dsh-client-ui-slots`。** 当前 DSH（0.2.1-rc.2）安装里没有这个包，它只是一条永远解析不到死依赖边；bundle 运行时只 `require('react')`，省略 `inject` 即等于空依赖。
+
+### 行为修复
+
+- **空状态里复制/展示的是 LAN 端口，不是 UDP 发现端口。** 手动添加地址走 HTTP `GET /v1/info`，用发现端口必然连不上——而这恰好是广播被拦时唯一的补救入口。设备列表与设置页本来用的是 LAN 端口，现在三处一致。
+- **列表的键盘处理不再劫持行内按钮。** `listbox` 的 `keydown` 会从子按钮冒泡上来，`preventDefault()` 吃掉按钮默认激活后再对当前行执行拉取/推送；键盘用户在「校验」上按回车会静默发起一次传输。现在行内的 `button`/`a`/`input`/`select`/`[role=checkbox]`/`[role=switch]` 自行处理按键。
+- **校验摘要按 `(设备, 会话)` 存。** 同一会话常同时存在于多台设备；原先只按 `session.id` 存，在 A 上校验通过后切到 B，B 的同一行会直接显示「已同步」。
+- **校验请求失败不再显示成「校验失败」。** 断网/超时原先写成 `verified: false`，把一份没问题的副本标成哈希不匹配，用户可能据此删掉好数据；现在记为「未校验」并单独提示传输错误。
+- **`busy` 改计数器。** 切设备与保存名称重叠时，先返回的那个会把按钮重新点亮，造成重复提交；同时 `SessionStage` 的 loading 会提前结束。
+- **快照轮询与设备列表请求加序号。** 4s 空闲轮询、700ms 传输轮询和每次操作后的显式刷新可能同时在飞，旧响应会覆盖新快照（在线状态闪烁、进度条回跳）；慢请求上 700ms 定时器还会无限堆叠。先点 A 再点 B 时，A 的错误提示也不再显示在 B 的界面上。
+- **拖拽一致性：** 悬停预览与真实落点用同一个 `dragY`（此前预览永远画在上方、松手却插到下方）；设备卡片补上一直没被加上的 `.ss-dev.over` 高亮，`dragleave` 不再因进入子元素而闪烁；卸载时移除 `body` 上的 `insertLine`/`ss-dnd-tip` 单例节点，重载不再累积；会话列表过期导致计划为空时给出提示，而不是静默什么都不发生。
+- **手动添加地址失败时保留输入**，不再清空用户刚敲的、正需要修改的那串地址。
+
+### 测试
+
+- 新增断言：注册的模块 id 必须等于 `package.json` 的 `name`。
+- `test/sync.test.mjs` 增加实例清理兜底：此前 23 次 `bootInstance` 只有个别调用 `stop()`，遗留的 HTTP server、LAN 监听和 UDP socket 会让 `node --test` 在全部断言通过后卡住不退出。现在整份套件约 30 秒跑完并正常退出。
+- **60 项**全部通过。
+
 ## 0.9.0 — 2026-10-23
 
 - **改成全同名 unscoped 包 `dsh-session-sync-xxg`。** 包名、`cordis.patch.yml` 的 bundle specifier、host 导出的插件名、client factory id 现在是同一个 unscoped 名字，DSH 不会再把同一个 client bundle 当成两个来源加载。本地已验证这套身份能正常加载。

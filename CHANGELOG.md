@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.9.1 — 2026-10-23
+
+0.9.0's single-identity direction was right; this release makes it actually self-consistent and closes a round of defects found by a full audit.
+
+### Loading and identity
+
+- **The client bundle's module id is now one constant, `MODULE_ID`.** `__ModuleLoader__.load({id})`, the injected `style[data-plugin]`, `data-plugin-css` and the exported plugin name all derive from it, and a test asserts it equals `package.json`'s `name`. The style tag used to carry the old string, so the host's `claimStyles`/`removeOwnedStyles` never recognised it: after a plugin reload the old stylesheet stayed, while the pre-insert `querySelector` found that stale tag and skipped the insert, leaving new CSS inactive until a full page reload.
+- **Dropped `@deepseek-ai/dsh-client-ui-slots` from `dsh.client.inject`.** That package does not exist in this DSH build (0.2.1-rc.2), so it was a dependency edge that could never resolve; the bundle only `require`s `react` at runtime, so omitting `inject` means an empty dependency set.
+
+### Behaviour
+
+- **The empty state shows and copies the LAN port, not the UDP discovery port.** Manual seeds connect over HTTP `GET /v1/info`, so a discovery port can never work — and this is the only recovery path when broadcast is blocked. The device rail and the settings page already used the LAN port; all three agree now.
+- **The session list's key handler no longer hijacks in-row buttons.** `keydown` bubbled from child buttons into the listbox handler, which called `preventDefault()` (killing the button) and then pulled/pushed the current row; pressing Enter on "verify" silently started a transfer. Rows' `button`/`a`/`input`/`select`/`[role=checkbox]`/`[role=switch]` now keep their own keys.
+- **Verification digests are keyed by `(device, session)`.** One conversation usually sits on several devices; keying by `session.id` alone made device B show "synced" because device A had verified.
+- **A failed verify request is no longer rendered as a mismatch.** A network error was stored as `verified: false`, painting a healthy copy red as a hash mismatch — and inviting the user to delete good data. It is recorded as "not verified" with the transport error surfaced separately.
+- **`busy` is a counter.** Switching device while a rename saved let the first reply re-enable the action buttons mid-flight, and ended the stage's loading state early.
+- **Snapshot polling and peer-session loads carry sequence numbers.** The 4 s idle tick, the 700 ms transfer tick and an explicit reload after every action can overlap; an older reply overwrote a newer snapshot (online state flicker, progress jumping backwards) and a slow host queued one request per tick. Clicking device A then B also no longer shows A's error on B's panel.
+- **Drag and drop consistency:** hover preview and the real drop share one `dragY` (the preview always claimed "above" while the drop inserted below); device cards finally get the `.ss-dev.over` highlight, with `dragleave` no longer flickering on child elements; the `body`-level `insertLine`/`ss-dnd-tip` singletons are removed on uninstall instead of accumulating per reload; a stale session list now reports why nothing opened instead of silently doing nothing.
+- **A rejected manual address keeps the typed value** instead of clearing the exact string the user needs to correct.
+
+### Tests
+
+- New assertion: the registered module id must equal `package.json`'s `name`.
+- `test/sync.test.mjs` gained a cleanup safety net: 23 `bootInstance` calls but only a couple of `stop()` calls left HTTP servers, LAN listeners and UDP sockets pinning the process, so `node --test` hung after every assertion passed. The whole suite now finishes in ~30 s and exits.
+- **60** tests passing.
+
 ## 0.9.0 — 2026-10-23
 
 - **New fully unscoped package identity `dsh-session-sync-xxg`.** The package name, the `cordis.patch.yml` bundle specifier, the host plugin name and the client factory id are now the same unscoped string, so DSH cannot treat one client bundle as two sources. This exact identity was verified loading locally.

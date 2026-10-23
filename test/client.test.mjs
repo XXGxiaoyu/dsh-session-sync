@@ -87,14 +87,19 @@ function makeContext(registration, { active = 'zh' } = {}) {
 
 test('bundle registers under its package id and declares slots + locale', () => {
   const { registration, appended } = loadBundle()
+  // The module id is the one string the host keys registration, style claims
+  // and factory lookups on, so it has to be the package name itself: a drift
+  // here makes client-modules read the row as unregistered and re-run the
+  // script, which dies on `duplicate factory registration`.
   assert.equal(registration.id, 'dsh-session-sync-xxg')
+  assert.equal(registration.id, JSON.parse(fs.readFileSync(path.join(here, '..', 'package.json'), 'utf8')).name)
   assert.equal(typeof registration.factory, 'function')
   assert.equal(appended.length, 0, 'nothing may touch the DOM before the factory runs')
 
   const { exports, injected, registered } = makeContext(registration)
   assert.equal(appended.length, 1, 'the stylesheet must be claimed by the module loader')
-  assert.equal(appended[0].dataset.plugin, 'dsh-session-sync')
-  assert.equal(appended[0].dataset.pluginCss, 'dsh-session-sync/client.css')
+  assert.equal(appended[0].dataset.plugin, 'dsh-session-sync-xxg', 'the style tag must carry the module id so the host can remove it again')
+  assert.equal(appended[0].dataset.pluginCss, 'dsh-session-sync-xxg/client.css')
   assert.match(appended[0].textContent, /\.ss-page/)
   assert.equal(exports.name, 'dsh-session-sync-xxg')
   assert.deepEqual(exports.inject, ['slots', 'locale'])
