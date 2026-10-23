@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.2 — 2026-10-23
+
+- **Fixed pull/verify failures for sessions imported by older builds.** If the peer has a log that DSH rejects with `released v2 unseeded Session contains an inherited end-seed marker`, `readSession` failed and the export returned 502. `SessionBridge.read` now catches exactly that validation error, decodes the stored log, strips the inherited prefix **in memory**, and exports it; no file rewrite, no event loss. Every other read error still surfaces.
+- **Connection/real-time tuning.** UDP beacon 4s→2s, explicit target probe 8s→3s, offline TTL 12s→8s; UI state poll 4s→1.5s, transfer poll 700ms→300ms; polling pauses while the page is hidden and refreshes immediately when visible. The local session list (push picker) is cached for 30s and prefetched on the first state call instead of costing ~3.5s per open.
+- **62** tests passing (new legacy-export fallback and non-target error propagation).
+
 ## 0.9.1 — 2026-10-23
 
 0.9.0's single-identity direction was right; this release makes it actually self-consistent and closes a round of defects found by a full audit.
